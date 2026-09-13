@@ -89,9 +89,8 @@
 	position: absolute;
 	inset-inline: 0;
 	top: var(--ccl-inline-surface-top, 0px);
-	width: auto;
-	max-width: none;
-	margin: var(--ccl-container-margin-top) 0 0;
+	width: 100%;
+	margin-block: var(--ccl-container-margin-top) 0;
 	padding: var(--file-margins);
 	contain: layout paint style;
 }
@@ -150,10 +149,17 @@
 	font-size: var(--ccl-box-font-size);
 }
 
-/* adjustments for the Minimal theme */
+/* Keep workspace card surfaces aligned with themes that constrain the editor width.
+   The inner card-grid max-width remains independent so card sizing and column limits
+   keep their existing behavior. */
+.cosense-card-links__container,
+.cosense-card-links__temp-view[data-ccl-card-surface="workspace"] {
+	max-width: var(--max-width, 100%);
+	margin-inline: auto;
+}
+
 .cosense-card-links__container,
 .cosense-card-links__temp-view .cosense-card-links__view-results {
-	max-width: var(--max-width);
 	padding-bottom: calc(
 		var(--navbar-bottom-offset) + var(--navbar-bottom-offset) -
 			var(--keyboard-height)
@@ -293,6 +299,9 @@
 }
 
 .cosense-card-links-pre-create__actions {
+	max-width: var(--max-width);
+	width: var(--line-width);
+	margin-inline: var(--content-margin) !important;
 	display: flex;
 	gap: 8px;
 }
