@@ -6,6 +6,7 @@ import type { IIndexingService } from "indexing/index-service/IndexingService";
 import type { ISortService } from "cards/sorting";
 
 export interface PluginIndexUpdateQueue {
+	beginBatch(): () => void;
 	requestIndexUpdateForFile(path: string): void;
 }
 

@@ -33,6 +33,7 @@ export class IndexUpdateQueue {
 	private hasOpenMetadataResolveBatch = false;
 	private metadataResolveGeneration = 0;
 	private initialLayoutReadyAt: number | undefined;
+	private batchDepth = 0;
 	private destroyed = false;
 
 	constructor(
@@ -90,6 +91,32 @@ export class IndexUpdateQueue {
 			return;
 		}
 		this.recordObservedChange({ type: "modify", path });
+	}
+
+	/**
+	 * Defers processing while continuing to collect and coalesce observed changes.
+	 * The returned function is idempotent, and nested batches flush only after the
+	 * outermost batch ends.
+	 */
+	public beginBatch(): () => void {
+		if (this.destroyed) {
+			return () => undefined;
+		}
+
+		this.batchDepth++;
+		let ended = false;
+
+		return () => {
+			if (ended) {
+				return;
+			}
+			ended = true;
+			this.batchDepth--;
+
+			if (this.batchDepth === 0 && this.changeQueue.hasPending()) {
+				this.schedulePendingProcessing();
+			}
+		};
 	}
 
 	setupEventListeners(): void {
@@ -446,7 +473,7 @@ export class IndexUpdateQueue {
 	}
 
 	private async processPendingChanges(): Promise<void> {
-		if (this.destroyed) {
+		if (this.destroyed || this.batchDepth > 0) {
 			return;
 		}
 		if (this.isProcessingPendingChanges) {
@@ -520,7 +547,7 @@ export class IndexUpdateQueue {
 	}
 
 	private schedulePendingProcessing(): void {
-		if (this.destroyed) {
+		if (this.destroyed || this.batchDepth > 0) {
 			return;
 		}
 		if (this.shouldDelayForMetadataResolve()) {
@@ -571,7 +598,9 @@ export class IndexUpdateQueue {
 		}
 
 		this.waitsForMetadataResolve = false;
-		this.processPendingChangesSafely();
+		if (this.batchDepth === 0) {
+			this.processPendingChangesSafely();
+		}
 	}
 
 	private handleMetadataResolve(file: TFile): void {

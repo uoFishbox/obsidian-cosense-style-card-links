@@ -317,6 +317,63 @@ describe("IndexUpdateQueue", () => {
 		);
 	});
 
+	test("batch coalesces changes and processes them after the outermost end", async () => {
+		const harness = createHarness();
+		await initializeQueue(harness);
+		const endOuterBatch = harness.queue.beginBatch();
+		const endInnerBatch = harness.queue.beginBatch();
+
+		harness.emitVaultEvent("modify", createMockTFile("notes/first.md"));
+		harness.emitMetadataEvent("changed", createMockTFile("notes/first.md"));
+		harness.emitVaultEvent("modify", createMockTFile("notes/second.md"));
+		await flushAsyncTasks();
+
+		expect(
+			harness.indexingService.applyFileChangesTimeSliced,
+		).not.toHaveBeenCalled();
+
+		endInnerBatch();
+		endInnerBatch();
+		await flushAsyncTasks();
+		expect(
+			harness.indexingService.applyFileChangesTimeSliced,
+		).not.toHaveBeenCalled();
+
+		endOuterBatch();
+		await flushAsyncTasks();
+
+		expect(
+			harness.indexingService.applyFileChangesTimeSliced,
+		).toHaveBeenCalledTimes(1);
+		expect(harness.indexingService.applyFileChangesTimeSliced).toHaveBeenCalledWith(
+			[
+				{ type: "modify", path: "notes/first.md" },
+				{ type: "modify", path: "notes/second.md" },
+			],
+		);
+	});
+
+	test("metadata resolved does not flush an active batch", async () => {
+		const harness = createHarness();
+		await initializeQueue(harness);
+		const endBatch = harness.queue.beginBatch();
+
+		harness.emitVaultEvent("modify", createMockTFile("notes/source.md"));
+		harness.emitMetadataEvent("resolved");
+		await flushAsyncTasks();
+
+		expect(
+			harness.indexingService.applyFileChangesTimeSliced,
+		).not.toHaveBeenCalled();
+
+		endBatch();
+		await flushAsyncTasks();
+
+		expect(
+			harness.indexingService.applyFileChangesTimeSliced,
+		).toHaveBeenCalledTimes(1);
+	});
+
 	test("markdown metadata change repairs an index update that used stale metadata", async () => {
 		const environment = new VaultEnvironmentBuilder([
 			{ path: "origin.md", links: [] },

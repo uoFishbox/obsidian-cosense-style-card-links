@@ -26,6 +26,7 @@ import { AbstractSvelteListView } from "obsidian-integration/views/abstractSvelt
 import { buildEditorLikeFrame } from "obsidian-integration/views/editorLikeFrame";
 import { getCardItemKey, type CardItem } from "cards/CardItem";
 import { materializePreCreationFile } from "./preCreationFileWorkflow";
+import { renamePreCreationUnresolvedLinks } from "./preCreationLinkRename";
 import { isPlainEnterAtContentEnd } from "shared/ui/dom/contentEditableCaret";
 import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
 import { VIEW_TYPE_PRE_CREATE } from "obsidian-integration/views/viewTypes";
@@ -81,6 +82,8 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	private isCreating = false;
 	private titleCancelled = false;
 	private originalTitleText = "";
+	private originalLinktext = "";
+	private isRenaming = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: PluginHost, viewServices: ViewServices) {
 		super(leaf, plugin, viewServices);
@@ -415,6 +418,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		this.inlineTitleEl.textContent = titleText;
 
 		this.originalTitleText = titleText;
+		this.originalLinktext = this.linktext;
 		this.titleCancelled = false;
 
 		// During editing: update linktext / expectedPath to synchronize button state
@@ -429,18 +433,21 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		this.inlineTitleEl.addEventListener("keydown", (e: KeyboardEvent) => {
 			if (e.key === "Enter") {
 				e.preventDefault();
-				if (!this.plugin.settings.experimentalCosenseTitleEditing) {
-					this.inlineTitleEl?.blur();
-					return;
-				}
+				// Title editing now renames unresolved links only. File creation is
+				// intentionally reserved for the explicit Create button.
 				if (
-					this.inlineTitleEl &&
-					isPlainEnterAtContentEnd(e, this.inlineTitleEl)
+					!this.plugin.settings.experimentalCosenseTitleEditing ||
+					(this.inlineTitleEl &&
+						isPlainEnterAtContentEnd(e, this.inlineTitleEl))
 				) {
-					void this.handleCreateAndOpen();
+					this.inlineTitleEl?.blur();
 				}
 			} else if (e.key === "Escape") {
 				this.titleCancelled = true;
+				this.linktext = this.originalLinktext;
+				this.expectedPath = this.computeExpectedPath();
+				this.persistCurrentBootstrapState();
+				this.syncToEphemeralState();
 				if (this.inlineTitleEl) {
 					this.inlineTitleEl.textContent = titleText;
 				}
@@ -457,12 +464,12 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 			if (currentTitle === this.originalTitleText) {
 				return;
 			}
-			// Do nothing if expectedPath is empty or creation is in progress
-			if (!this.expectedPath || this.isCreating) {
+			// Do nothing if expectedPath is empty or another write is in progress.
+			if (!this.expectedPath || this.isCreating || this.isRenaming) {
 				return;
 			}
-			// Create the file
-			void this.handleCreateAndOpen();
+			// Rename dangling links in-place. Do not materialize a file here.
+			void this.handleRenameUnresolvedLinks(this.originalLinktext);
 		});
 
 		// Description + actions (placed where metadata-container would be)
@@ -542,6 +549,51 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 
 	protected getListHostComponent() {
 		return TagNotesListHost;
+	}
+
+	private async handleRenameUnresolvedLinks(oldLinktext: string): Promise<void> {
+		if (
+			!oldLinktext ||
+			!this.linktext ||
+			oldLinktext === this.linktext ||
+			this.isRenaming ||
+			this.isCreating
+		) {
+			return;
+		}
+
+		this.isRenaming = true;
+		if (this.createButtonEl) this.createButtonEl.disabled = true;
+		try {
+			const result = await renamePreCreationUnresolvedLinks(
+				this.app,
+				this.plugin.indexingService,
+				this.plugin.indexUpdateQueue,
+				oldLinktext,
+				this.linktext,
+			);
+			if (result.failed.length > 0) {
+				console.warn(
+					"[Cosense card links] Some unresolved links could not be renamed:",
+					result.failed,
+				);
+			}
+			// The renamed dangling target is now canonical for this pre-creation
+			// view. A later explicit Create should create it directly, rather than
+			// recreating the old target and relying on a file rename side effect.
+			this.creationPath = this.expectedPath;
+			this.persistCurrentBootstrapState();
+			this.syncToEphemeralState();
+			this.originalLinktext = this.linktext;
+		} catch (error) {
+			console.error(
+				"[Cosense card links] Failed to rename unresolved links:",
+				error,
+			);
+		} finally {
+			this.isRenaming = false;
+			if (this.leaf.view === this) this.render();
+		}
 	}
 
 	private async handleCreateAndOpen(): Promise<void> {
