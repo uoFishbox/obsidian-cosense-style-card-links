@@ -94,6 +94,76 @@ describe("shadowHoverPopoverBridge", () => {
 		dispose();
 	});
 
+	it("recovers a stale active anchor when the next mouseover arrives without mouseout", () => {
+		const registry = createRegistryStub({
+			v0: { interactionId: "item:first" },
+			v1: { interactionId: "item:second" },
+		});
+		const { shadowRoot, dispose } = installBridge(registry);
+		const first = createInteractionElement("v0");
+		const second = createInteractionElement("v1");
+		shadowRoot.append(first, second);
+
+		first.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, composed: true }),
+		);
+		second.dispatchEvent(
+			new MouseEvent("mouseover", {
+				bubbles: true,
+				composed: true,
+				relatedTarget: first,
+			}),
+		);
+
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledTimes(1);
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledWith(first);
+		expect(handleDelegatedEnterMock).toHaveBeenCalledTimes(2);
+		expect(handleDelegatedEnterMock).toHaveBeenLastCalledWith(
+			second,
+			"v1",
+			expect.any(MouseEvent),
+		);
+		expect(first.dataset.cclHovered).toBeUndefined();
+		expect(second.dataset.cclHovered).toBe("true");
+
+		second.dispatchEvent(
+			new MouseEvent("mouseout", { bubbles: true, composed: true }),
+		);
+		expect(handleDelegatedLeaveMock).toHaveBeenLastCalledWith(second);
+
+		dispose();
+	});
+
+	it("releases a stale active anchor when the next interaction disables preview", () => {
+		const registry = createRegistryStub({
+			v0: { interactionId: "item:first" },
+			v1: { interactionId: "item:second", hoverPreviewEnabled: false },
+		});
+		const { shadowRoot, dispose } = installBridge(registry);
+		const first = createInteractionElement("v0");
+		const second = createInteractionElement("v1");
+		shadowRoot.append(first, second);
+
+		first.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, composed: true }),
+		);
+		second.dispatchEvent(
+			new MouseEvent("mouseover", {
+				bubbles: true,
+				composed: true,
+				relatedTarget: first,
+			}),
+		);
+
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledTimes(1);
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledWith(first);
+		expect(handleDelegatedEnterMock).toHaveBeenCalledTimes(1);
+		expect(first.dataset.cclHovered).toBeUndefined();
+		expect(second.dataset.cclHovered).toBe("true");
+
+		dispose();
+	});
+
 	it("does not leave the old interaction immediately during ctrl/meta anchor handoff", () => {
 		const { shadowRoot, dispose } = installBridge();
 		const first = createInteractionElement("item:first");
@@ -452,19 +522,21 @@ function createRegistryStub(
 		register: vi.fn(() => () => {}),
 		setInteractionDescriptorResolverProvider: vi.fn(),
 		resolve: vi.fn(
-			(interactionId: string) =>
-				(descriptors[interactionId] ?? { interactionId }) as any,
+			(interactionHandle: string) =>
+				(descriptors[interactionHandle] ?? {
+					interactionId: interactionHandle,
+				}) as any,
 		),
 		clear: vi.fn(),
 	};
 }
 
 function createInteractionElement(
-	interactionId: string,
+	interactionHandle: string,
 	doc: Document = document,
 ): HTMLDivElement {
 	const element = doc.createElement("div");
-	element.dataset.cclInteractionHandle = interactionId;
+	element.dataset.cclInteractionHandle = interactionHandle;
 	return element;
 }
 

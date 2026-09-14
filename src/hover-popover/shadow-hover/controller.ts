@@ -45,7 +45,7 @@ type ShadowHoverLinkSpec = {
 
 type LaunchShadowPopover = (request: ShadowPopoverLaunchRequest) => void;
 type ResolveShadowHoverLink = (
-	interactionId: string,
+	interactionHandle: string,
 ) => ShadowHoverLinkSpec | null | Promise<ShadowHoverLinkSpec | null>;
 
 export class ShadowHoverControllerImpl {
@@ -53,7 +53,7 @@ export class ShadowHoverControllerImpl {
 
 	private readonly session = createShadowHoverSession();
 	private lastLaunchActualEl: HTMLElement | null = null;
-	private lastLaunchInteractionId: string | null = null;
+	private lastLaunchInteractionHandle: string | null = null;
 	private lastLaunchAt = 0;
 
 	constructor(
@@ -63,17 +63,17 @@ export class ShadowHoverControllerImpl {
 
 	handleDelegatedEnter(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		event: MouseEvent,
 	): void {
 		if (this.session.destroyed) return;
 		setAnchorHovered(this.session, anchorEl, true);
-		this.handleAnchorEnter(anchorEl, interactionId, event);
+		this.handleAnchorEnter(anchorEl, interactionHandle, event);
 	}
 
 	handleDelegatedAnchorSync(
 		anchorEl: HTMLElement,
-		interactionId?: string,
+		interactionHandle?: string,
 		event?: MouseEvent,
 	): void {
 		if (this.session.destroyed) return;
@@ -100,36 +100,36 @@ export class ShadowHoverControllerImpl {
 		}
 		syncPopoverTargetAndTransition(this.session);
 		if (
-			interactionId &&
-			this.shouldRecoverMissingPopover(anchorEl, interactionId)
+			interactionHandle &&
+			this.shouldRecoverMissingPopover(anchorEl, interactionHandle)
 		) {
-			this.relaunchAnchor(anchorEl, interactionId, event);
+			this.relaunchAnchor(anchorEl, interactionHandle, event);
 		}
 	}
 
 	handleDelegatedModifierKey(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		event: KeyboardEvent,
 	): void {
 		if (this.session.destroyed) return;
 		setAnchorHovered(this.session, anchorEl, true);
-		this.relaunchAnchor(anchorEl, interactionId);
+		this.relaunchAnchor(anchorEl, interactionHandle);
 	}
 
 	handleDelegatedPointerMove(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		event: PointerEvent,
 	): void {
 		if (this.session.destroyed) return;
 		setAnchorHovered(this.session, anchorEl, true);
 
 		if (this.session.activeAnchor?.actualEl !== anchorEl) {
-			this.handleAnchorEnter(anchorEl, interactionId, event);
+			this.handleAnchorEnter(anchorEl, interactionHandle, event);
 			return;
 		}
-		this.relaunchAnchor(anchorEl, interactionId, event);
+		this.relaunchAnchor(anchorEl, interactionHandle, event);
 	}
 
 	handleDelegatedLeave(anchorEl: HTMLElement): void {
@@ -168,12 +168,12 @@ export class ShadowHoverControllerImpl {
 
 	private shouldRecoverMissingPopover(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 	): boolean {
 		if (this.session.activePopover) return false;
 		if (
 			this.lastLaunchActualEl !== anchorEl ||
-			this.lastLaunchInteractionId !== interactionId
+			this.lastLaunchInteractionHandle !== interactionHandle
 		) {
 			return true;
 		}
@@ -183,9 +183,9 @@ export class ShadowHoverControllerImpl {
 		);
 	}
 
-	private markLaunch(anchorEl: HTMLElement, interactionId: string): void {
+	private markLaunch(anchorEl: HTMLElement, interactionHandle: string): void {
 		this.lastLaunchActualEl = anchorEl;
-		this.lastLaunchInteractionId = interactionId;
+		this.lastLaunchInteractionHandle = interactionHandle;
 		this.lastLaunchAt = Date.now();
 	}
 
@@ -198,7 +198,7 @@ export class ShadowHoverControllerImpl {
 
 	private relaunchAnchor(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		event?: MouseEvent,
 	): void {
 		const proxy = this.syncActiveAnchor(anchorEl);
@@ -212,7 +212,7 @@ export class ShadowHoverControllerImpl {
 		this.resolveAndLaunch(
 			anchorEl,
 			proxy,
-			interactionId,
+			interactionHandle,
 			event ?? this.createSyntheticHoverEvent(anchorEl),
 			requestSeq,
 		);
@@ -220,7 +220,7 @@ export class ShadowHoverControllerImpl {
 
 	private handleAnchorEnter(
 		anchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		mouseEvent?: MouseEvent,
 	): void {
 		if (this.session.destroyed) return;
@@ -283,7 +283,7 @@ export class ShadowHoverControllerImpl {
 		this.resolveAndLaunch(
 			anchorEl,
 			proxy,
-			interactionId,
+			interactionHandle,
 			mouseEvent ?? this.createSyntheticHoverEvent(anchorEl),
 			requestSeq,
 		);
@@ -292,14 +292,14 @@ export class ShadowHoverControllerImpl {
 	private resolveAndLaunch(
 		actualAnchorEl: HTMLElement,
 		proxyAnchorEl: HTMLElement,
-		interactionId: string,
+		interactionHandle: string,
 		event: MouseEvent,
 		requestSeq: number,
 	): void {
-		const resolution = this.resolveLink(interactionId);
+		const resolution = this.resolveLink(interactionHandle);
 		if (!isPromiseLike(resolution)) {
 			if (!resolution) return;
-			this.markLaunch(actualAnchorEl, interactionId);
+			this.markLaunch(actualAnchorEl, interactionHandle);
 			this.launchResolvedLink(
 				actualAnchorEl,
 				proxyAnchorEl,
@@ -310,7 +310,7 @@ export class ShadowHoverControllerImpl {
 			return;
 		}
 
-		this.markLaunch(actualAnchorEl, interactionId);
+		this.markLaunch(actualAnchorEl, interactionHandle);
 		void resolution.then(
 			(link) => {
 				if (!link) return;

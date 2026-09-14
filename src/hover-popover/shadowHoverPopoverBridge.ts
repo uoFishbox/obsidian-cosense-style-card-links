@@ -202,10 +202,13 @@ function handleMouseOver(
 	if (isRelatedTargetWithinAnchor(nextAnchorEl, event)) {
 		return;
 	}
-	enterLogicalHover(handle, nextAnchorEl);
 
 	const nextDescriptor = handle.registry.resolve(nextInteractionHandle);
 	if (!nextDescriptor || nextDescriptor.hoverPreviewEnabled === false) {
+		if (handle.activeAnchorEl && handle.activeAnchorEl !== nextAnchorEl) {
+			leaveActiveAnchor(handle);
+		}
+		enterLogicalHover(handle, nextAnchorEl);
 		if (handle.activeAnchorEl === nextAnchorEl) {
 			leaveActiveAnchor(handle);
 		}
@@ -213,6 +216,7 @@ function handleMouseOver(
 	}
 
 	if (handle.activeAnchorEl === nextAnchorEl) {
+		enterLogicalHover(handle, nextAnchorEl);
 		handle.lastPointerModState = getModifierState(event);
 		if (handle.activeInteractionHandle === nextInteractionHandle) {
 			handle.controller.handleDelegatedAnchorSync(
@@ -260,7 +264,7 @@ function handleMouseOver(
 	if (handle.activeAnchorEl && handle.activeAnchorEl !== nextAnchorEl) {
 		const wantsPreview = getModifierState(event);
 		if (!wantsPreview) {
-			return;
+			leaveActiveAnchor(handle);
 		}
 	}
 
