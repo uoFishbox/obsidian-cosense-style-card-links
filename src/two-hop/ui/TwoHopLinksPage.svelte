@@ -72,7 +72,6 @@
 				(matchedItem?.contentMatched ?? true)
 					? "title-and-content"
 					: "title-only",
-			interactionId: row.interactionId,
 		});
 	}
 

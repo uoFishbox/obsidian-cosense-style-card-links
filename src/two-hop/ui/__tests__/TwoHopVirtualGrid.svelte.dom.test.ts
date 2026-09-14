@@ -29,7 +29,6 @@ import TwoHopVirtualGridHarness from "./TwoHopVirtualGridHarness.svelte";
 function createSection(count: number, totalCount = count): TwoHopSectionModel {
 	const items = Array.from({ length: count }, (_, index) => ({
 		item: { type: "newLink" },
-		interactionId: `item:${index}`,
 		searchKey: `item:${index}`,
 		key: `item:${index}`,
 	})) as TwoHopItemModel[];
@@ -79,7 +78,6 @@ function createCardModelResolver() {
 			ariaLabel: item.key,
 			className: null,
 			extension: null,
-			interactionId: item.key,
 			interactionDescriptor: null,
 			searchQuery: "",
 			previewRequest: null,
@@ -88,10 +86,8 @@ function createCardModelResolver() {
 }
 
 function createInteractiveCardModelResolver() {
-	return vi.fn((item: TwoHopItemModel, revision: unknown): CardRenderModel => {
-		const interactionId = `${item.key}:${String(revision)}`;
+	return vi.fn((item: TwoHopItemModel, _revision: unknown): CardRenderModel => {
 		const interactionDescriptor: ItemInteractionDescriptor = {
-			interactionId,
 			kind: "item",
 			item: item.item,
 			targetFile: null,
@@ -103,7 +99,6 @@ function createInteractiveCardModelResolver() {
 			ariaLabel: item.key,
 			className: null,
 			extension: null,
-			interactionId,
 			interactionDescriptor,
 			searchQuery: "",
 			previewRequest: null,
@@ -352,7 +347,7 @@ describe("TwoHopVirtualGrid component", () => {
 		expect(findCardByTitle(root, "item:0")).not.toBeNull();
 	});
 
-	it("updates the DOM handle when a mounted card interaction identity changes", async () => {
+	it("retains handles on descriptor refresh and invalidates them when the displayed card changes", async () => {
 		const resolver = createInteractiveCardModelResolver();
 		const onHop1Click = vi.fn();
 		const section = createSection(1);
@@ -375,20 +370,35 @@ describe("TwoHopVirtualGrid component", () => {
 
 		await publishSection(section, 1);
 		for (let index = 0; index < 4; index += 1) await flushFrames();
-		const refreshedCard = await vi.waitFor(() => {
-			const card = findCardByTitle(root, "item:0");
+		const refreshedCard = findCardByTitle(root, "item:0")!;
+		expect(refreshedCard.dataset.cclInteractionHandle).toBe(initialHandle);
+		await fireEvent.click(refreshedCard);
+		expect(onHop1Click).toHaveBeenCalledTimes(2);
+
+		await publishSection(
+			createTwoHopSectionModel({
+				id: section.id,
+				kind: section.kind,
+				title: section.title,
+				items: [{ ...section.items[0]!, key: "item:replacement" }],
+				totalCount: 1,
+			}),
+			2,
+		);
+		const replacementCard = await vi.waitFor(() => {
+			const card = findCardByTitle(root, "item:replacement");
 			expect(card?.dataset.cclInteractionHandle).toBeDefined();
 			expect(card?.dataset.cclInteractionHandle).not.toBe(initialHandle);
 			return card!;
 		});
-		const refreshedHandle = refreshedCard.dataset.cclInteractionHandle;
-		refreshedCard.dataset.cclInteractionHandle = initialHandle!;
-		await fireEvent.click(refreshedCard);
-		expect(onHop1Click).toHaveBeenCalledTimes(1);
-
-		refreshedCard.dataset.cclInteractionHandle = refreshedHandle!;
-		await fireEvent.click(refreshedCard);
+		const replacementHandle = replacementCard.dataset.cclInteractionHandle;
+		replacementCard.dataset.cclInteractionHandle = initialHandle!;
+		await fireEvent.click(replacementCard);
 		expect(onHop1Click).toHaveBeenCalledTimes(2);
+
+		replacementCard.dataset.cclInteractionHandle = replacementHandle!;
+		await fireEvent.click(replacementCard);
+		expect(onHop1Click).toHaveBeenCalledTimes(3);
 	});
 
 	it("retains valid hydrated models across filtered publications and invalidates precise changes", async () => {
@@ -459,7 +469,6 @@ describe("TwoHopVirtualGrid component", () => {
 			{ length: 3 },
 			(_, index) => ({
 				...section.items[index]!,
-				interactionId: `prepended:${index}`,
 				searchKey: `prepended:${index}`,
 				key: `prepended:${index}`,
 			}),
@@ -496,7 +505,6 @@ describe("TwoHopVirtualGrid component", () => {
 		const scrollTopBeforePublication = scroller.scrollTop;
 		const prependedItems = section.items.slice(0, 3).map((item, index) => ({
 			...item,
-			interactionId: `prepended:${index}`,
 			searchKey: `prepended:${index}`,
 			key: `prepended:${index}`,
 		}));
@@ -573,7 +581,6 @@ describe("TwoHopVirtualGrid component", () => {
 				const prepended = section.items.slice(0, 6).map((item, index) => ({
 					...item,
 					key: `prepended:${index}`,
-					interactionId: `prepended:${index}`,
 				}));
 				await publishSection(
 					createTwoHopSectionModel({
@@ -682,7 +689,6 @@ describe("TwoHopVirtualGrid component", () => {
 			{ length: 3 },
 			(_, index) => ({
 				item: { type: "newLink" },
-				interactionId: `replaced:${index}`,
 				searchKey: `replaced:${index}`,
 				key: `replaced:${index}`,
 			}),

@@ -172,9 +172,7 @@ describe("createTwoHopSectionPublicationMemo", () => {
 		});
 
 		expect(second[0]).not.toBe(first[0]);
-		expect(second[0]?.items[0]?.interactionId).toBe(
-			first[0]?.items[0]?.interactionId,
-		);
+		expect(second[0]?.items[0]?.key).toBe(first[0]?.items[0]?.key);
 	});
 
 	it("expands only the requested prefix while preserving item identity and sorting", () => {

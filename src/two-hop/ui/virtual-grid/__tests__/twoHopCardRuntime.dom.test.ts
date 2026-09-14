@@ -110,7 +110,6 @@ function createFixture() {
 			ariaLabel: file.basename,
 			className: null,
 			extension: null,
-			interactionId: item.key,
 			interactionDescriptor: null,
 			searchQuery: "",
 			previewRequest: compileCardPreviewRequest({

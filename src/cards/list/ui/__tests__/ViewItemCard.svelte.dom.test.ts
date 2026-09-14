@@ -55,7 +55,6 @@ describe("ViewItemCard", () => {
 			ariaLabel: "Compiled aria label",
 			className: "compiled-card",
 			extension: "pdf",
-			interactionId: "compiled-id",
 			interactionDescriptor: null,
 			searchQuery: "compiled",
 			previewRequest: null,

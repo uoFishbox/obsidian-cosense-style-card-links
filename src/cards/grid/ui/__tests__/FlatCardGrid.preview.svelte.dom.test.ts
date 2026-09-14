@@ -54,7 +54,6 @@ function createModel(file: TFile): CardRenderModel {
 		ariaLabel: file.basename,
 		className: null,
 		extension: "md",
-		interactionId: file.path,
 		interactionDescriptor: null,
 		searchQuery: "",
 		previewRequest: {
@@ -222,7 +221,7 @@ describe("FlatCardGrid preview surface", () => {
 			},
 			previewRuntime,
 		} as AppContext;
-		const getItemId = (model: CardRenderModel) => model.interactionId;
+		const getItemId = (model: CardRenderModel) => model.targetFile!.path;
 		const rendered = render(FlatCardGridPreviewHarness, {
 			props: {
 				models,

@@ -20,7 +20,6 @@ describe("buildShadowHoverLinkSpec", () => {
 		const sourceFile = createMockTFile("source.md");
 		const targetFile = createMockTFile("target.md");
 		const descriptor: ItemInteractionDescriptor = {
-			interactionId: "item:taggedNote:target.md",
 			kind: "item",
 			item: {
 				type: "taggedNote",
@@ -54,7 +53,6 @@ describe("buildShadowHoverLinkSpec", () => {
 		const targetFile = createMockTFile("target.md");
 		const preferredPosition = createPosition(12);
 		const descriptor: ItemInteractionDescriptor = {
-			interactionId: "item:branch:target",
 			kind: "item",
 			item: {
 				type: "branch",
@@ -97,7 +95,6 @@ describe("buildShadowHoverLinkSpec", () => {
 		const targetFile = createMockTFile("target.md");
 		const preferredPosition = createPosition(18);
 		const descriptor: ItemInteractionDescriptor = {
-			interactionId: "item:branch:async-target",
 			kind: "item",
 			item: {
 				type: "branch",
@@ -138,7 +135,6 @@ describe("buildShadowHoverLinkSpec", () => {
 	it("returns null for unresolved new-link items", () => {
 		const targetFile = createMockTFile("target.md");
 		const descriptor: ItemInteractionDescriptor = {
-			interactionId: "item:newLink:missing",
 			kind: "item",
 			item: {
 				type: "newLink",

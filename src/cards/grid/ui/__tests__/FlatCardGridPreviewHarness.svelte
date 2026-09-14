@@ -24,7 +24,7 @@
 		linkContext,
 		appContext,
 		applicationStore,
-		getItemId = (model) => model.interactionId,
+		getItemId = (model) => model.targetFile!.path,
 	}: Props = $props();
 	setLinkContext(linkContext);
 	setAppContext(appContext);

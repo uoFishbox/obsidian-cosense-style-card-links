@@ -24,7 +24,6 @@ import {
 	type TwoHopSectionModel,
 } from "two-hop/ui/twoHopSectionModel";
 import {
-	createItemInteractionKey,
 	createSectionHeaderInteractionKey,
 	type InteractionSettings,
 	type SectionHeaderInteractionDescriptor,
@@ -146,7 +145,6 @@ function createPrimaryDescriptor<T>(
 			const virtualKey = params.getVirtualKey(source, index);
 			return {
 				item,
-				interactionId: createItemInteractionKey(item, virtualKey),
 				searchKey: params.getSearchKey(source),
 				key: virtualKey,
 			};
@@ -230,7 +228,6 @@ export function createBranchSectionDescriptor(
 			const virtualKey = generateBacklinkKey(source);
 			return {
 				item,
-				interactionId: createItemInteractionKey(item, virtualKey),
 				searchKey: createTwohopChildSearchKeyFromBaseKeys(
 					branchBaseKey,
 					virtualKey,
@@ -301,7 +298,6 @@ export function createTagSectionDescriptor(
 			);
 			return {
 				item,
-				interactionId: createItemInteractionKey(item, virtualKey),
 				searchKey: getTagNoteSearchKeyFromBaseKey(input.source.tag, baseKey),
 				key: virtualKey,
 			};
@@ -337,7 +333,6 @@ export function createNewLinksSectionDescriptor(
 			const virtualKey = generateIndexedLinkKey(source, "new");
 			return {
 				item,
-				interactionId: createItemInteractionKey(item, virtualKey),
 				searchKey: virtualKey,
 				key: virtualKey,
 			};

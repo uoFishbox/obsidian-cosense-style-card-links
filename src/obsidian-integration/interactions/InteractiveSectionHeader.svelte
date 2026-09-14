@@ -31,7 +31,10 @@
 	}: Props = $props();
 
 	const interactionRegistry = useInteractionRegistry();
-	const interactionHandle = createInteractionHandle("h");
+	const interactionKey = $derived(interactionDescriptor?.interactionId);
+	const interactionHandle = $derived.by(() =>
+		interactionKey === undefined ? undefined : createInteractionHandle("h"),
+	);
 	const dataAttributes = $derived({
 		"data-ccl-interaction-handle": interactionHandle,
 		"data-ccl-section-variant": sectionVariant,
@@ -39,7 +42,7 @@
 
 	function registerInteractionDescriptor(): (() => void) | undefined {
 		const descriptor = interactionDescriptor;
-		if (!interactionRegistry || !descriptor) return;
+		if (!interactionRegistry || !descriptor || !interactionHandle) return;
 
 		return interactionRegistry.register(interactionHandle, descriptor);
 	}

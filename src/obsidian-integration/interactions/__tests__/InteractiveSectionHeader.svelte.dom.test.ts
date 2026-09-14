@@ -74,11 +74,20 @@ describe("InteractiveSectionHeader", () => {
 			descriptor: nextDescriptor,
 		});
 
-		expect(registry.resolve(interactionHandle!)).toStrictEqual(nextDescriptor);
+		const nextHandle = getInteractionHandleFromElement(header);
+		expect(nextHandle).not.toBe(interactionHandle);
+		expect(registry.resolve(interactionHandle!)).toBeUndefined();
+		expect(registry.resolve(nextHandle!)).toStrictEqual(nextDescriptor);
+
+		const refreshed = { ...nextDescriptor, searchQuery: "updated" };
+		await view.rerender({ registry, descriptor: refreshed });
+		expect(getInteractionHandleFromElement(header)).toBe(nextHandle);
+		expect(registry.resolve(nextHandle!)).toStrictEqual(refreshed);
 
 		view.unmount();
 
 		expect(registry.resolve(interactionHandle!)).toBeUndefined();
+		expect(registry.resolve(nextHandle!)).toBeUndefined();
 	});
 
 	it("releases the previous descriptor when the prop transitions to undefined on rebind", async () => {
@@ -108,6 +117,12 @@ describe("InteractiveSectionHeader", () => {
 		});
 
 		expect(registry.resolve(interactionHandle!)).toBeUndefined();
+		expect(getInteractionHandleFromElement(header)).toBeNull();
+		await view.rerender({ registry, descriptor: initialDescriptor });
+		const nextHandle = getInteractionHandleFromElement(header);
+		expect(nextHandle).not.toBe(interactionHandle);
+		expect(registry.resolve(interactionHandle!)).toBeUndefined();
+		expect(registry.resolve(nextHandle!)).toStrictEqual(initialDescriptor);
 	});
 
 	it.each([

@@ -38,7 +38,6 @@
 		createCardRenderModel,
 		type CardRenderModel,
 	} from "cards/rendering/cardRenderModel";
-	import { createItemInteractionKey } from "cards/interactions/interactionTypes";
 	import type { PreviewRuntime } from "card-preview/runtime/previewRuntime";
 	import type { ListViewUiState } from "cards/list/model/listViewUiState";
 	import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
@@ -346,7 +345,6 @@
 			(matchedItem?.contentMatched ?? true)
 				? "title-and-content"
 				: "title-only";
-		const interactionId = createItemInteractionKey(item, itemKey);
 		const model = createCardRenderModel({
 			item,
 			settings: revision.settings,
@@ -355,7 +353,6 @@
 				applicationStore.previewState.getRenderVersion(path),
 			searchQuery: revision.searchQuery,
 			searchScope,
-			interactionId,
 		});
 		revision.modelsByKey.set(itemKey, { item, model });
 		return model;

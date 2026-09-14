@@ -26,7 +26,6 @@ vi.mock("obsidian", async () => {
 const SOURCE_FILE_PATH = "notes/source-note.md";
 const TARGET_FILE_PATH = "notes/target-note.md";
 const FOREIGN_TARGET_FILE_PATH = "notes/foreign-target.md";
-const INTERACTION_ID = "token-37";
 const SECTION_INTERACTION_ID = "section-token-19";
 const LINK_RAW_TEXT = "target-reference";
 const DRAG_RAW_TEXT = "visible-alias";
@@ -111,7 +110,6 @@ function createTouchEvent(
 
 function createItemDescriptor(item: CardItem, file: TFile): ItemInteractionDescriptor {
 	return {
-		interactionId: INTERACTION_ID,
 		kind: "item",
 		item,
 		targetFile: file,
@@ -282,7 +280,7 @@ describe("delegated interaction dispatcher", () => {
 		expect(linkContext.onOpenFile).toHaveBeenCalledTimes(1);
 	});
 
-	it("dispatches each DOM binding independently when semantic IDs are shared", () => {
+	it("dispatches each DOM binding to its own descriptor", () => {
 		const linkContext = createLinkContext();
 		const appContext = createAppContext(linkContext);
 		const registry = createInteractionRegistry();
@@ -365,6 +363,70 @@ describe("delegated interaction dispatcher", () => {
 		expect(linkContext.onOpenFile).toHaveBeenCalledTimes(1);
 	});
 
+	it("enters separate card bindings even when they share a descriptor", () => {
+		const linkContext = createLinkContext();
+		const registry = createInteractionRegistry();
+		const file = createMockTFile(TARGET_FILE_PATH);
+		const descriptor = createItemDescriptor({ type: "file", data: file }, file);
+		const dispatcher = createDelegatedInteractionDispatcher({
+			registry,
+			linkContext,
+		});
+		attachDispatcher(root, dispatcher);
+		const cards = [0, 1].map(() => {
+			const element = document.createElement("div");
+			const handle = createInteractionHandle();
+			registry.register(handle, descriptor);
+			element.dataset.cclInteractionHandle = handle;
+			root.append(element);
+			return element;
+		});
+		const [first, second] = cards;
+		first.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+		first.dispatchEvent(
+			new MouseEvent("mouseout", { bubbles: true, relatedTarget: second }),
+		);
+		second.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, relatedTarget: first }),
+		);
+		expect(linkContext.onLinkHover).toHaveBeenCalledTimes(2);
+		expect(vi.mocked(linkContext.onLinkHover).mock.calls[1]?.[0].target).toBe(
+			second,
+		);
+	});
+
+	it("cancels a long press when the touched DOM element is rebound", () => {
+		vi.useFakeTimers();
+		Platform.isMobile = true;
+		const linkContext = createLinkContext();
+		const registry = createInteractionRegistry();
+		const file = createMockTFile(TARGET_FILE_PATH);
+		const descriptor = createItemDescriptor({ type: "file", data: file }, file);
+		const firstHandle = createInteractionHandle();
+		const nextHandle = createInteractionHandle();
+		registry.register(firstHandle, descriptor);
+		registry.register(nextHandle, descriptor);
+		const dispatcher = createDelegatedInteractionDispatcher({
+			registry,
+			linkContext,
+		});
+		attachProductionMobileTouchDispatcher(root, dispatcher);
+		const element = document.createElement("div");
+		element.dataset.cclInteractionHandle = firstHandle;
+		root.append(element);
+		element.dispatchEvent(
+			createTouchEvent("touchstart", [
+				{ clientX: 20, clientY: 30, screenX: 20, screenY: 30 },
+			]),
+		);
+		element.dataset.cclInteractionHandle = nextHandle;
+		vi.advanceTimersByTime(500);
+		expect(linkContext.onLinkHover).not.toHaveBeenCalled();
+		expect(linkContext.onShowFileMenu).not.toHaveBeenCalled();
+		expect(element.dataset.cclLongPressed).toBeUndefined();
+		Platform.isMobile = false;
+	});
+
 	it("suppresses repeated mouseover dispatches for the same interaction until the pointer leaves the root", () => {
 		const linkContext = createLinkContext();
 		const appContext = createAppContext(linkContext);
@@ -375,7 +437,7 @@ describe("delegated interaction dispatcher", () => {
 			file,
 		);
 		const interactionHandle = createInteractionHandle();
-		registry.register(interactionHandle, descriptor);
+		const unregister = registry.register(interactionHandle, descriptor);
 
 		const dispatcher = createDelegatedInteractionDispatcher({
 			registry,
@@ -396,10 +458,16 @@ describe("delegated interaction dispatcher", () => {
 		expect(firstHoverEvent.currentTarget).toBe(element);
 		expect(firstHoverEvent.target).toBe(element);
 
+		unregister();
+		element.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+		registry.register(interactionHandle, descriptor);
+		element.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+		expect(linkContext.onLinkHover).toHaveBeenCalledTimes(2);
+
 		root.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
 		element.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
 
-		expect(linkContext.onLinkHover).toHaveBeenCalledTimes(2);
+		expect(linkContext.onLinkHover).toHaveBeenCalledTimes(3);
 	});
 
 	it("suppresses hover preview when disabled while keeping click activation", () => {

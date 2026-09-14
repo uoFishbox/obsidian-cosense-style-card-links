@@ -7,8 +7,14 @@ import type { InteractionDescriptorResolverProvider } from "./interactionRegistr
 
 export interface VirtualCardInteractionController extends InteractionDescriptorResolverProvider {
 	getInteractionHandle(physicalCellSlot: number): InteractionHandle;
-	/** Synchronizes mounted cells without materializing an intermediate binding array. */
-	syncMountedRows<TCell extends { readonly physicalCellSlot: number }>(
+	/**
+	 * Synchronizes bindings by mounted key, independently of descriptor availability.
+	 * A null descriptor keeps an unavailable binding; undefined excludes a non-card cell.
+	 * Returns whether DOM handles need to be republished.
+	 */
+	syncMountedRows<
+		TCell extends { readonly physicalCellSlot: number; readonly key: string },
+	>(
 		rows: readonly {
 			readonly bindings: readonly (TCell | null | undefined)[];
 		}[],
@@ -19,9 +25,14 @@ export interface VirtualCardInteractionController extends InteractionDescriptorR
 	clear(): void;
 }
 
-/** Owns one unique lookup handle for each live virtual card slot. */
+interface MountedInteractionBinding {
+	readonly handle: InteractionHandle;
+	key: string | null;
+}
+
+/** Owns live card bindings; reusing a physical slot for another key invalidates its handle. */
 export function createVirtualCardInteractionController(): VirtualCardInteractionController {
-	const handleBySlot = new Map<number, InteractionHandle>();
+	const bindingBySlot = new Map<number, MountedInteractionBinding>();
 	const descriptorByHandle = new Map<InteractionHandle, ItemInteractionDescriptor>();
 
 	return {
@@ -29,10 +40,10 @@ export function createVirtualCardInteractionController(): VirtualCardInteraction
 			return descriptorByHandle.get(interactionHandle) ?? null;
 		},
 		getInteractionHandle(physicalCellSlot) {
-			const existing = handleBySlot.get(physicalCellSlot);
-			if (existing) return existing;
+			const existing = bindingBySlot.get(physicalCellSlot);
+			if (existing) return existing.handle;
 			const handle = createInteractionHandle("v");
-			handleBySlot.set(physicalCellSlot, handle);
+			bindingBySlot.set(physicalCellSlot, { handle, key: null });
 			return handle;
 		},
 		syncMountedRows(rows, resolveDescriptor) {
@@ -45,36 +56,37 @@ export function createVirtualCardInteractionController(): VirtualCardInteraction
 					if (descriptor === undefined) continue;
 					const physicalCellSlot = cell.physicalCellSlot;
 					activeSlots.add(physicalCellSlot);
-					let handle = handleBySlot.get(physicalCellSlot);
-					const previous = handle
-						? descriptorByHandle.get(handle)
-						: undefined;
+					let binding = bindingBySlot.get(physicalCellSlot);
 					if (
-						!handle ||
-						(previous &&
-							descriptor &&
-							previous.interactionId !== descriptor.interactionId)
+						!binding ||
+						(binding.key !== null && binding.key !== cell.key)
 					) {
-						if (handle) descriptorByHandle.delete(handle);
-						handle = createInteractionHandle("v");
-						handleBySlot.set(physicalCellSlot, handle);
+						if (binding) descriptorByHandle.delete(binding.handle);
+						binding = {
+							handle: createInteractionHandle("v"),
+							key: cell.key,
+						};
+						bindingBySlot.set(physicalCellSlot, binding);
 						handlesChanged = true;
 					}
+					// The mounted identity survives lazy descriptor eviction/hydration.
+					binding.key = cell.key;
+					const { handle } = binding;
 					if (descriptor) descriptorByHandle.set(handle, descriptor);
 					else descriptorByHandle.delete(handle);
 				}
 			}
-			for (const physicalCellSlot of handleBySlot.keys()) {
+			for (const [physicalCellSlot, binding] of bindingBySlot) {
 				if (!activeSlots.has(physicalCellSlot)) {
-					descriptorByHandle.delete(handleBySlot.get(physicalCellSlot)!);
-					handleBySlot.delete(physicalCellSlot);
+					descriptorByHandle.delete(binding.handle);
+					bindingBySlot.delete(physicalCellSlot);
 					handlesChanged = true;
 				}
 			}
 			return handlesChanged;
 		},
 		clear() {
-			handleBySlot.clear();
+			bindingBySlot.clear();
 			descriptorByHandle.clear();
 		},
 	};

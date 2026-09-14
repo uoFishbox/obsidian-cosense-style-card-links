@@ -62,7 +62,6 @@ describe("createCardRenderModel", () => {
 			searchQuery: "needle",
 			searchScope: "title-only",
 			contentPreview: "matched content",
-			interactionId: "i0",
 		});
 
 		expect(model).toMatchObject({
@@ -71,7 +70,6 @@ describe("createCardRenderModel", () => {
 			title: "Quarterly report",
 			className: null,
 			extension: "pdf",
-			interactionId: "i0",
 			searchQuery: "needle",
 		});
 		expect(getPreviewRenderVersion).not.toHaveBeenCalled();

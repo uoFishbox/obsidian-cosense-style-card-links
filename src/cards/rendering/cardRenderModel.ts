@@ -11,7 +11,6 @@ import type { LinkUtilitiesContext } from "cards/context/linkUtilities";
 import type { PluginSettings } from "settings/model";
 import {
 	createItemInteractionDescriptor,
-	createItemInteractionKey,
 	type ItemInteractionDescriptor,
 } from "cards/interactions/interactionTypes";
 import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
@@ -23,7 +22,6 @@ export interface CardShellModel {
 	readonly ariaLabel: string;
 	readonly className: string | null;
 	readonly extension: string | null;
-	readonly interactionId: string;
 	readonly searchQuery: string;
 }
 
@@ -51,7 +49,6 @@ export interface CreateCardRenderModelParams {
 	readonly searchQuery?: string;
 	readonly searchScope?: "title-only" | "title-and-content";
 	readonly contentPreview?: string;
-	readonly interactionId?: string;
 }
 
 /** Creates the card shell and memoizes preview/interaction models on first access. */
@@ -69,7 +66,6 @@ export function createCardRenderModel(
 	const searchQuery = params.searchQuery ?? "";
 	const searchScope = params.searchScope ?? "title-and-content";
 	const contentPreview = params.contentPreview;
-	const interactionId = params.interactionId ?? createItemInteractionKey(params.item);
 	const text = getMainUiTranslations(params.settings.language);
 	let previewRequest: CardPreviewRequest | null | undefined;
 	let interactionDescriptor: ItemInteractionDescriptor | null | undefined;
@@ -97,7 +93,6 @@ export function createCardRenderModel(
 			params.settings,
 			searchQuery,
 			params.context,
-			{ interactionId },
 		);
 		return interactionDescriptor;
 	}
@@ -107,12 +102,9 @@ export function createCardRenderModel(
 		targetFile,
 		title,
 		ariaLabel:
-			params.item.type === "newLink"
-				? text.unresolvedLink
-				: text.openLink(title),
+			params.item.type === "newLink" ? text.unresolvedLink : text.openLink(title),
 		className,
 		extension: targetFile?.extension ?? null,
-		interactionId,
 		get interactionDescriptor() {
 			return resolveInteractionDescriptor();
 		},

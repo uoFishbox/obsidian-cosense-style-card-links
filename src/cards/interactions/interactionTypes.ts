@@ -1,10 +1,5 @@
 import type { TFile } from "obsidian";
 import { getItemRawText, getItemTargetFile, type CardItem } from "cards/CardItem";
-import {
-	generateBacklinkKey,
-	generateBranchKey,
-	generateIndexedLinkKey,
-} from "card-preview/text/textUtils";
 import type {
 	AppContext,
 	LinkInteractionOptions,
@@ -52,7 +47,6 @@ export type InteractionSettings = Pick<
 >;
 
 interface BaseInteractionDescriptor {
-	interactionId: string;
 	kind: InteractionKind;
 	targetFile: TFile | null;
 	hoverPreviewEnabled?: boolean;
@@ -68,6 +62,8 @@ export interface ItemInteractionDescriptor extends BaseInteractionDescriptor {
 }
 
 export interface SectionHeaderInteractionDescriptor extends BaseInteractionDescriptor {
+	/** Keeps a header binding stable across descriptor refreshes. */
+	interactionId: string;
 	kind: "sectionHeader";
 	link: IndexedLink;
 	isOutgoingLink: boolean;
@@ -77,46 +73,17 @@ export type InteractionDescriptor =
 	| ItemInteractionDescriptor
 	| SectionHeaderInteractionDescriptor;
 
-export function createItemInteractionKey(item: CardItem, virtualKey?: string): string {
-	switch (item.type) {
-		case "file":
-			return `item:file:${item.data.path}`;
-		case "taggedNote":
-			return `item:taggedNote:${item.data.path}`;
-		case "branch":
-			return `item:branch:${generateBranchKey(item.data, "interaction")}`;
-		case "backlink":
-			return virtualKey
-				? `item:backlink:${virtualKey}:interaction`
-				: `item:backlink:${generateBacklinkKey(item.data, "interaction")}`;
-		case "newLink":
-			return virtualKey
-				? `item:newLink:${virtualKey}:interaction`
-				: `item:newLink:${generateIndexedLinkKey(item.data, "interaction")}`;
-		default:
-			return "";
-	}
-}
-
-export const createItemInteractionId = createItemInteractionKey;
-
-export interface CreateItemInteractionDescriptorOptions {
-	interactionId?: string;
-}
-
+/** Builds interaction data; mounted keys and handles own card identity. */
 export function createItemInteractionDescriptor(
 	item: CardItem,
 	settings: PluginSettings,
 	searchQuery: string,
 	context: LinkUtilitiesContext,
-	options: CreateItemInteractionDescriptorOptions = {},
 ): ItemInteractionDescriptor | null {
-	const interactionId = options.interactionId ?? createItemInteractionKey(item);
 	const targetFile = getItemTargetFile(item, context);
 	const rawText = getItemRawText(item);
 
 	return {
-		interactionId,
 		kind: "item",
 		item,
 		targetFile,
@@ -131,8 +98,6 @@ export function createItemInteractionDescriptor(
 export function createSectionHeaderInteractionKey(sectionId: string): string {
 	return `section:${sectionId}`;
 }
-
-export const createSectionHeaderInteractionId = createSectionHeaderInteractionKey;
 
 export function resolveDescriptorInteractionOptions(
 	descriptor: InteractionDescriptor,

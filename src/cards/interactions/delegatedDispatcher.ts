@@ -20,6 +20,7 @@ import {
 	resolveDescriptorInteractionOptions,
 	resolveDescriptorInteractionOptionsAsync,
 	type InteractionDescriptor,
+	type InteractionHandle,
 } from "./interactionTypes";
 import {
 	createOwnerMouseEvent,
@@ -170,7 +171,7 @@ export function createDelegatedInteractionDispatcher({
 }: DelegatedDispatcherDeps) {
 	const resolvedLinkContext = linkContext ?? appContext?.linkContext;
 	const onShowFileMenu = resolvedLinkContext?.onShowFileMenu;
-	let activeHoverInteractionId: string | null = null;
+	let activeHoverInteractionHandle: InteractionHandle | null = null;
 	let longPressTimer: number | undefined = undefined;
 	let longPressTimerWindow: Window | null = null;
 	let activeTouchElement: HTMLElement | null = null;
@@ -192,7 +193,7 @@ export function createDelegatedInteractionDispatcher({
 
 	function resetTransientState(): void {
 		resetLongPressState();
-		activeHoverInteractionId = null;
+		activeHoverInteractionHandle = null;
 	}
 
 	return {
@@ -297,17 +298,17 @@ export function createDelegatedInteractionDispatcher({
 			}
 
 			const relatedElement = getInteractionElement(event.relatedTarget);
-			const relatedInteractionId = relatedElement
-				? resolveInteractionDescriptor(registry, relatedElement)?.interactionId
-				: null;
+			const relatedInteractionHandle =
+				getInteractionHandleFromElement(relatedElement);
+			const interactionHandle = getInteractionHandleFromElement(element);
 			if (
-				relatedInteractionId &&
-				relatedInteractionId === descriptor.interactionId
+				relatedInteractionHandle &&
+				relatedInteractionHandle === interactionHandle
 			) {
 				return;
 			}
 
-			if (activeHoverInteractionId === descriptor.interactionId) {
+			if (activeHoverInteractionHandle === interactionHandle) {
 				return;
 			}
 
@@ -320,7 +321,7 @@ export function createDelegatedInteractionDispatcher({
 					event,
 				)
 			) {
-				activeHoverInteractionId = descriptor.interactionId;
+				activeHoverInteractionHandle = interactionHandle;
 			}
 		},
 
@@ -334,29 +335,24 @@ export function createDelegatedInteractionDispatcher({
 				return;
 			}
 
-			const descriptor = resolveInteractionDescriptor(registry, element);
-			if (!descriptor) {
-				return;
-			}
-
 			const relatedElement = getInteractionElement(event.relatedTarget);
-			const relatedInteractionId = relatedElement
-				? resolveInteractionDescriptor(registry, relatedElement)?.interactionId
-				: null;
+			const relatedInteractionHandle =
+				getInteractionHandleFromElement(relatedElement);
+			const interactionHandle = getInteractionHandleFromElement(element);
 			if (
-				relatedInteractionId &&
-				relatedInteractionId === descriptor.interactionId
+				relatedInteractionHandle &&
+				relatedInteractionHandle === interactionHandle
 			) {
 				return;
 			}
 
-			if (activeHoverInteractionId === descriptor.interactionId) {
-				activeHoverInteractionId = null;
+			if (activeHoverInteractionHandle === interactionHandle) {
+				activeHoverInteractionHandle = null;
 			}
 		},
 
 		handleMouseLeave(): void {
-			activeHoverInteractionId = null;
+			activeHoverInteractionHandle = null;
 		},
 
 		handleKeyDown(event: KeyboardEvent): void {
@@ -411,13 +407,19 @@ export function createDelegatedInteractionDispatcher({
 				screenY: touch.screenY,
 			};
 
+			const touchInteractionHandle = getInteractionHandleFromElement(element);
 			const ownerWindow = getOwnerWindow(element);
 			longPressTimerWindow = ownerWindow;
 			longPressTimer = ownerWindow.setTimeout(() => {
 				longPressTimer = undefined;
 				longPressTimerWindow = null;
 				const targetElement = activeTouchElement;
-				if (!targetElement?.isConnected) {
+				if (
+					!targetElement?.isConnected ||
+					!touchInteractionHandle ||
+					getInteractionHandleFromElement(targetElement) !==
+						touchInteractionHandle
+				) {
 					return;
 				}
 
@@ -459,7 +461,7 @@ export function createDelegatedInteractionDispatcher({
 							hoverEvent,
 						)
 					) {
-						activeHoverInteractionId = currentDescriptor.interactionId;
+						activeHoverInteractionHandle = touchInteractionHandle;
 					}
 				}
 

@@ -80,7 +80,6 @@ function createFakePreviewSurface() {
 function createItem(index: number): TwoHopItemModel {
 	return {
 		item: { type: "newLink" } as TwoHopItemModel["item"],
-		interactionId: `interaction:${index}`,
 		searchKey: `search:${index}`,
 		key: `item:${index}`,
 	};
@@ -110,7 +109,6 @@ function resolveCardModel(item: TwoHopItemModel): CardRenderModel {
 		ariaLabel: item.key,
 		className: null,
 		extension: null,
-		interactionId: item.interactionId ?? item.key,
 		interactionDescriptor: null,
 		searchQuery: "",
 		previewRequest: createPreviewRequest(0),

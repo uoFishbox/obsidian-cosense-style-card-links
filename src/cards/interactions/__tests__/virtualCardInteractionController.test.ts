@@ -6,6 +6,7 @@ import type { VirtualCardInteractionController } from "../virtualCardInteraction
 import type { ItemInteractionDescriptor } from "../interactionTypes";
 
 interface TestBinding {
+	readonly key: string;
 	readonly physicalCellSlot: number;
 	readonly descriptor: ItemInteractionDescriptor | null;
 }
@@ -14,23 +15,21 @@ function syncCards(
 	controller: VirtualCardInteractionController,
 	bindings: readonly {
 		readonly slotId: number;
+		readonly key?: string;
 		readonly descriptor: ItemInteractionDescriptor | null;
 	}[],
 ): boolean {
-	const cells: TestBinding[] = bindings.map(({ slotId, descriptor }) => ({
+	const cells: TestBinding[] = bindings.map(({ slotId, key, descriptor }) => ({
+		key: key ?? descriptor?.targetFile?.path ?? "notes/card.md",
 		physicalCellSlot: slotId,
 		descriptor,
 	}));
 	return controller.syncMountedRows([{ bindings: cells }], (cell) => cell.descriptor);
 }
 
-function createDescriptor(
-	interactionId: string,
-	path: string,
-): ItemInteractionDescriptor {
+function createDescriptor(path: string): ItemInteractionDescriptor {
 	const file = { path, extension: "md" } as TFile;
 	return {
-		interactionId,
 		kind: "item",
 		item: { type: "file", data: file } as CardItem,
 		targetFile: file,
@@ -38,9 +37,48 @@ function createDescriptor(
 }
 
 describe("virtualCardInteractionController", () => {
+	it("invalidates an old handle when a slot changes cards before descriptors hydrate", () => {
+		const controller = createVirtualCardInteractionController();
+		const descriptor = createDescriptor("notes/card.md");
+		syncCards(controller, [{ slotId: 0, key: "section-a/card", descriptor }]);
+		const oldHandle = controller.getInteractionHandle(0);
+		syncCards(controller, [{ slotId: 0, key: "section-a/card", descriptor: null }]);
+		expect(controller.getInteractionHandle(0)).toBe(oldHandle);
+
+		expect(
+			syncCards(controller, [
+				{ slotId: 0, key: "section-b/card", descriptor: null },
+			]),
+		).toBe(true);
+		const nextHandle = controller.getInteractionHandle(0);
+		expect(nextHandle).not.toBe(oldHandle);
+		syncCards(controller, [{ slotId: 0, key: "section-b/card", descriptor }]);
+		expect(controller.getInteractionHandle(0)).toBe(nextHandle);
+		expect(controller.resolveInteractionDescriptor(oldHandle)).toBeNull();
+		expect(controller.resolveInteractionDescriptor(nextHandle)).toBe(descriptor);
+	});
+
+	it("keeps a mounted binding when its descriptor is refreshed", () => {
+		const controller = createVirtualCardInteractionController();
+		syncCards(controller, [
+			{
+				slotId: 0,
+				key: "card",
+				descriptor: createDescriptor("notes/card.md"),
+			},
+		]);
+		const handle = controller.getInteractionHandle(0);
+		const refreshed = createDescriptor("notes/renamed-card.md");
+		expect(
+			syncCards(controller, [{ slotId: 0, key: "card", descriptor: refreshed }]),
+		).toBe(false);
+		expect(controller.getInteractionHandle(0)).toBe(handle);
+		expect(controller.resolveInteractionDescriptor(handle)).toBe(refreshed);
+	});
+
 	it("invalidates hydrated and empty handles on clear and creates fresh bindings", () => {
 		const controller = createVirtualCardInteractionController();
-		const descriptor = createDescriptor("card", "notes/card.md");
+		const descriptor = createDescriptor("notes/card.md");
 		expect(
 			syncCards(controller, [
 				{ slotId: 0, descriptor },
@@ -71,7 +109,7 @@ describe("virtualCardInteractionController", () => {
 
 	it("allocates a stable handle before a slot descriptor is hydrated", () => {
 		const controller = createVirtualCardInteractionController();
-		const descriptor = createDescriptor("token-card", "notes/card.md");
+		const descriptor = createDescriptor("notes/card.md");
 		const handle = controller.getInteractionHandle(0);
 
 		expect(controller.resolveInteractionDescriptor(handle)).toBeNull();
@@ -83,8 +121,8 @@ describe("virtualCardInteractionController", () => {
 
 	it("rotates the handle when a physical slot is rebound to another semantic item", () => {
 		const controller = createVirtualCardInteractionController();
-		const first = createDescriptor("token-card-first", "notes/first-card.md");
-		const second = createDescriptor("token-card-second", "notes/second-card.md");
+		const first = createDescriptor("notes/first-card.md");
+		const second = createDescriptor("notes/second-card.md");
 
 		syncCards(controller, [{ slotId: 0, descriptor: first }]);
 		const firstHandle = controller.getInteractionHandle(0);
@@ -98,14 +136,14 @@ describe("virtualCardInteractionController", () => {
 
 	it("retains the handle when refreshed data represents the same semantic item", () => {
 		const controller = createVirtualCardInteractionController();
-		const first = createDescriptor("token-card", "notes/first-version.md");
-		const refreshed = createDescriptor("token-card", "notes/refreshed-version.md");
+		const first = createDescriptor("notes/first-version.md");
+		const refreshed = createDescriptor("notes/refreshed-version.md");
 
-		syncCards(controller, [{ slotId: 0, descriptor: first }]);
+		syncCards(controller, [{ slotId: 0, key: "card", descriptor: first }]);
 		const handle = controller.getInteractionHandle(0);
-		expect(syncCards(controller, [{ slotId: 0, descriptor: refreshed }])).toBe(
-			false,
-		);
+		expect(
+			syncCards(controller, [{ slotId: 0, key: "card", descriptor: refreshed }]),
+		).toBe(false);
 
 		expect(controller.getInteractionHandle(0)).toBe(handle);
 		expect(controller.resolveInteractionDescriptor(handle)).toBe(refreshed);
@@ -113,7 +151,7 @@ describe("virtualCardInteractionController", () => {
 
 	it("drops a handle when its slot leaves the mounted window", () => {
 		const controller = createVirtualCardInteractionController();
-		const descriptor = createDescriptor("token-card", "notes/card.md");
+		const descriptor = createDescriptor("notes/card.md");
 		syncCards(controller, [{ slotId: 0, descriptor }]);
 		const handle = controller.getInteractionHandle(0);
 
@@ -124,12 +162,12 @@ describe("virtualCardInteractionController", () => {
 
 	it("gives slots with the same semantic interaction independent handles", () => {
 		const controller = createVirtualCardInteractionController();
-		const first = createDescriptor("token-card-shared", "notes/first-card.md");
-		const second = createDescriptor("token-card-shared", "notes/second-card.md");
+		const first = createDescriptor("notes/first-card.md");
+		const second = createDescriptor("notes/second-card.md");
 
 		syncCards(controller, [
-			{ slotId: 0, descriptor: first },
-			{ slotId: 1, descriptor: second },
+			{ slotId: 0, key: "shared-card", descriptor: first },
+			{ slotId: 1, key: "shared-card", descriptor: second },
 		]);
 		const firstHandle = controller.getInteractionHandle(0);
 		const secondHandle = controller.getInteractionHandle(1);
@@ -138,14 +176,14 @@ describe("virtualCardInteractionController", () => {
 		expect(controller.resolveInteractionDescriptor(firstHandle)).toBe(first);
 		expect(controller.resolveInteractionDescriptor(secondHandle)).toBe(second);
 
-		syncCards(controller, [{ slotId: 1, descriptor: second }]);
+		syncCards(controller, [{ slotId: 1, key: "shared-card", descriptor: second }]);
 		expect(controller.resolveInteractionDescriptor(firstHandle)).toBeNull();
 		expect(controller.resolveInteractionDescriptor(secondHandle)).toBe(second);
 	});
 
 	it("keeps the handle for a mounted slot while its descriptor is unavailable", () => {
 		const controller = createVirtualCardInteractionController();
-		const descriptor = createDescriptor("token-card", "notes/card.md");
+		const descriptor = createDescriptor("notes/card.md");
 		syncCards(controller, [{ slotId: 0, descriptor }]);
 		const handle = controller.getInteractionHandle(0);
 

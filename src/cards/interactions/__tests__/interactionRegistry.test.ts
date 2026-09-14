@@ -8,13 +8,11 @@ import {
 } from "../interactionTypes";
 
 function createDescriptor(
-	interactionId: string,
 	dragRawText: string,
 	filePath: string,
 ): ItemInteractionDescriptor {
 	const file = { path: filePath } as TFile;
 	return {
-		interactionId,
 		kind: "item",
 		item: { type: "file", data: file } satisfies CardItem,
 		targetFile: file,
@@ -26,7 +24,6 @@ describe("interactionRegistry", () => {
 	it("releases a direct descriptor through its registration lease", () => {
 		const registry = createInteractionRegistry();
 		const descriptor = createDescriptor(
-			"token-registry-direct",
 			"[[drag-alias]]",
 			"notes/registry-target.md",
 		);
@@ -41,12 +38,8 @@ describe("interactionRegistry", () => {
 
 	it("keeps a newer owner when an earlier registration is released", () => {
 		const registry = createInteractionRegistry();
-		const first = createDescriptor("shared-token", "[[first]]", "notes/first.md");
-		const second = createDescriptor(
-			"shared-token",
-			"[[second]]",
-			"notes/second.md",
-		);
+		const first = createDescriptor("[[first]]", "notes/first.md");
+		const second = createDescriptor("[[second]]", "notes/second.md");
 		const handle = createInteractionHandle();
 		const releaseFirst = registry.register(handle, first);
 		const releaseSecond = registry.register(handle, second);
@@ -60,12 +53,8 @@ describe("interactionRegistry", () => {
 
 	it("restores the previous owner when the latest registration is released", () => {
 		const registry = createInteractionRegistry();
-		const first = createDescriptor("shared-token", "[[first]]", "notes/first.md");
-		const second = createDescriptor(
-			"shared-token",
-			"[[second]]",
-			"notes/second.md",
-		);
+		const first = createDescriptor("[[first]]", "notes/first.md");
+		const second = createDescriptor("[[second]]", "notes/second.md");
 		const handle = createInteractionHandle();
 		const releaseFirst = registry.register(handle, first);
 		const releaseSecond = registry.register(handle, second);
@@ -78,8 +67,8 @@ describe("interactionRegistry", () => {
 
 	it("makes registration leases idempotent across registry clears", () => {
 		const registry = createInteractionRegistry();
-		const stale = createDescriptor("shared-token", "[[stale]]", "notes/stale.md");
-		const fresh = createDescriptor("shared-token", "[[fresh]]", "notes/fresh.md");
+		const stale = createDescriptor("[[stale]]", "notes/stale.md");
+		const fresh = createDescriptor("[[fresh]]", "notes/fresh.md");
 		const handle = createInteractionHandle();
 		const releaseStale = registry.register(handle, stale);
 
@@ -95,15 +84,10 @@ describe("interactionRegistry", () => {
 	it("prefers direct descriptors over provider descriptors", () => {
 		const registry = createInteractionRegistry();
 		const provided = createDescriptor(
-			"token-provider-item",
 			"[[provided-alias]]",
 			"notes/provider-target.md",
 		);
-		const direct = createDescriptor(
-			"token-provider-item",
-			"[[direct-alias]]",
-			"notes/direct-target.md",
-		);
+		const direct = createDescriptor("[[direct-alias]]", "notes/direct-target.md");
 		const handle = createInteractionHandle();
 		registry.setInteractionDescriptorResolverProvider({
 			resolveInteractionDescriptor: () => provided,
@@ -118,16 +102,8 @@ describe("interactionRegistry", () => {
 
 	it("resolves provider descriptors lazily without caching them", () => {
 		const registry = createInteractionRegistry();
-		const stale = createDescriptor(
-			"token-lazy-item",
-			"[[stale-alias]]",
-			"notes/stale-target.md",
-		);
-		const fresh = createDescriptor(
-			"token-lazy-item",
-			"[[fresh-alias]]",
-			"notes/fresh-target.md",
-		);
+		const stale = createDescriptor("[[stale-alias]]", "notes/stale-target.md");
+		const fresh = createDescriptor("[[fresh-alias]]", "notes/fresh-target.md");
 		let descriptor = stale;
 		const handle = createInteractionHandle();
 		const resolveInteractionDescriptor = vi.fn(() => descriptor);
@@ -146,7 +122,6 @@ describe("interactionRegistry", () => {
 	it("removes a provider when its scope is cleared", () => {
 		const registry = createInteractionRegistry();
 		const descriptor = createDescriptor(
-			"token-cleared-item",
 			"[[cleared-alias]]",
 			"notes/cleared-target.md",
 		);

@@ -10,7 +10,9 @@ const {
 	releaseActivePopoverMock,
 	destroyMock,
 	buildShadowHoverLinkSpecMock,
+	resolveLinkForTest,
 } = vi.hoisted(() => ({
+	resolveLinkForTest: vi.fn<(handle: string) => unknown>(),
 	handleDelegatedEnterMock: vi.fn(),
 	handleDelegatedAnchorSyncMock: vi.fn(),
 	handleDelegatedModifierKeyMock: vi.fn(),
@@ -18,18 +20,27 @@ const {
 	handleDelegatedPointerMoveMock: vi.fn(),
 	releaseActivePopoverMock: vi.fn(),
 	destroyMock: vi.fn(),
-	buildShadowHoverLinkSpecMock: vi.fn((descriptor?: { interactionId?: string }) =>
-		descriptor?.interactionId
-			? {
-					linktext: descriptor.interactionId,
-					sourcePath: "note.md",
-				}
-			: null,
+	buildShadowHoverLinkSpecMock: vi.fn(
+		(descriptor?: {
+			interactionId?: string;
+		}):
+			| { linktext: string; sourcePath: string }
+			| null
+			| Promise<{ linktext: string; sourcePath: string } | null> =>
+			descriptor?.interactionId
+				? {
+						linktext: descriptor.interactionId,
+						sourcePath: "note.md",
+					}
+				: null,
 	),
 }));
 
 vi.mock("hover-popover/shadow-hover/controller", () => ({
 	ShadowHoverControllerImpl: class MockShadowHoverControllerImpl {
+		constructor(_launch: unknown, resolveLink: (handle: string) => unknown) {
+			resolveLinkForTest.mockImplementation(resolveLink);
+		}
 		handleDelegatedEnter = handleDelegatedEnterMock;
 		handleDelegatedAnchorSync = handleDelegatedAnchorSyncMock;
 		handleDelegatedModifierKey = handleDelegatedModifierKeyMock;
@@ -63,6 +74,7 @@ describe("shadowHoverPopoverBridge", () => {
 		releaseActivePopoverMock.mockReset();
 		destroyMock.mockReset();
 		buildShadowHoverLinkSpecMock.mockClear();
+		resolveLinkForTest.mockReset();
 	});
 
 	afterEach(() => {
@@ -93,6 +105,76 @@ describe("shadowHoverPopoverBridge", () => {
 
 		dispose();
 	});
+
+	it("enters a distinct binding when cards share a semantic ID", () => {
+		const registry = createRegistryStub({
+			v0: { interactionId: "shared" },
+			v1: { interactionId: "shared" },
+		});
+		const { shadowRoot, dispose } = installBridge(registry);
+		const first = createInteractionElement("v0");
+		const second = createInteractionElement("v1");
+		shadowRoot.append(first, second);
+		first.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, composed: true }),
+		);
+		first.dispatchEvent(
+			new MouseEvent("mouseout", {
+				bubbles: true,
+				composed: true,
+				relatedTarget: second,
+			}),
+		);
+		second.dispatchEvent(
+			new MouseEvent("mouseover", {
+				bubbles: true,
+				composed: true,
+				relatedTarget: first,
+			}),
+		);
+		expect(handleDelegatedEnterMock).toHaveBeenCalledTimes(2);
+		expect(handleDelegatedEnterMock).toHaveBeenLastCalledWith(
+			second,
+			"v1",
+			expect.any(MouseEvent),
+		);
+		expect(handleDelegatedAnchorSyncMock).not.toHaveBeenCalled();
+		dispose();
+	});
+
+	it.each(["rebind", "unregister", "refresh"])(
+		"discards a pending link when its binding changes through %s without another pointer event",
+		async (change) => {
+			const registry = createRegistryStub({ v0: { interactionId: "first" } });
+			const { shadowRoot, dispose } = installBridge(registry);
+			const anchor = createInteractionElement("v0");
+			shadowRoot.append(anchor);
+			anchor.dispatchEvent(
+				new MouseEvent("mouseover", { bubbles: true, composed: true }),
+			);
+			let finish: (link: {
+				linktext: string;
+				sourcePath: string;
+			}) => void = () => {};
+			const pending = new Promise<{ linktext: string; sourcePath: string }>(
+				(resolve) => {
+					finish = resolve;
+				},
+			);
+			buildShadowHoverLinkSpecMock.mockReturnValueOnce(pending);
+			const resolution = resolveLinkForTest("v0");
+			if (change === "rebind") anchor.dataset.cclInteractionHandle = "v1";
+			else if (change === "unregister")
+				vi.mocked(registry.resolve).mockReturnValue(undefined);
+			else
+				vi.mocked(registry.resolve).mockReturnValue({
+					...registry.resolve("v0" as never),
+				} as ReturnType<InteractionRegistry["resolve"]>);
+			finish({ linktext: "first", sourcePath: "source.md" });
+			expect(await resolution).toBeNull();
+			dispose();
+		},
+	);
 
 	it("recovers a stale active anchor when the next mouseover arrives without mouseout", () => {
 		const registry = createRegistryStub({

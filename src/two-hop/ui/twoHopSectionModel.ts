@@ -34,7 +34,6 @@ export interface TwoHopHeaderModel {
 /** Minimal immutable item data shared by every two-hop section kind. */
 export interface TwoHopItemModel {
 	readonly item: CardItem;
-	readonly interactionId?: string;
 	readonly searchKey: string;
 	readonly key: string;
 }

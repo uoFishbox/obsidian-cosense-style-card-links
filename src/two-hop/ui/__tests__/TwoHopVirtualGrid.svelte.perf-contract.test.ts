@@ -69,7 +69,6 @@ vi.mock("two-hop/ui/virtual-grid/twoHopCardRuntime", async (importOriginal) => {
 function createSection(count: number, totalCount = count): TwoHopSectionModel {
 	const items = Array.from({ length: count }, (_, index) => ({
 		item: { type: "newLink" },
-		interactionId: `item:${index}`,
 		searchKey: `item:${index}`,
 		key: `item:${index}`,
 	})) as TwoHopItemModel[];
@@ -91,7 +90,6 @@ function createCardModelResolver() {
 			ariaLabel: item.key,
 			className: null,
 			extension: null,
-			interactionId: item.key,
 			interactionDescriptor: null,
 			searchQuery: "",
 			previewRequest: null,
