@@ -95,6 +95,76 @@ describe("runStreamingSearch", () => {
 		expect(cachedRead).not.toHaveBeenCalled();
 	});
 
+	it("matches exact and descendant metadata tags without reading content", async () => {
+		const exactFile = createMockTFile("notes/exact.md");
+		const descendantFile = createMockTFile("notes/descendant.md");
+		const similarFile = createMockTFile("notes/similar.md");
+		const { vault, cachedRead } = createVault(
+			new Map([
+				[exactFile.path, "body without the query"],
+				[descendantFile.path, "body without the query"],
+				[similarFile.path, "contains #project as plain text"],
+			]),
+		);
+		const tagsByPath = new Map<string, readonly string[]>([
+			[exactFile.path, ["project"]],
+			[descendantFile.path, ["project/active"]],
+			[similarFile.path, ["projectile"]],
+		]);
+		const updates: StreamingSearchUpdate[] = [];
+
+		await runStreamingSearch({
+			vault,
+			files: [exactFile, descendantFile, similarFile],
+			items: [
+				createItem("exact", "unrelated", exactFile.path),
+				createItem("descendant", "unrelated", descendantFile.path),
+				createItem("similar", "unrelated", similarFile.path),
+			],
+			query: "#PROJECT",
+			scope: "title-and-content",
+			operator: "or",
+			getTagNames: (file) => tagsByPath.get(file.path) ?? [],
+			isCancelled: () => false,
+			onUpdate: (update) => updates.push(update),
+		});
+
+		expect(Array.from(getFinalUpdate(updates).matchesByKey.keys())).toEqual([
+			"exact",
+			"descendant",
+		]);
+		expect(cachedRead).not.toHaveBeenCalled();
+	});
+
+	it("combines included and excluded tag terms with normal text", async () => {
+		const activeFile = createMockTFile("notes/active.md");
+		const archivedFile = createMockTFile("notes/archived.md");
+		const { vault } = createVault(new Map());
+		const tagsByPath = new Map<string, readonly string[]>([
+			[activeFile.path, ["project"]],
+			[archivedFile.path, ["project", "archive"]],
+		]);
+		const updates: StreamingSearchUpdate[] = [];
+
+		await runStreamingSearch({
+			vault,
+			files: [activeFile, archivedFile],
+			items: [
+				createItem("active", "alpha note", activeFile.path),
+				createItem("archived", "alpha note", archivedFile.path),
+			],
+			query: "alpha #project -#archive",
+			scope: "title-only",
+			getTagNames: (file) => tagsByPath.get(file.path) ?? [],
+			isCancelled: () => false,
+			onUpdate: (update) => updates.push(update),
+		});
+
+		expect(Array.from(getFinalUpdate(updates).matchesByKey.keys())).toEqual([
+			"active",
+		]);
+	});
+
 	it("ignores WikiLink delimiters when matching title text", async () => {
 		const { vault } = createVault(new Map());
 		const updates: StreamingSearchUpdate[] = [];

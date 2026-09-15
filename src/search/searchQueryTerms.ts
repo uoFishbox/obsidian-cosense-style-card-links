@@ -5,17 +5,21 @@ const SEARCH_TERM_PATTERN = /(-?)"([^"]+)"|[^\s"]+/gu;
 export interface SearchQueryTerms {
 	readonly included: readonly string[];
 	readonly excluded: readonly string[];
+	readonly includedTags: readonly string[];
+	readonly excludedTags: readonly string[];
 }
 
-/** Parses included and `-`-prefixed excluded terms from a search query. */
+/** Parses text terms and hash-prefixed tag terms, including `-` exclusions. */
 export function getSearchQueryTerms(query: string | undefined): SearchQueryTerms {
 	const normalizedQuery = query?.trim().toLowerCase() ?? "";
 	if (!normalizedQuery) {
-		return { included: [], excluded: [] };
+		return { included: [], excluded: [], includedTags: [], excludedTags: [] };
 	}
 
 	const included: string[] = [];
 	const excluded: string[] = [];
+	const includedTags: string[] = [];
+	const excludedTags: string[] = [];
 	for (const match of normalizedQuery.matchAll(SEARCH_TERM_PATTERN)) {
 		const quotedTerm = match[2];
 		const rawTerm = quotedTerm ?? match[0];
@@ -24,10 +28,20 @@ export function getSearchQueryTerms(query: string | undefined): SearchQueryTerms
 			(quotedTerm === undefined && rawTerm.length > 1 && rawTerm.startsWith("-"));
 		const term =
 			isExcluded && quotedTerm === undefined ? rawTerm.slice(1) : rawTerm;
+		if (!term) continue;
+
+		const isTag = term.length > 1 && term.startsWith("#") && !/\s/u.test(term);
+		if (isTag) {
+			const normalizedTag = term.slice(1);
+			const destination = isExcluded ? excludedTags : includedTags;
+			if (!destination.includes(normalizedTag)) destination.push(normalizedTag);
+			continue;
+		}
+
 		const destination = isExcluded ? excluded : included;
-		if (term && !destination.includes(term)) destination.push(term);
+		if (!destination.includes(term)) destination.push(term);
 	}
-	return { included, excluded };
+	return { included, excluded, includedTags, excludedTags };
 }
 
 /** Builds a literal RegExp source that treats WikiLink delimiters as invisible. */

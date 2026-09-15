@@ -9,6 +9,7 @@ import type {
 	SearchMatchScope,
 } from "./searchTypes";
 import { getFileContent } from "card-preview/pipeline/previewContent";
+import { extractTags } from "indexing/metadata/metadataExtractor";
 
 const EMPTY_SEARCH_SNAPSHOT: SearchDatasetSnapshot = {
 	items: [],
@@ -199,6 +200,8 @@ export function useStreamingSearchSession(
 
 		void runStreamingSearch({
 			vault: app.vault,
+			getTagNames: (file) =>
+				extractTags(app.metadataCache.getFileCache(file)).map((tag) => tag.tag),
 			items: itemsSnapshot,
 			files: filesSnapshot,
 			query: request.query,

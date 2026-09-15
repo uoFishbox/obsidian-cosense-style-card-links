@@ -108,6 +108,8 @@ export async function runCliQuery(
 		const offsets = new Map<string, { offset: number; length: number }>();
 		await runStreamingSearch({
 			vault: app.vault,
+			getTagNames: (file) =>
+				extractTags(app.metadataCache.getFileCache(file)).map((tag) => tag.tag),
 			files: app.vault.getFiles(),
 			items: pages.map((page) => ({
 				key: page.path,

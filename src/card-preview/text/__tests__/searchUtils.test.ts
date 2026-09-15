@@ -30,6 +30,10 @@ describe("searchUtils", () => {
 		expect("Alpha beta gamma delta".match(pattern ?? /$^/g)).toEqual(["Alpha"]);
 	});
 
+	it("does not treat tag filters as text to highlight", () => {
+		expect(createCaseInsensitiveRegExp("#project")).toBeNull();
+	});
+
 	it("finds adjacent text across WikiLink delimiters", () => {
 		expect(findCaseInsensitiveIndex("before text[[TEXT]] after", "textTEXT")).toBe(
 			7,

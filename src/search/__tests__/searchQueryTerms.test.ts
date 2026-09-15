@@ -6,6 +6,8 @@ describe("getSearchQueryTerms", () => {
 		expect(getSearchQueryTerms('"text text2"')).toEqual({
 			included: ["text text2"],
 			excluded: [],
+			includedTags: [],
+			excludedTags: [],
 		});
 	});
 
@@ -13,6 +15,8 @@ describe("getSearchQueryTerms", () => {
 		expect(getSearchQueryTerms('alpha "Beta Gamma" delta')).toEqual({
 			included: ["alpha", "beta gamma", "delta"],
 			excluded: [],
+			includedTags: [],
+			excludedTags: [],
 		});
 	});
 
@@ -20,6 +24,8 @@ describe("getSearchQueryTerms", () => {
 		expect(getSearchQueryTerms('alpha -beta -"gamma delta"')).toEqual({
 			included: ["alpha"],
 			excluded: ["beta", "gamma delta"],
+			includedTags: [],
+			excludedTags: [],
 		});
 	});
 
@@ -27,6 +33,17 @@ describe("getSearchQueryTerms", () => {
 		expect(getSearchQueryTerms('alpha "beta gamma')).toEqual({
 			included: ["alpha", "beta", "gamma"],
 			excluded: [],
+			includedTags: [],
+			excludedTags: [],
+		});
+	});
+
+	it("parses included and excluded hash-prefixed tags separately", () => {
+		expect(getSearchQueryTerms("alpha #Project -#Archive #project/sub")).toEqual({
+			included: ["alpha"],
+			excluded: [],
+			includedTags: ["project", "project/sub"],
+			excludedTags: ["archive"],
 		});
 	});
 });

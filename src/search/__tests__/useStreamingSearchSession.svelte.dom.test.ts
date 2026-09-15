@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/svelte";
-import type { App, TFile, Vault } from "obsidian";
+import type { App, CachedMetadata, TFile, Vault } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import { createMockTFile } from "testing/__mocks__/testHelpers";
 import UseStreamingSearchSessionHarness from "./UseStreamingSearchSessionHarness.svelte";
@@ -11,9 +11,15 @@ vi.mock("../fileContentVaultEventHub", () => ({
 	}),
 }));
 
-function createApp(cachedRead: (file: TFile) => Promise<string>): App {
+function createApp(
+	cachedRead: (file: TFile) => Promise<string>,
+	metadataByPath: ReadonlyMap<string, CachedMetadata> = new Map(),
+): App {
 	return {
 		vault: { cachedRead } as unknown as Vault,
+		metadataCache: {
+			getFileCache: (file: TFile) => metadataByPath.get(file.path) ?? null,
+		},
 	} as App;
 }
 
@@ -44,6 +50,52 @@ describe("useStreamingSearchSession", () => {
 			expect(screen.getByTestId("phase")).toHaveTextContent("ready"),
 		);
 		expect(screen.getByTestId("visible-keys")).toHaveTextContent("alpha");
+		expect(cachedRead).not.toHaveBeenCalled();
+	});
+
+	it("searches both inline and Properties tags from Obsidian metadata", async () => {
+		const inlineFile = createMockTFile("notes/inline.md");
+		const propertiesFile = createMockTFile("notes/properties.md");
+		const unrelatedFile = createMockTFile("notes/unrelated.md");
+		const cachedRead = vi.fn(async () => "");
+		const metadataByPath = new Map<string, CachedMetadata>();
+		metadataByPath.set(inlineFile.path, {
+			tags: [
+				{
+					tag: "#Project",
+					position: {
+						start: { line: 0, col: 0, offset: 0 },
+						end: { line: 0, col: 8, offset: 8 },
+					},
+				},
+			],
+		});
+		metadataByPath.set(propertiesFile.path, {
+			frontmatter: { tags: ["project"] },
+		} as unknown as CachedMetadata);
+		const files = [inlineFile, propertiesFile, unrelatedFile];
+
+		render(UseStreamingSearchSessionHarness, {
+			props: {
+				app: createApp(cachedRead, metadataByPath),
+				query: "#project",
+				enabled: true,
+				files,
+				dataset: files.map((file) => ({
+					key: file.basename,
+					searchText: "unrelated title",
+					targetFilePath: file.path,
+				})),
+				matchScope: "title-only",
+			},
+		});
+
+		await waitFor(() =>
+			expect(screen.getByTestId("phase")).toHaveTextContent("ready"),
+		);
+		expect(screen.getByTestId("visible-keys")).toHaveTextContent(
+			"inline,properties",
+		);
 		expect(cachedRead).not.toHaveBeenCalled();
 	});
 
