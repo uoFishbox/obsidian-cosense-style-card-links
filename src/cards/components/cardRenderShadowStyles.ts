@@ -523,8 +523,8 @@ export const CARD_RENDER_SHADOW_CSS = String.raw`
   fill-opacity: 0.65;
 }
 .canvas-minimap rect.is-themed {
-  stroke: rgb(var(--canvas-color));
-  fill: rgb(var(--canvas-color));
+  stroke: var(--canvas-color);
+  fill: var(--canvas-color);
   fill-opacity: 0.5;
 }
 .canvas-minimap path {
@@ -532,6 +532,6 @@ export const CARD_RENDER_SHADOW_CSS = String.raw`
   fill: none;
 }
 .canvas-minimap path.is-themed {
-  stroke: rgb(var(--canvas-color));
+  stroke: var(--canvas-color);
 }
 `;
