@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
 	restoreTwoHopLayoutAnchor,
-	restoreTwoHopScrollPosition,
 	type TwoHopLayoutAnchor,
 } from "../anchorRestoration";
+import { restoreScrollPosition } from "shared/ui/scroll/scrollPositionRestoration";
 import { DEFAULT_TWO_HOP_GRID_LAYOUT } from "../layout";
 import { createTwoHopRowModel } from "../rowModel";
 import { createTwoHopSectionModel } from "two-hop/ui/twoHopSectionModel";
@@ -84,7 +84,7 @@ describe("two-hop absolute scroll restoration", () => {
 		});
 		scrollTop = 250;
 
-		const restoration = restoreTwoHopScrollPosition(
+		const restoration = restoreScrollPosition(
 			{ scrollRoot: scroller, scrollTop: 600 },
 			root,
 		);

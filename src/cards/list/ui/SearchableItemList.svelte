@@ -311,6 +311,11 @@
 			]),
 		),
 	);
+	let layoutAnchorScope = $derived(
+		search.normalized
+			? JSON.stringify([search.normalized, searchMatchScope])
+			: "unfiltered",
+	);
 	let loadMoreIncrement = $derived(applicationStore.loadMoreIncrement);
 	let preserveResultsHeightOnSearch = $derived(
 		config.preserveResultsHeightOnSearch ?? true,
@@ -371,11 +376,25 @@
 
 	let resultsContainerEl = $state<HTMLDivElement | null>(null);
 	let searchInputEl = $state<HTMLInputElement | null>(null);
-	let resultsMinHeight = $derived(
-		preserveResultsHeightOnSearch && searchEnabled && search.normalized
-			? "100vh"
-			: null,
-	);
+	let resultsMinHeight = $state<string | null>(null);
+
+	$effect(() => {
+		if (preserveResultsHeightOnSearch && searchEnabled && search.normalized) {
+			resultsMinHeight = "100vh";
+			return;
+		}
+		// Keep the search-era height through the unfiltered result commit. Removing
+		// it earlier can clamp the parent scroller before the full grid grows.
+		void tick().then(() => {
+			if (
+				!preserveResultsHeightOnSearch ||
+				!searchEnabled ||
+				!search.normalized
+			) {
+				resultsMinHeight = null;
+			}
+		});
+	});
 
 	async function moveFocusToResults(direction: "up" | "down") {
 		await tick();
@@ -417,6 +436,26 @@
 	bind:searchInputEl
 />
 
+{#snippet sectionHeader()}
+	<LinkSectionHeader
+		title={config.sectionHeaderTitle ?? config.title}
+		totalCount={filteredItems.length}
+		{language}
+	/>
+{/snippet}
+
+{#snippet emptyResults()}
+	<div class="modal-empty">
+		{#if isSearchLoading}
+			{text.searching}
+		{:else if searchEnabled && search.normalized && searchSession.phase === "ready"}
+			{text.noMatchesFound}
+		{:else}
+			{config.emptyMessage}
+		{/if}
+	</div>
+{/snippet}
+
 <div
 	class="cosense-card-links__view-results cosense-card-links__search-result-container"
 	class:ccl-search-pending={isSearchLoading}
@@ -424,66 +463,48 @@
 	bind:this={resultsContainerEl}
 	style:min-height={resultsMinHeight}
 >
-	{#if filteredItems.length}
-		{#snippet sectionHeader()}
-			<LinkSectionHeader
-				title={config.sectionHeaderTitle ?? config.title}
-				totalCount={filteredItems.length}
-				{language}
+	<LinkList
+		className="cosense-card-links__section twohop-links-back-links"
+		items={filteredItems}
+		itemsRevision={gridItemsRevision}
+		getItemId={getItemKey}
+		sectionId={searchScopedSectionId}
+		{layoutAnchorScope}
+		{applicationStore}
+		{initialVisibleCount}
+		{loadMoreIncrement}
+		paginationMode={config.paginationMode ?? "button"}
+		{language}
+		initialScrollState={uiState?.scrollState}
+		onMoveFocusAboveGrid={moveFocusToSearchInput}
+		onScrollStateChange={(scrollState) => {
+			if (!uiState) return;
+			const currentInputQuery = uiState.searchInputValue.trim().toLowerCase();
+			if (
+				currentInputQuery &&
+				(searchSession.phase !== "ready" ||
+					presentation.result !== searchSession.visibleResult?.result)
+			) {
+				return;
+			}
+			uiState.scrollState = scrollState;
+		}}
+		{resolveItemPreviewRequest}
+		{resolveItemInteractionDescriptor}
+		header={config.showSectionHeader ? sectionHeader : undefined}
+		empty={emptyResults}
+	>
+		{#snippet item({ item, previewKey, interactionHandle })}
+			<ViewItemCard
+				model={resolveViewItemCardModel(item)}
+				{previewKey}
+				{interactionHandle}
 			/>
 		{/snippet}
-
-		<LinkList
-			className="cosense-card-links__section twohop-links-back-links"
-			items={filteredItems}
-			itemsRevision={gridItemsRevision}
-			getItemId={getItemKey}
-			sectionId={searchScopedSectionId}
-			{applicationStore}
-			{initialVisibleCount}
-			{loadMoreIncrement}
-			paginationMode={config.paginationMode ?? "button"}
-			{language}
-			initialScrollState={uiState?.scrollState}
-			onMoveFocusAboveGrid={moveFocusToSearchInput}
-			onScrollStateChange={(scrollState) => {
-				if (!uiState) return;
-				const currentInputQuery = uiState.searchInputValue.trim().toLowerCase();
-				if (
-					currentInputQuery &&
-					(searchSession.phase !== "ready" ||
-						presentation.result !== searchSession.visibleResult?.result)
-				) {
-					return;
-				}
-				uiState.scrollState = scrollState;
-			}}
-			{resolveItemPreviewRequest}
-			{resolveItemInteractionDescriptor}
-			header={config.showSectionHeader ? sectionHeader : undefined}
-		>
-			{#snippet item({ item, previewKey, interactionHandle })}
-				<ViewItemCard
-					model={resolveViewItemCardModel(item)}
-					{previewKey}
-					{interactionHandle}
-				/>
-			{/snippet}
-		</LinkList>
-		{#if isSearchLoading}
-			<div class="cosense-card-links__search-status" aria-live="polite">
-				{text.searching}
-			</div>
-		{/if}
-	{:else}
-		<div class="modal-empty">
-			{#if isSearchLoading}
-				{text.searching}
-			{:else if searchEnabled && search.normalized && searchSession.phase === "ready"}
-				{text.noMatchesFound}
-			{:else}
-				{config.emptyMessage}
-			{/if}
+	</LinkList>
+	{#if filteredItems.length && isSearchLoading}
+		<div class="cosense-card-links__search-status" aria-live="polite">
+			{text.searching}
 		</div>
 	{/if}
 </div>

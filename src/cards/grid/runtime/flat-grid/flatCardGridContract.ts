@@ -41,6 +41,8 @@ export interface FlatCardGridProps<T> {
 	initialVisibleCount?: number;
 	loadMoreIncrement?: number;
 	sectionId?: string;
+	/** Identifies result sets whose replacement must preserve the parent scroll offset. */
+	layoutAnchorScope?: string;
 	applicationStore?: FlatCardGridApplicationStore;
 	className?: string;
 	paginationMode?: "button" | "infinite-scroll";

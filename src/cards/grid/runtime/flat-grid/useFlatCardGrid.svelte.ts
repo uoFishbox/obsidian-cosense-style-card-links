@@ -40,6 +40,10 @@ import type {
 	FlatCardGridItemRenderArgs,
 	FlatCardGridProps,
 } from "./flatCardGridContract";
+import {
+	createFlatGridScrollRestorationController,
+	type FlatGridScrollRestorationController,
+} from "./scrollRestoration";
 
 const EMPTY_MOUNTED_ROWS: readonly MountedFlatGridRow<never>[] = [];
 
@@ -160,6 +164,7 @@ export function useFlatCardGrid<T>(
 	): void => {
 		cardSurfaceRuntime.publish(mountedBuild, visibleRange);
 	};
+	let scrollRestoration: FlatGridScrollRestorationController | null = null;
 	const virtualList = useVirtualizer<
 		FlatGridLogicalCell<T>,
 		FlatGridRowModel<T>,
@@ -181,6 +186,7 @@ export function useFlatCardGrid<T>(
 				snapshot.mountedBuild,
 				snapshot.ranges.previewVisible,
 			);
+			scrollRestoration?.scheduleAfterSnapshot();
 		},
 		resolveLayoutMeasurement: (nextMeasurement, rootEl, runtimeMeasurement) => {
 			const layoutMeasurement = resolveFlatGridLayoutMeasurement({
@@ -204,6 +210,14 @@ export function useFlatCardGrid<T>(
 		frameCoordinator,
 	});
 	const measurement = virtualList.measurement;
+	scrollRestoration = createFlatGridScrollRestorationController({
+		getRootEl: () => sectionRootEl,
+		getScrollContainerEl: () => measurement.scrollContainerEl,
+		suppressNextNativeScroll: virtualList.suppressNextNativeScroll,
+		runDataChangeMeasurement: () => {
+			virtualList.runScrollMeasurement(undefined, "data-change");
+		},
+	});
 	const contentHeight = $derived(virtualList.getTotalHeight(layout.contentHeight));
 	const mountedRows = $derived.by<readonly MountedFlatGridRow<T>[]>(() => {
 		const rowsInMountedRange = virtualList.getMountedBuild()?.rowsInMountedRange;
@@ -283,6 +297,15 @@ export function useFlatCardGrid<T>(
 		scheduleLayoutMeasurementForCardLayout(configuredCardLayout);
 	});
 
+	let lastLayoutAnchorScope = props.layoutAnchorScope;
+	$effect.pre(() => {
+		const nextLayoutAnchorScope = props.layoutAnchorScope;
+		if (nextLayoutAnchorScope === lastLayoutAnchorScope) return;
+		lastLayoutAnchorScope = nextLayoutAnchorScope;
+		if (nextLayoutAnchorScope === undefined) return;
+		untrack(() => scrollRestoration?.preserveScrollPosition());
+	});
+
 	$effect(() => {
 		return observeRootElement();
 	});
@@ -304,6 +327,7 @@ export function useFlatCardGrid<T>(
 
 	onDestroy(() => {
 		scrollStateController.persist();
+		scrollRestoration?.dispose();
 		cardSurfaceRuntime.dispose();
 	});
 
@@ -375,6 +399,7 @@ export function useFlatCardGrid<T>(
 		set sectionRootEl(nextRootEl: HTMLDivElement | null) {
 			sectionRootEl = nextRootEl;
 			frameCoordinator.bindOwnerElement?.(nextRootEl);
+			if (nextRootEl) scrollRestoration?.scheduleAfterSnapshot();
 		},
 		get contentEl() {
 			return contentEl;

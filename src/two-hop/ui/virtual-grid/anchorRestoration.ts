@@ -2,6 +2,11 @@ import { tick } from "svelte";
 import { resolveVisibleRange } from "cards/virtualization/public";
 import { getOptionalOwnerWindow } from "shared/ui/dom/realmSafeDom";
 import { findNearestScrollContainer } from "shared/ui/scroll/scrollContainer";
+import {
+	captureScrollPosition,
+	restoreScrollPosition,
+	type CapturedScrollPosition,
+} from "shared/ui/scroll/scrollPositionRestoration";
 import type { TwoHopRowModel } from "./rowModel";
 
 export interface TwoHopLayoutAnchor {
@@ -15,50 +20,6 @@ export interface TwoHopLayoutAnchorMeasurement {
 	readonly viewportHeight: number;
 	readonly sectionTop: number;
 	readonly scrollContainerEl: HTMLElement | null;
-}
-
-export interface TwoHopScrollPosition {
-	readonly scrollTop: number;
-	readonly scrollRoot: HTMLElement | null;
-}
-
-/** Captures the parent scroll offset without tying it to a particular card. */
-export function captureTwoHopScrollPosition(
-	rootEl: HTMLElement | null,
-	measurement: TwoHopLayoutAnchorMeasurement,
-): TwoHopScrollPosition | null {
-	if (!rootEl) return null;
-	const ownerWindow = getOptionalOwnerWindow(rootEl);
-	if (!ownerWindow) return null;
-	const scrollRoot =
-		measurement.scrollContainerEl ?? findNearestScrollContainer(rootEl);
-	return {
-		scrollTop: scrollRoot?.scrollTop ?? ownerWindow.scrollY,
-		scrollRoot,
-	};
-}
-
-/** Restores an absolute parent scroll offset after result-set DOM replacement. */
-export function restoreTwoHopScrollPosition(
-	position: TwoHopScrollPosition | null,
-	rootEl: HTMLElement | null,
-): { readonly delta: number; readonly scrollTop: number } | null {
-	if (!position || !rootEl) return null;
-	const ownerWindow = getOptionalOwnerWindow(rootEl);
-	if (!ownerWindow) return null;
-	const currentScrollRoot = findNearestScrollContainer(rootEl);
-	if (currentScrollRoot !== position.scrollRoot) return null;
-
-	const currentScrollTop = currentScrollRoot?.scrollTop ?? ownerWindow.scrollY;
-	if (Math.abs(currentScrollTop - position.scrollTop) >= 0.5) {
-		if (currentScrollRoot) currentScrollRoot.scrollTop = position.scrollTop;
-		else ownerWindow.scrollBy({ top: position.scrollTop - currentScrollTop });
-	}
-	const restoredScrollTop = currentScrollRoot?.scrollTop ?? ownerWindow.scrollY;
-	return {
-		delta: restoredScrollTop - currentScrollTop,
-		scrollTop: restoredScrollTop,
-	};
 }
 
 /** Captures the first visible cell so layout changes can preserve its position. */
@@ -128,7 +89,7 @@ type PendingLayoutAnchor = {
 
 type PendingAbsolutePosition = {
 	readonly kind: "absolute-position";
-	readonly position: TwoHopScrollPosition;
+	readonly position: CapturedScrollPosition;
 };
 
 type PendingScrollRestore = PendingLayoutAnchor | PendingAbsolutePosition;
@@ -168,9 +129,9 @@ export function createTwoHopAnchorRestorationController(
 
 	function preserveScrollPosition(): void {
 		if (pendingRestore?.kind === "absolute-position") return;
-		const position = captureTwoHopScrollPosition(
+		const position = captureScrollPosition(
 			params.getRootEl(),
-			params.getMeasurement(),
+			params.getMeasurement().scrollContainerEl,
 		);
 		pendingRestore = position ? { kind: "absolute-position", position } : null;
 	}
@@ -207,7 +168,7 @@ export function createTwoHopAnchorRestorationController(
 		const pending = pendingRestore;
 		pendingRestore = null;
 		if (pending?.kind === "absolute-position") {
-			const restoration = restoreTwoHopScrollPosition(
+			const restoration = restoreScrollPosition(
 				pending.position,
 				params.getRootEl(),
 			);

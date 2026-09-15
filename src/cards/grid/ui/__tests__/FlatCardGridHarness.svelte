@@ -9,6 +9,7 @@
 		initialVisibleCount?: number;
 		loadMoreIncrement?: number;
 		sectionId?: string;
+		layoutAnchorScope?: string;
 		applicationStore?: CardCollectionState;
 		paginationMode?: "button" | "infinite-scroll";
 		infiniteScrollRootMargin?: string;
@@ -23,6 +24,7 @@
 		initialVisibleCount = items.length,
 		loadMoreIncrement = items.length,
 		sectionId,
+		layoutAnchorScope,
 		applicationStore,
 		paginationMode = "button",
 		infiniteScrollRootMargin = "0px 0px 900px 0px",
@@ -55,6 +57,7 @@
 				{initialVisibleCount}
 				{loadMoreIncrement}
 				{sectionId}
+				{layoutAnchorScope}
 				{applicationStore}
 				{paginationMode}
 				{infiniteScrollRootMargin}
@@ -91,6 +94,7 @@
 				{initialVisibleCount}
 				{loadMoreIncrement}
 				{sectionId}
+				{layoutAnchorScope}
 				{applicationStore}
 				{paginationMode}
 				{infiniteScrollRootMargin}

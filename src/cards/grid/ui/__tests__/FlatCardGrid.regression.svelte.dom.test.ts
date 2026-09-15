@@ -1,4 +1,4 @@
-import { waitFor } from "@testing-library/svelte";
+import { render, waitFor } from "@testing-library/svelte";
 import { describe, expect, it } from "vitest";
 import {
 	renderFlatCardGridContract,
@@ -6,8 +6,12 @@ import {
 } from "./flatCardGridContractFixture";
 import {
 	createItems,
+	getFlatCardGridElements,
+	setFlatCardGridViewport,
 	setupFlatCardGridTestEnvironment,
 } from "./flatCardGridTestEnvironment";
+import { flushFrames } from "testing/helpers/DOMObserverMock";
+import FlatCardGridHarness from "./FlatCardGridHarness.svelte";
 
 setupFlatCardGridTestEnvironment();
 
@@ -128,6 +132,46 @@ describe("FlatCardGrid regression", () => {
 		await waitFor(() => {
 			expect(driver.mountedLogicalIndexes()).toEqual([]);
 		});
+	});
+
+	it("restores the parent scroll position after a scoped result set crosses empty", async () => {
+		const itemCount = 100;
+		const rendered = render(FlatCardGridHarness, {
+			props: {
+				items: createItems(itemCount),
+				initialVisibleCount: itemCount,
+				loadMoreIncrement: itemCount,
+				layoutAnchorScope: "search:alpha",
+			},
+		});
+		const elements = getFlatCardGridElements(rendered.container);
+		await setFlatCardGridViewport(elements, {
+			rootHeight: 300,
+			width: 330,
+			scrollTop: 900,
+			sectionTop: -900,
+		});
+
+		await rendered.rerender({
+			items: [],
+			initialVisibleCount: itemCount,
+			loadMoreIncrement: itemCount,
+			layoutAnchorScope: "search:beta",
+		});
+		elements.scrollRoot.scrollTop = 200;
+		expect(
+			rendered.container.querySelector(".cosense-card-links__virtual-grid"),
+		).toBeNull();
+
+		await rendered.rerender({
+			items: createItems(itemCount),
+			initialVisibleCount: itemCount,
+			loadMoreIncrement: itemCount,
+			layoutAnchorScope: "search:beta",
+		});
+		await flushFrames();
+
+		await waitFor(() => expect(elements.scrollRoot.scrollTop).toBe(900));
 	});
 
 	it("updates rendered content when an item object changes without changing its key", async () => {
