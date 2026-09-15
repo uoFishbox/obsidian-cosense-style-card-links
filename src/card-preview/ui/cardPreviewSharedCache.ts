@@ -120,6 +120,7 @@ async function applySharedSearchContextToTextPreviewForState(
 		targetFile: TFile;
 		normalizedQuery: string;
 		firstMatchOffset?: number | (() => number | undefined);
+		forceRawSearchSnippet?: boolean;
 		settings: PreviewRenderSettings;
 		vault: Vault;
 		getRawContent?: RawContentLoader;
@@ -132,6 +133,7 @@ async function applySharedSearchContextToTextPreviewForState(
 		targetFile,
 		normalizedQuery,
 		firstMatchOffset,
+		forceRawSearchSnippet,
 		settings,
 		vault,
 		getRawContent,
@@ -155,7 +157,10 @@ async function applySharedSearchContextToTextPreviewForState(
 		...createSharedAbortableRequest(async (sharedSignal) => {
 			throwIfAborted(sharedSignal, "Preview request aborted");
 			let contentForRender = previewContent;
-			if (!previewContentHasVisibleQuery(previewContent, normalizedQuery)) {
+			if (
+				forceRawSearchSnippet ||
+				!previewContentHasVisibleQuery(previewContent, normalizedQuery)
+			) {
 				const rawContent = getRawContent
 					? await getRawContent(targetFile, sharedSignal)
 					: await readRawContent(targetFile, vault, sharedSignal);

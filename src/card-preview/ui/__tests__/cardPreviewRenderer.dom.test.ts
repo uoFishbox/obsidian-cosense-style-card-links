@@ -298,6 +298,47 @@ describe("card preview renderer contract", () => {
 		expect(state.highlightSearchMatchesInHtml).toHaveBeenCalledOnce();
 	});
 
+	it("regenerates the snippet when the first match is in frontmatter", async () => {
+		const host = document.createElement("div");
+		const file = createMockTFile("notes/frontmatter-search.md");
+		const getPreview = vi.fn(async () => ({
+			type: "text" as const,
+			content: "Body also contains alpha.",
+		}));
+		const app = {
+			vault: {},
+			metadataCache: {
+				getFileCache: () => ({
+					frontmatterPosition: {
+						start: { line: 0, col: 0, offset: 0 },
+						end: { line: 2, col: 3, offset: 24 },
+					},
+				}),
+			},
+		} as unknown as App;
+		const renderer = createCardPreviewRenderer({
+			app,
+			getPreview,
+			domCommitScope: immediateDomCommitScope,
+			imageDomCommitScope: immediateDomCommitScope,
+			enqueuePreviewRender: immediatePreviewRender,
+			sharedCache: createCardPreviewSharedCache(),
+			resolveSearchMatchOffset: () => ({ offset: 7 }),
+		});
+
+		renderer(host, createRequest(file, { searchQuery: "alpha" }));
+
+		await waitFor(() => expect(host.textContent).toContain("snippet:alpha"));
+		expect(state.getFileContent).toHaveBeenCalledOnce();
+		expect(state.getContentSnippet).toHaveBeenCalledWith(
+			"before alpha after",
+			expect.any(Object),
+			"alpha",
+			{ firstMatchIndex: 7 },
+			expect.any(AbortSignal),
+		);
+	});
+
 	it("routes image and non-image commits through separate budget scopes", async () => {
 		const domCommitScope = {
 			...immediateDomCommitScope,

@@ -597,11 +597,37 @@ describe("getContentSnippet with search query", () => {
 		expect(withOpt).toBe(withoutOpt);
 	});
 
-	test("does not show YAML when keyword only exists in frontmatter", () => {
+	test("shows and highlights YAML when keyword only exists in frontmatter", () => {
 		const content = `---\ntitle: target note\n---\n\nBody without keyword.`;
 		const result = getContentSnippet(content, defaultSettings, "target");
-		expect(result).toBe("Body without keyword.");
-		expect(result).not.toContain("title:");
+		const highlighted = highlightSearchMatchesInHtml(result, "target");
+
+		expect(result).toContain("title: target note");
+		expect(highlighted).toContain(
+			'title: <span class="ccl-search-highlight">target</span> note',
+		);
+	});
+
+	test("uses a precomputed frontmatter match offset", () => {
+		const content = `---\naliases:\n  - target alias\n---\n\nBody without keyword.`;
+		const firstMatchIndex = content.indexOf("target");
+		const result = getContentSnippet(content, defaultSettings, "target", {
+			firstMatchIndex,
+		});
+
+		expect(result).toContain("target alias");
+		expect(result).not.toBe("Body without keyword.");
+	});
+
+	test("shows a frontmatter match with BOM and CRLF", () => {
+		const content = ["\uFEFF---", "title: target note", "---", "Body"].join("\r\n");
+		const result = getContentSnippet(content, defaultSettings, "target");
+		const highlighted = highlightSearchMatchesInHtml(result, "target");
+
+		expect(result).not.toContain("\uFEFF");
+		expect(highlighted).toContain(
+			'title: <span class="ccl-search-highlight">target</span> note',
+		);
 	});
 
 	test("accepts precomputed firstMatchIndex option", () => {

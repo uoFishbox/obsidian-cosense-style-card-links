@@ -345,17 +345,26 @@ export function createCardPreviewRenderer(
 		const normalizedQuery = normalizePreviewQuery(request.searchQuery);
 		if (!normalizedQuery) return preview;
 
+		const firstMatchOffset = () =>
+			options.resolveSearchMatchOffset?.(request.searchQuery, request.file)
+				?.offset;
+		const initialFirstMatchOffset = firstMatchOffset();
+		const frontmatterPosition = options.app.metadataCache?.getFileCache(
+			request.file,
+		)?.frontmatterPosition;
+		const forceRawSearchSnippet =
+			typeof initialFirstMatchOffset === "number" &&
+			frontmatterPosition !== undefined &&
+			initialFirstMatchOffset >= frontmatterPosition.start.offset &&
+			initialFirstMatchOffset <= frontmatterPosition.end.offset;
 		const contentForRender =
 			await sharedCache.applySharedSearchContextToTextPreview({
 				previewContent: preview.content,
 				cacheKey: request.renderKey,
 				targetFile: request.file,
 				normalizedQuery,
-				firstMatchOffset: () =>
-					options.resolveSearchMatchOffset?.(
-						request.searchQuery,
-						request.file,
-					)?.offset,
+				firstMatchOffset: initialFirstMatchOffset ?? firstMatchOffset,
+				forceRawSearchSnippet,
 				settings: request.settings,
 				vault: options.app.vault,
 				getRawContent: options.getRawContent,

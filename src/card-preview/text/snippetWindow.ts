@@ -37,22 +37,40 @@ function resolveSearchPreviewSeekBufferChars(
 		: DEFAULT_SEARCH_PREVIEW_SEEK_BUFFER_CHARS;
 }
 
-function resolveFirstMatchIndexAfterFrontmatter(
-	effectiveContent: string,
+function resolveSearchContentAfterFrontmatter(
+	content: string,
+	strippedContent: string,
 	removedLength: number,
 	normalizedSearchQuery: string,
 	searchOptions?: GetContentSnippetOptions,
-): number {
-	const firstMatchIndex = searchOptions?.firstMatchIndex;
-	if (typeof firstMatchIndex !== "number") {
-		return findCaseInsensitiveIndex(effectiveContent, normalizedSearchQuery);
+): { readonly content: string; readonly firstMatchIndex: number } {
+	const firstMatchIndex =
+		typeof searchOptions?.firstMatchIndex === "number"
+			? searchOptions.firstMatchIndex
+			: findCaseInsensitiveIndex(content, normalizedSearchQuery);
+
+	if (firstMatchIndex >= 0 && firstMatchIndex < removedLength) {
+		const bomLength = content.startsWith("\uFEFF") ? 1 : 0;
+		return {
+			content: content.substring(bomLength),
+			firstMatchIndex: Math.max(0, firstMatchIndex - bomLength),
+		};
 	}
 
 	if (firstMatchIndex >= removedLength) {
-		return firstMatchIndex - removedLength;
+		return {
+			content: strippedContent,
+			firstMatchIndex: firstMatchIndex - removedLength,
+		};
 	}
 
-	return findCaseInsensitiveIndex(effectiveContent, normalizedSearchQuery);
+	return {
+		content: strippedContent,
+		firstMatchIndex: findCaseInsensitiveIndex(
+			strippedContent,
+			normalizedSearchQuery,
+		),
+	};
 }
 
 function buildFencedBlockSliceAroundMatch(
@@ -272,16 +290,19 @@ export function selectContentSnippetWindow(
 	searchOptions?: GetContentSnippetOptions,
 ): ContentSnippetWindow {
 	const strippedFrontmatter = stripLeadingFrontmatter(content);
-	const effectiveContent = strippedFrontmatter.content;
-	const firstMatchIndex =
+	const searchContent =
 		normalizedSearchQuery && strippedFrontmatter.removed
-			? resolveFirstMatchIndexAfterFrontmatter(
-					effectiveContent,
+			? resolveSearchContentAfterFrontmatter(
+					content,
+					strippedFrontmatter.content,
 					strippedFrontmatter.removedLength,
 					normalizedSearchQuery,
 					searchOptions,
 				)
-			: searchOptions?.firstMatchIndex;
+			: {
+					content: strippedFrontmatter.content,
+					firstMatchIndex: searchOptions?.firstMatchIndex,
+				};
 	const configuredMaxChars = settings?.previewMaxChars ?? DEFAULT_PREVIEW_MAX_CHARS;
 	const rawWindowLimit = Math.max(
 		configuredMaxChars * RAW_WINDOW_SIZE_MULTIPLIER,
@@ -289,10 +310,10 @@ export function selectContentSnippetWindow(
 	);
 
 	return selectContentSlice(
-		effectiveContent,
+		searchContent.content,
 		rawWindowLimit,
 		settings,
 		normalizedSearchQuery,
-		firstMatchIndex,
+		searchContent.firstMatchIndex,
 	);
 }
