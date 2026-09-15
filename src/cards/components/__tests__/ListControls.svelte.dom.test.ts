@@ -148,7 +148,7 @@ describe("ListControls", () => {
 		["Title", "type", "alphabetical", "alphabetical-reverse"],
 		["Backlinks", "links-coming-in", "backlink-count-reverse", "backlink-count"],
 		["Created", "calendar-plus", "created-date-reverse", "created-date"],
-		["Modified", "calendar-clock", "modified-date-reverse", "modified-date"],
+		["Modified", "calendar-sync", "modified-date-reverse", "modified-date"],
 		["File size", "hard-drive", "file-size-reverse", "file-size"],
 	] as const)(
 		"selects %s while preserving the default/reverse state",
@@ -253,7 +253,7 @@ describe("ListControls", () => {
 		// the trigger falls back to the generic "Select" label without a field icon.
 		expect(sortMenuTrigger).toHaveTextContent("Select");
 		expect(
-			sortMenuTrigger.querySelector('[data-icon="calendar-clock"]'),
+			sortMenuTrigger.querySelector('[data-icon="calendar-sync"]'),
 		).not.toBeInTheDocument();
 		expect(
 			sortMenuTrigger.querySelector('[data-icon="chevrons-up-down"]'),
@@ -262,7 +262,7 @@ describe("ListControls", () => {
 		expect(shortcut).toHaveAttribute("aria-pressed", "true");
 		expect(shortcut).not.toHaveAttribute("title");
 		expect(
-			shortcut.querySelector('[data-icon="calendar-clock"]'),
+			shortcut.querySelector('[data-icon="calendar-sync"]'),
 		).toBeInTheDocument();
 		expect(shortcut).toHaveTextContent("Modified");
 

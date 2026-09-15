@@ -39,14 +39,14 @@
 		{
 			id: "created-date",
 			label: "Created",
-			icon: "calendar-plus",
+			icon: "clock-plus",
 			default: "created-date-reverse",
 			reverse: "created-date",
 		},
 		{
 			id: "modified-date",
 			label: "Modified",
-			icon: "calendar-clock",
+			icon: "clock",
 			default: "modified-date-reverse",
 			reverse: "modified-date",
 		},

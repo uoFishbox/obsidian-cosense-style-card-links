@@ -1,5 +1,7 @@
 import type { IconName, MenuPositionDef } from "obsidian";
 
+export function addIcon(_iconId: string, _svgContent: string): void {}
+
 export function setIcon(parent: HTMLElement, icon: IconName): void {
 	parent.dataset.icon = icon;
 	parent.replaceChildren(

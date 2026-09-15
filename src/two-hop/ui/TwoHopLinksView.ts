@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, TFile, type IconName } from "obsidian";
+import { addIcon, ItemView, WorkspaceLeaf, TFile, type IconName } from "obsidian";
 import type { PluginHost } from "obsidian-integration/pluginHost";
 import type { TwoHopState } from "two-hop/state/TwoHopState.svelte";
 import type { ViewServices } from "obsidian-integration/views/viewServices";
@@ -15,6 +15,13 @@ import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
 import { TWO_HOP_LINKS_VIEW_TYPE } from "obsidian-integration/views/viewTypes";
 
 export { TWO_HOP_LINKS_VIEW_TYPE } from "obsidian-integration/views/viewTypes";
+
+const TWO_HOP_LINKS_ICON: IconName = "cosense-card-links-layout-grid";
+
+addIcon(
+	TWO_HOP_LINKS_ICON,
+	'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid"><g transform="scale(4.1666667)"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></g></svg>',
+);
 
 export interface ExternalListSurfaceLease {
 	readonly element: HTMLElement;
@@ -47,7 +54,7 @@ export class TwoHopLinksView extends ItemView {
 	}
 
 	getIcon(): IconName {
-		return "network";
+		return TWO_HOP_LINKS_ICON;
 	}
 
 	async onOpen(): Promise<void> {
