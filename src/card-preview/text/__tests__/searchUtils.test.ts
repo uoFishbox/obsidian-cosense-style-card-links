@@ -24,6 +24,12 @@ describe("searchUtils", () => {
 		);
 	});
 
+	it("does not highlight excluded query terms", () => {
+		const pattern = createCaseInsensitiveRegExp('alpha -beta -"gamma delta"', true);
+
+		expect("Alpha beta gamma delta".match(pattern ?? /$^/g)).toEqual(["Alpha"]);
+	});
+
 	it("finds adjacent text across WikiLink delimiters", () => {
 		expect(findCaseInsensitiveIndex("before text[[TEXT]] after", "textTEXT")).toBe(
 			7,

@@ -114,6 +114,84 @@ describe("runStreamingSearch", () => {
 		]);
 	});
 
+	it("matches a double-quoted phrase only in the same contiguous order", async () => {
+		const { vault } = createVault(new Map());
+		const updates: StreamingSearchUpdate[] = [];
+
+		await runStreamingSearch({
+			vault,
+			files: [],
+			items: [
+				createItem("exact-phrase", "prefix text text2 suffix", null),
+				createItem("separated", "text between text2", null),
+				createItem("reversed", "text2 text", null),
+			],
+			query: '"text text2"',
+			scope: "title-only",
+			isCancelled: () => false,
+			onUpdate: (update) => updates.push(update),
+		});
+
+		expect(Array.from(getFinalUpdate(updates).matchesByKey.keys())).toEqual([
+			"exact-phrase",
+		]);
+	});
+
+	it("excludes unquoted terms and quoted phrases from title matches", async () => {
+		const { vault } = createVault(new Map());
+		const updates: StreamingSearchUpdate[] = [];
+
+		await runStreamingSearch({
+			vault,
+			files: [],
+			items: [
+				createItem("included", "alpha allowed", null),
+				createItem("excluded-term", "alpha beta", null),
+				createItem("excluded-phrase", "alpha gamma delta", null),
+				createItem("noncontiguous-phrase", "alpha gamma between delta", null),
+			],
+			query: 'alpha -beta -"gamma delta"',
+			scope: "title-only",
+			isCancelled: () => false,
+			onUpdate: (update) => updates.push(update),
+		});
+
+		expect(Array.from(getFinalUpdate(updates).matchesByKey.keys())).toEqual([
+			"included",
+			"noncontiguous-phrase",
+		]);
+	});
+
+	it("supports exclusion-only queries and checks full-text content", async () => {
+		const allowedFile = createMockTFile("notes/allowed.md");
+		const blockedFile = createMockTFile("notes/blocked.md");
+		const { vault, cachedRead } = createVault(
+			new Map([
+				[allowedFile.path, "gamma between delta"],
+				[blockedFile.path, "contains gamma delta exactly"],
+			]),
+		);
+		const updates: StreamingSearchUpdate[] = [];
+
+		await runStreamingSearch({
+			vault,
+			files: [allowedFile, blockedFile],
+			items: [
+				createItem("allowed", "plain title", allowedFile.path),
+				createItem("blocked", "plain title", blockedFile.path),
+			],
+			query: '-"gamma delta"',
+			scope: "title-and-content",
+			isCancelled: () => false,
+			onUpdate: (update) => updates.push(update),
+		});
+
+		expect(Array.from(getFinalUpdate(updates).matchesByKey.keys())).toEqual([
+			"allowed",
+		]);
+		expect(cachedRead).toHaveBeenCalledTimes(2);
+	});
+
 	it("ignores WikiLink delimiters while preserving raw content offsets", async () => {
 		const file = createMockTFile("notes/wikilink.md");
 		const { vault } = createVault(

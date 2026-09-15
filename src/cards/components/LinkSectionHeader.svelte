@@ -69,9 +69,8 @@
 
 		menu.addItem((item) => {
 			item.setTitle(
-				getMainUiTranslations(
-					appContext.applicationStore.settings.language,
-				).useMergedLinksSection,
+				getMainUiTranslations(appContext.applicationStore.settings.language)
+					.useMergedLinksSection,
 			)
 				.setChecked(mergedEnabled)
 				.onClick(() => {

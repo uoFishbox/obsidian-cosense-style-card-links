@@ -54,7 +54,7 @@ function getCachedRegExpSource(query: string | undefined): string | null {
 		return cachedSource;
 	}
 
-	const terms = getSearchQueryTerms(query);
+	const terms = [...getSearchQueryTerms(query).included];
 	let source: string | null = null;
 	if (terms.length > 0) {
 		terms.sort((a, b) => b.length - a.length);

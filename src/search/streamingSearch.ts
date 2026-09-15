@@ -16,7 +16,8 @@ const YIELD_CHECK_INTERVAL = 10;
 const YIELD_BUDGET_MS = 5;
 const YIELD_MAX_DELAY_MS = 100;
 interface ContentTermMatches {
-	readonly matches: readonly boolean[];
+	readonly included: readonly boolean[];
+	readonly excluded: readonly boolean[];
 	readonly firstMatch: SearchContentMatch | null;
 }
 
@@ -53,11 +54,12 @@ export async function runStreamingSearch(
 	options: RunStreamingSearchOptions,
 ): Promise<void> {
 	const terms = getSearchQueryTerms(options.query);
-	const matchesTerms = (matches: readonly boolean[]): boolean =>
+	const matchesIncludedTerms = (matches: readonly boolean[]): boolean =>
 		options.operator === "or"
 			? matches.length === 0 || matches.some(Boolean)
 			: matches.every(Boolean);
-	const termMatchers = terms.map(createCaseInsensitiveWikiLinkMatcher);
+	const includedMatchers = terms.included.map(createCaseInsensitiveWikiLinkMatcher);
+	const excludedMatchers = terms.excluded.map(createCaseInsensitiveWikiLinkMatcher);
 	const contentMatchesByPath = new Map<string, ContentTermMatches>();
 	const fileByPath = new Map(options.files.map((file) => [file.path, file]));
 	const now = options.now ?? (() => performance.now());
@@ -106,15 +108,28 @@ export async function runStreamingSearch(
 	for (const item of options.items) {
 		if (options.isCancelled()) return;
 
-		const titleMatches = termMatchers.map((matcher) =>
+		const titleIncludedMatches = includedMatchers.map((matcher) =>
 			matcher.test(item.searchText),
 		);
-		if (matchesTerms(titleMatches)) {
+		const titleHasExcludedMatch = excludedMatchers.some((matcher) =>
+			matcher.test(item.searchText),
+		);
+		if (titleHasExcludedMatch) {
+			if (!(await checkpoint())) return;
+			continue;
+		}
+
+		const titleMatchesIncludedTerms = matchesIncludedTerms(titleIncludedMatches);
+		const requiresContentCheck =
+			options.scope === "title-and-content" &&
+			item.targetFilePath !== null &&
+			(!titleMatchesIncludedTerms || excludedMatchers.length > 0);
+		if (!requiresContentCheck && titleMatchesIncludedTerms) {
 			pendingMatches.push({
 				key: item.key,
 				contentMatched: false,
 			});
-		} else if (options.scope === "title-and-content" && item.targetFilePath) {
+		} else if (requiresContentCheck && item.targetFilePath) {
 			const path = item.targetFilePath;
 			let contentTermMatches = contentMatchesByPath.get(path);
 			if (!contentTermMatches) {
@@ -122,7 +137,11 @@ export async function runStreamingSearch(
 				if (file) {
 					const content = await readContent(file, options.vault);
 					if (options.isCancelled()) return;
-					contentTermMatches = matchContentTerms(content, termMatchers);
+					contentTermMatches = matchContentTerms(
+						content,
+						includedMatchers,
+						excludedMatchers,
+					);
 					contentMatchesByPath.set(path, contentTermMatches);
 					if (contentTermMatches.firstMatch) {
 						pendingContentMatches.push({
@@ -135,18 +154,19 @@ export async function runStreamingSearch(
 
 			if (
 				contentTermMatches &&
-				matchesTerms(
-					titleMatches.map(
+				!contentTermMatches.excluded.some(Boolean) &&
+				matchesIncludedTerms(
+					titleIncludedMatches.map(
 						(matched, index) =>
-							matched || contentTermMatches.matches[index],
+							matched || contentTermMatches.included[index],
 					),
 				)
 			) {
 				pendingMatches.push({
 					key: item.key,
 					contentMatched: hasRequiredContentMatch(
-						titleMatches,
-						contentTermMatches.matches,
+						titleIncludedMatches,
+						contentTermMatches.included,
 					),
 				});
 			}
@@ -172,14 +192,15 @@ function createCaseInsensitiveWikiLinkMatcher(term: string): RegExp {
 
 function matchContentTerms(
 	content: string,
-	matchers: readonly RegExp[],
+	includedMatchers: readonly RegExp[],
+	excludedMatchers: readonly RegExp[],
 ): ContentTermMatches {
-	const matches: boolean[] = [];
+	const included: boolean[] = [];
 	let firstMatch: SearchContentMatch | null = null;
 
-	for (const matcher of matchers) {
+	for (const matcher of includedMatchers) {
 		const match = matcher.exec(content);
-		matches.push(match !== null);
+		included.push(match !== null);
 		if (!match || (firstMatch && firstMatch.offset <= match.index)) continue;
 		firstMatch = {
 			offset: match.index,
@@ -187,7 +208,11 @@ function matchContentTerms(
 		};
 	}
 
-	return { matches, firstMatch };
+	return {
+		included,
+		excluded: excludedMatchers.map((matcher) => matcher.test(content)),
+		firstMatch,
+	};
 }
 
 function hasRequiredContentMatch(
