@@ -2,6 +2,41 @@ import { describe, test, expect } from "vitest";
 import { transformContentForPreview } from "../text/textTransformUtils";
 
 describe("transformContentForPreview", () => {
+	test.each([
+		["**bold** and *italic*", "bold and italic"],
+		["__bold__ and _italic_", "bold and italic"],
+		["***both*** and ___both___", "both and both"],
+		["**bold *italic*** and __bold _italic___", "bold italic and bold italic"],
+		["*italic **bold*** and _italic __bold___", "italic bold and italic bold"],
+		["**太字**と*斜体*", "太字と斜体"],
+		["**a** *b* __c__ _d_", "a b c d"],
+		["file_name_here and file__name__here", "file_name_here and file__name__here"],
+		[
+			String.raw`\*literal\* and \_literal\_`,
+			String.raw`\*literal\* and \_literal\_`,
+		],
+		["unmatched * and _ markers", "unmatched * and _ markers"],
+		["******\n______", "******\n______"],
+	])("strips emphasis delimiters safely: %s", (content, expected) => {
+		expect(transformContentForPreview(content)).toBe(expected);
+	});
+
+	test.each(["```", "~~~"])("preserves emphasis inside %s code fences", (fence) => {
+		const code = "**bold** *italic* __bold__ _italic_";
+		const result = transformContentForPreview(
+			`*outside*\n${fence}md\n${code}\n${fence}`,
+		);
+		expect(result).toBe(
+			`outside\n<span class="cosense-card-links__code-block">${code}</span>`,
+		);
+	});
+
+	test("preserves emphasis inside inline code", () => {
+		expect(transformContentForPreview("`**bold** _italic_` *outside*")).toBe(
+			'<span class="cosense-card-links__inline-code">**bold** _italic_</span> outside',
+		);
+	});
+
 	test("removes frontmatter", () => {
 		const content = `---
 title: Test

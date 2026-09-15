@@ -72,6 +72,12 @@ const REGEX = {
 	headings: /^#+\s+.*/gm,
 	horizontalRules: /^-{3,}\s*$/gm,
 	highlight: /==([^=]+)==/g,
+	strongAsterisk: /(?<![\\*])\*\*(?=\**[^\s*])(\S(?:[\s\S]*?\S)?)(?<!\\)\*\*(?!\*)/g,
+	strongUnderscore:
+		/(?<![\\_\p{L}\p{N}])__(?=_*[^\s_])(\S(?:[\s\S]*?\S)?)(?<!\\)__(?![_\p{L}\p{N}])/gu,
+	emphasisAsterisk: /(?<![\\*])\*(\S(?:[^*]*?\S)?)(?<![\\*])\*(?!\*)/g,
+	emphasisUnderscore:
+		/(?<![\\_\p{L}\p{N}])_(\S(?:[^_]*?\S)?)(?<![\\_])_(?![_\p{L}\p{N}])/gu,
 };
 
 export type TextTransformReplacement =
@@ -166,6 +172,19 @@ function buildCommonRules(
 			replacement: (_: string, p1: string) => p1,
 			skipIfAbsent: (content: string) => !content.includes("=="),
 		},
+		...[
+			REGEX.strongAsterisk,
+			REGEX.strongUnderscore,
+			REGEX.emphasisAsterisk,
+			REGEX.emphasisUnderscore,
+		].map(
+			(regex): TextTransformRule => ({
+				regex,
+				replacement: "$1",
+				skipIfAbsent: (content) =>
+					!content.includes("*") && !content.includes("_"),
+			}),
+		),
 		{
 			regex: REGEX.wikilinks,
 			replacement: (_: string, title: string, alias: string) =>
