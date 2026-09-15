@@ -64,6 +64,8 @@ function shouldKeepEmbedLiteral(
 
 const REGEX = {
 	frontmatter: /^\uFEFF?---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/,
+	callouts: /^[ \t]*>[ \t]*\[![^\]\r\n]+\][+-]?[^\r\n]*(?:\r?\n[ \t]*>[^\r\n]*)*/gm,
+	blockquoteMarkers: /^(?:[ \t]*>[ \t]?)+/gm,
 	listMarkers: /^[ \t]*[-*][ \t]+/gm,
 	wikilinks: /(?<!!)\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
 	externalLinks: /(?<!!)\[([^\]]+)\]\(([^)]+)\)/g,
@@ -79,6 +81,22 @@ const REGEX = {
 	emphasisUnderscore:
 		/(?<![\\_\p{L}\p{N}])_(\S(?:[^_]*?\S)?)(?<![\\_])_(?![_\p{L}\p{N}])/gu,
 };
+
+const CALLOUT_HEADER_PREFIX = /^[ \t]*>[ \t]*\[![^\]\r\n]+\][+-]?[ \t]*/;
+const CALLOUT_BODY_PREFIX = /^[ \t]*>[ \t]?/;
+
+function extractCalloutText(callout: string): string {
+	const lineBreak = callout.match(/\r?\n/)?.[0] ?? "\n";
+	const [header = "", ...bodyLines] = callout.split(/\r?\n/);
+	const title = header.replace(CALLOUT_HEADER_PREFIX, "");
+	const body = bodyLines
+		.map((line) => line.replace(CALLOUT_BODY_PREFIX, ""))
+		.join(lineBreak);
+
+	if (!title) return body;
+	if (!body) return title;
+	return `${title}${lineBreak}${body}`;
+}
 
 export type TextTransformReplacement =
 	| string
@@ -138,6 +156,17 @@ function buildCommonRules(
 					},
 				]),
 		{
+			regex: REGEX.callouts,
+			replacement: extractCalloutText,
+			skipIfAbsent: (content: string) =>
+				!content.includes(">") || !content.includes("[!"),
+		},
+		{
+			regex: REGEX.blockquoteMarkers,
+			replacement: "",
+			skipIfAbsent: (content: string) => !content.includes(">"),
+		},
+		{
 			regex: REGEX.embededContent,
 			replacement: (
 				match: string,
@@ -162,7 +191,7 @@ function buildCommonRules(
 				!content.includes("-") && !content.includes("*"),
 		},
 		{
-			regex: /^\s*[\r\n]/gm,
+			regex: /(?<!\r)^[ \t]*\r?\n/gm,
 			replacement: "",
 			skipIfAbsent: (content: string) =>
 				!content.includes("\n") && !content.includes("\r"),

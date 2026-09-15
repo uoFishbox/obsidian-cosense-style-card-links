@@ -51,6 +51,34 @@ Some content here.`;
 		expect(result).toContain("Some content here");
 	});
 
+	test("extracts text from a callout", () => {
+		const content = "> [!NOTE]\n> text";
+
+		expect(transformContentForPreview(content)).toBe("text");
+	});
+
+	test("extracts multiline callout text and keeps a custom title", () => {
+		const content = "> [!TIP]- Custom title\r\n> first line\r\n>\r\n> second line";
+
+		expect(transformContentForPreview(content)).toBe(
+			"Custom title\r\nfirst line\r\nsecond line",
+		);
+	});
+
+	test("does not parse callout syntax inside code", () => {
+		const content = "```md\n> [!NOTE]\n> text\n```";
+
+		expect(transformContentForPreview(content)).toContain(
+			"&gt; [!NOTE]\n&gt; text",
+		);
+	});
+
+	test("extracts text from an ordinary blockquote", () => {
+		expect(transformContentForPreview("> quoted text")).toBe("quoted text");
+		expect(transformContentForPreview("> &#x20;text")).toBe("&#x20;text");
+		expect(transformContentForPreview("> > nested text")).toBe("nested text");
+	});
+
 	test("handles empty content", () => {
 		const content = "";
 		const result = transformContentForPreview(content);
