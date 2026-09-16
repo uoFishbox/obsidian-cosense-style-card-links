@@ -30,7 +30,10 @@ import { DISABLED_PREVIEW_SURFACE } from "card-preview/runtime/disabledPreviewSu
 import { useAppContext } from "cards/context/linkContext";
 import type { VirtualFrameCoordinator } from "shared/ui/scheduling/frameCoordinator";
 import { DEFAULT_SETTINGS } from "settings/model";
-import { isMountedFlatGridItemCell } from "./mountedCardBindings";
+import {
+	getMountedItemPreviewKey,
+	isMountedFlatGridItemCell,
+} from "./mountedCardBindings";
 import { createFlatGridInfiniteScrollController } from "./infiniteScroll";
 import { createFlatGridScrollStateController } from "./scrollState";
 import { createCardGridVisibilityPolicyResolver } from "cards/grid/model/cardGridVisibilityPolicy";
@@ -385,7 +388,7 @@ export function useFlatCardGrid<T>(
 			scrollContainerEl,
 			rowIndex: mountedCell.rowIndex,
 			activationCandidateId: mountedCell.key,
-			previewKey: String(mountedCell.key),
+			previewKey: getMountedItemPreviewKey(mountedCell),
 			interactionHandle: cardSurfaceRuntime.getInteractionHandle(
 				mountedCell.physicalCellSlot,
 			),

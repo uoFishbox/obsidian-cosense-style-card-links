@@ -17,6 +17,7 @@
 		appContext: AppContext;
 		applicationStore: CardCollectionState;
 		getItemId?: (model: CardRenderModel, index: number) => string;
+		sectionId?: string;
 	}
 
 	let {
@@ -25,6 +26,7 @@
 		appContext,
 		applicationStore,
 		getItemId = (model) => model.targetFile!.path,
+		sectionId,
 	}: Props = $props();
 	setLinkContext(linkContext);
 	setAppContext(appContext);
@@ -39,6 +41,7 @@
 		items={models}
 		{getItemId}
 		initialVisibleCount={models.length}
+		{sectionId}
 		{applicationStore}
 		resolveItemPreviewRequest={(model) => model.previewRequest}
 		resolveItemInteractionDescriptor={(model) => model.interactionDescriptor}

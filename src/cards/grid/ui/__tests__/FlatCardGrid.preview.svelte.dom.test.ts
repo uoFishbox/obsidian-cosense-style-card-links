@@ -78,6 +78,77 @@ function findCardByTitle(root: ShadowRoot, title: string): HTMLElement | null {
 	);
 }
 
+async function renderSinglePreview(
+	model: CardRenderModel,
+	getPreview: LinkContext["getPreview"],
+	sectionId: string,
+	previewSelector = "img",
+) {
+	const file = model.targetFile;
+	if (!file) throw new TypeError("Preview test model requires a target file");
+	const linkContext = {
+		getPreview,
+		sourceFile: file,
+		fileToLinktext: () => "card",
+		getMetadata: () => null,
+	} as unknown as LinkContext;
+	const applicationStore = {
+		settings: DEFAULT_SETTINGS,
+		previewState: { getRenderVersion: () => "0:0" },
+	} as unknown as CardCollectionState;
+	const app = { vault: {} } as App;
+	const previewRuntime = createPreviewRuntime({ app, getPreview });
+	previewRuntimes.add(previewRuntime);
+	const appContext = {
+		app,
+		applicationStore,
+		linkContext,
+		bookmarks: {
+			filePaths: new Set(),
+			orderedFilePaths: [],
+			isBookmarked: () => false,
+		},
+		previewRuntime,
+	} as AppContext;
+	const rendered = render(FlatCardGridPreviewHarness, {
+		props: {
+			models: [model],
+			linkContext,
+			appContext,
+			applicationStore,
+			sectionId,
+		},
+	});
+	const scrollRoot = rendered.container.querySelector<HTMLElement>(
+		'[data-testid="scroll-root"]',
+	);
+	const gridRoot = rendered.container.querySelector<HTMLElement>(
+		".cosense-card-links__virtual-grid",
+	);
+	if (!scrollRoot || !gridRoot) {
+		throw new TypeError("Virtual grid test surface was not rendered");
+	}
+	setNumericProperty(scrollRoot, "clientHeight", 240);
+	setNumericProperty(scrollRoot, "scrollTop", 0);
+	setElementRect(scrollRoot, { top: 0, width: 330, height: 240 });
+	gridRoot.style.setProperty("--ccl-box-size", "100px");
+	gridRoot.style.setProperty("--ccl-box-height", "120px");
+	gridRoot.style.setProperty("--ccl-box-gap", "10px");
+	gridRoot.style.setProperty("--ccl-box-cols-max", "3");
+	setElementRect(gridRoot, { top: 0, width: 330, height: 500 });
+	triggerResize(gridRoot, 330, 500);
+	triggerResize(scrollRoot, 330, 240);
+	for (let index = 0; index < 8; index += 1) {
+		await flushFrames();
+		await Promise.resolve();
+	}
+	const shadowRoot = gridRoot.shadowRoot;
+	if (!shadowRoot) throw new TypeError("Missing virtual grid shadow root");
+	await waitFor(() => expect(shadowRoot.querySelector(previewSelector)).toBeTruthy());
+
+	return { rendered, shadowRoot, linkContext, appContext, applicationStore };
+}
+
 describe("FlatCardGrid preview surface", () => {
 	it("commits preview DOM through the virtual surface", async () => {
 		const file = {
@@ -290,6 +361,91 @@ describe("FlatCardGrid preview surface", () => {
 		expect(
 			getPreview.mock.calls.filter(([file]) => file.path === "duplicate-b.md"),
 		).toHaveLength(loadsBefore);
+	});
+
+	it("keeps preview DOM stable when the section scope changes", async () => {
+		const file = {
+			path: "stable-preview.canvas",
+			basename: "stable-preview",
+			extension: "canvas",
+			parent: { path: "" },
+			stat: { mtime: 1 },
+		} as TFile;
+		const model = createModel(file);
+		const renderDom = vi.fn(async (container: HTMLElement) => {
+			const canvas = container.ownerDocument.createElement("div");
+			canvas.dataset.canvasPreview = "true";
+			container.replaceChildren(canvas);
+		});
+		const getPreview = vi.fn(async () => ({
+			type: "dom" as const,
+			attachment: "resource-bound" as const,
+			render: renderDom,
+		}));
+		const { rendered, shadowRoot, linkContext, appContext, applicationStore } =
+			await renderSinglePreview(
+				model,
+				getPreview,
+				"search:foo",
+				"[data-canvas-preview]",
+			);
+		const previewBefore = shadowRoot.querySelector("[data-canvas-preview]");
+
+		await rendered.rerender({
+			models: [model],
+			linkContext,
+			appContext,
+			applicationStore,
+			sectionId: "search:bar",
+		});
+		for (let index = 0; index < 8; index += 1) {
+			await flushFrames();
+			await Promise.resolve();
+		}
+
+		expect(shadowRoot.querySelector("[data-canvas-preview]")).toBe(previewBefore);
+		expect(getPreview).toHaveBeenCalledTimes(1);
+		expect(renderDom).toHaveBeenCalledTimes(1);
+	});
+
+	it("rerenders a stable item when its preview render key changes", async () => {
+		const file = {
+			path: "search-preview.md",
+			basename: "search-preview",
+			extension: "md",
+			parent: { path: "" },
+			stat: { mtime: 1 },
+		} as TFile;
+		const initialModel = createModel(file);
+		const nextModel = {
+			...initialModel,
+			previewRequest: {
+				...initialModel.previewRequest!,
+				renderKey: "preview:search-preview.md:bar",
+				searchQuery: "bar",
+			},
+		};
+		const getPreview = vi.fn(async () => ({
+			type: "image" as const,
+			content: "https://example.com/search-preview.png",
+		}));
+		const { rendered, linkContext, appContext, applicationStore } =
+			await renderSinglePreview(initialModel, getPreview, "search:foo");
+		expect(getPreview).toHaveBeenCalledTimes(1);
+
+		await rendered.rerender({
+			models: [nextModel],
+			linkContext,
+			appContext,
+			applicationStore,
+			sectionId: "search:bar",
+		});
+		for (let index = 0; index < 8; index += 1) {
+			await flushFrames();
+			await Promise.resolve();
+		}
+
+		await waitFor(() => expect(getPreview).toHaveBeenCalledTimes(2));
 	});
 
 	it("replaces a rebound card preview without showing stale content", async () => {

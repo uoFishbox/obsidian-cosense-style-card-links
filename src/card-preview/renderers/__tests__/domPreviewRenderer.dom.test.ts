@@ -41,6 +41,7 @@ describe("createMarkdownDomPreview", () => {
 		if (preview.type !== "dom") {
 			throw new Error("Expected dom preview");
 		}
+		expect(preview.attachment).toBe("resource-bound");
 
 		await preview.render(container, component);
 
@@ -183,6 +184,7 @@ describe("generateCanvasPreview", () => {
 		if (!preview || preview.type !== "dom") {
 			throw new Error("Expected dom preview");
 		}
+		expect(preview.attachment).toBe("resource-bound");
 
 		await preview.render(container, component);
 

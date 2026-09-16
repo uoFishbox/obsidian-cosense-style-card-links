@@ -47,6 +47,13 @@ export function isMountedFlatGridItemCell<T>(
 	return mountedCell?.cell.kind === "item";
 }
 
+/** Resolves the stable source identity used by the preview lifecycle. */
+export function getMountedItemPreviewKey<T>(
+	mountedCell: MountedFlatGridItemCell<T>,
+): string {
+	return String(mountedCell.cell.sourceKey);
+}
+
 /** Resolves immutable preview bindings from mounted card rows. */
 export function buildFlatGridCardBindings<T>({
 	rows,
@@ -62,7 +69,7 @@ export function buildFlatGridCardBindings<T>({
 			const basePreviewRequest = resolvePreviewRequest?.(item, itemIndex);
 			if (basePreviewRequest) {
 				previewBindings.push({
-					key: String(mountedCell.key),
+					key: getMountedItemPreviewKey(mountedCell),
 					rowIndex: mountedCell.rowIndex,
 					request: applyCardPreviewDimensions(
 						basePreviewRequest,

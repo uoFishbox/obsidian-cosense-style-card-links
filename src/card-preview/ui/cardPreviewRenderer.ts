@@ -8,7 +8,11 @@ import {
 } from "card-preview/scheduling/previewDomCommitScheduler";
 import { toPreviewImageSrc } from "card-preview/renderers/externalImageSource";
 import type { PreviewContentAnalysis } from "card-preview/pipeline/previewContent";
-import type { PreviewData, PreviewRequestOptions } from "card-preview/types";
+import type {
+	PreviewData,
+	PreviewDomAttachment,
+	PreviewRequestOptions,
+} from "card-preview/types";
 import { syncMathStylesForNode } from "shared/ui/dom/mathShadowStyles";
 import { isAbortError, throwIfAborted } from "card-preview/pipeline/previewAbort";
 import { normalizePreviewQuery } from "card-preview/pipeline/previewRenderKeys";
@@ -55,10 +59,10 @@ export interface PreviewRenderCallbacks {
 /**
  * Describes whether committed DOM still depends on renderer-owned resources.
  * `detachable` DOM owns everything it needs and may move between hosts after
- * renderer cleanup. `host-bound` DOM must keep renderer resources alive until
- * that DOM is removed or replaced.
+ * renderer cleanup. `resource-bound` DOM may move while keeping those resources
+ * alive. `host-bound` DOM must remain in its committed host.
  */
-export type CardPreviewAttachment = "detachable" | "host-bound";
+export type CardPreviewAttachment = "detachable" | PreviewDomAttachment;
 
 export type CardPreviewRenderer = (
 	container: HTMLElement,
@@ -377,7 +381,11 @@ export function createCardPreviewRenderer(
 }
 
 function resolvePreviewAttachment(preview: PreviewData): CardPreviewAttachment {
-	if (preview.type === "dom") return "host-bound";
+	if (preview.type === "dom") {
+		return preview.attachment === "resource-bound"
+			? "resource-bound"
+			: "host-bound";
+	}
 	return "detachable";
 }
 

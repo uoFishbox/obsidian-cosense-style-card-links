@@ -7,6 +7,8 @@ export type PreviewDomRenderer = (
 	signal?: AbortSignal,
 ) => Promise<void>;
 
+export type PreviewDomAttachment = "host-bound" | "resource-bound";
+
 export type PreviewData =
 	| {
 			type: "text";
@@ -24,6 +26,11 @@ export type PreviewData =
 	| {
 			type: "dom";
 			content?: never;
+			/**
+			 * `resource-bound` DOM may move between hosts while its renderer-owned
+			 * resources remain alive. Omitted values remain fixed to their host.
+			 */
+			attachment?: PreviewDomAttachment;
 			render: PreviewDomRenderer;
 	  };
 

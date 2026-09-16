@@ -99,11 +99,11 @@ export function createPreviewSlotController(
 		content = { state: "empty" };
 	}
 
-	function detachDetachableContent(element: HTMLElement): boolean {
+	function detachTransferableContent(element: HTMLElement): boolean {
 		stopSearchFit();
 		if (
 			content.state !== "committed" ||
-			content.attachment !== "detachable" ||
+			content.attachment === "host-bound" ||
 			content.host !== element
 		) {
 			return false;
@@ -114,11 +114,11 @@ export function createPreviewSlotController(
 		return true;
 	}
 
-	function restoreDetachableContent(element: HTMLElement): boolean {
+	function restoreTransferredContent(element: HTMLElement): boolean {
 		if (
 			!detachedContent ||
 			content.state !== "committed" ||
-			content.attachment !== "detachable"
+			content.attachment === "host-bound"
 		) {
 			return false;
 		}
@@ -149,13 +149,13 @@ export function createPreviewSlotController(
 			cancelOperation();
 			const previousHost = host;
 			const retained =
-				previousHost !== undefined && detachDetachableContent(previousHost);
+				previousHost !== undefined && detachTransferableContent(previousHost);
 			if (previousHost) resetPreviewHostAppearance(previousHost);
 			if (!retained && previousHost) clearDom();
 			host = element;
 			resetPreviewHostAppearance(element);
 			appliedContentType = undefined;
-			if (!restoreDetachableContent(element) && content.state !== "empty") {
+			if (!restoreTransferredContent(element) && content.state !== "empty") {
 				clearDom();
 			}
 			syncHostAppearance();
@@ -168,7 +168,7 @@ export function createPreviewSlotController(
 				if (host !== element || hostGeneration !== leaseGeneration) return;
 				advanceRevision();
 				cancelOperation();
-				const retained = detachDetachableContent(element);
+				const retained = detachTransferableContent(element);
 				if (!retained) clearDom();
 				resetPreviewHostAppearance(element);
 				host = undefined;
@@ -268,7 +268,7 @@ export function createPreviewSlotController(
 						contentType,
 						attachment,
 						host: expectedHost,
-						release: attachment === "host-bound" ? cancel : undefined,
+						release: attachment === "detachable" ? undefined : cancel,
 					};
 					failedRenderKey = undefined;
 					if (cancelRender === cancel) cancelRender = undefined;

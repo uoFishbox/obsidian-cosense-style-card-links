@@ -62,6 +62,7 @@ export function createMarkdownDomPreview(
 ): PreviewData {
 	return {
 		type: "dom",
+		attachment: "resource-bound",
 		render: createMarkdownDomRenderer(app, sourcePath, markdown, options),
 	};
 }

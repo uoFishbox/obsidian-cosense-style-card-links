@@ -114,6 +114,39 @@ describe("PreviewSlotController", () => {
 		controller.dispose();
 	});
 
+	it("moves resource-bound DOM while keeping renderer resources alive", () => {
+		const callbacks: PreviewRenderCallbacks[] = [];
+		const cleanup = vi.fn();
+		const render = vi.fn<CardPreviewRenderer>((_host, _request, next) => {
+			if (!next) throw new TypeError("Missing callbacks");
+			callbacks.push(next);
+			return cleanup;
+		});
+		const controller = createPreviewSlotController(() => render);
+		const firstHost = document.createElement("div");
+		const firstLease = controller.attachHost(firstHost);
+		controller.bind(request("canvas"));
+		controller.setActive(true);
+		controller.activate();
+
+		const canvas = document.createElement("div");
+		firstHost.replaceChildren(canvas);
+		callbacks[0]?.onCommitted("dom", "resource-bound");
+		expect(cleanup).not.toHaveBeenCalled();
+
+		firstLease.dispose();
+		const secondHost = document.createElement("div");
+		controller.attachHost(secondHost);
+		expect(secondHost.firstChild).toBe(canvas);
+		expect(controller.needsActivation()).toBe(false);
+
+		controller.activate();
+		expect(render).toHaveBeenCalledOnce();
+		expect(cleanup).not.toHaveBeenCalled();
+		controller.dispose();
+		expect(cleanup).toHaveBeenCalledOnce();
+	});
+
 	it("keeps committed DOM visible while a changed render key is refreshing", () => {
 		const callbacks: PreviewRenderCallbacks[] = [];
 		const render = vi.fn<CardPreviewRenderer>((_host, _request, next) => {
