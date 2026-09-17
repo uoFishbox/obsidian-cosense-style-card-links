@@ -12,6 +12,11 @@ import { InitialScanChangeRecorder } from "./InitialScanChangeRecorder";
 type InitialFullScanState = "pending" | "running" | "failed" | "completed";
 const INITIAL_FULL_SCAN_DELAY_MS = 100;
 
+interface InitialCatchUpTiming {
+	metadataWaitMs: number;
+	updateMs: number;
+}
+
 export class IndexUpdateQueue {
 	private debouncedProcessPending: () => void;
 	private readonly changeQueue = new FileChangeQueue();
@@ -366,7 +371,7 @@ export class IndexUpdateQueue {
 			if (process.env.NODE_ENV === "development") {
 				buildFinishedAt = performance.now();
 			}
-			await this.applyInitialCatchUpChanges();
+			const catchUpTiming = await this.applyInitialCatchUpChanges();
 			if (this.destroyed) {
 				return;
 			}
@@ -384,6 +389,8 @@ export class IndexUpdateQueue {
 					),
 					buildMs: roundTimingMs(buildFinishedAt - buildStartedAt),
 					catchUpMs: roundTimingMs(catchUpFinishedAt - buildFinishedAt),
+					catchUpMetadataWaitMs: roundTimingMs(catchUpTiming.metadataWaitMs),
+					catchUpUpdateMs: roundTimingMs(catchUpTiming.updateMs),
 					commitMs: roundTimingMs(readyAt - catchUpFinishedAt),
 					totalFromBuildStartMs: roundTimingMs(readyAt - buildStartedAt),
 					totalFromLayoutReadyMs: roundTimingMs(readyAt - layoutReadyAt),
@@ -433,15 +440,20 @@ export class IndexUpdateQueue {
 		});
 	}
 
-	private async applyInitialCatchUpChanges(): Promise<void> {
+	private async applyInitialCatchUpChanges(): Promise<InitialCatchUpTiming> {
+		const timing: InitialCatchUpTiming = { metadataWaitMs: 0, updateMs: 0 };
+		const shouldMeasure = process.env.NODE_ENV === "development";
 		this.isProcessingPendingChanges = true;
 		try {
 			while (this.initialChangeRecorder.hasPending()) {
 				while (this.hasOpenMetadataResolveBatch) {
+					const startedAt = shouldMeasure ? performance.now() : 0;
 					await this.waitForNextMetadataResolve();
+					if (shouldMeasure)
+						timing.metadataWaitMs += performance.now() - startedAt;
 
 					if (this.destroyed) {
-						return;
+						return timing;
 					}
 				}
 
@@ -451,13 +463,17 @@ export class IndexUpdateQueue {
 						(path) => this.fileExists(path),
 					)
 				) {
+					const startedAt = shouldMeasure ? performance.now() : 0;
 					await this.waitForNextMetadataResolve();
+					if (shouldMeasure)
+						timing.metadataWaitMs += performance.now() - startedAt;
 
 					if (this.destroyed) {
-						return;
+						return timing;
 					}
 				}
 
+				const updateStartedAt = shouldMeasure ? performance.now() : 0;
 				const changes = this.initialChangeRecorder.drainToFinalStateChanges(
 					(path) => this.fileExists(path),
 					(path) => this.shouldIndexPath(path),
@@ -465,7 +481,10 @@ export class IndexUpdateQueue {
 				if (changes.length > 0) {
 					await this.indexingService.applyFileChangesTimeSliced(changes);
 				}
+				if (shouldMeasure)
+					timing.updateMs += performance.now() - updateStartedAt;
 			}
+			return timing;
 		} finally {
 			this.isProcessingPendingChanges = false;
 			this.notifyQueueIdleWaitersIfIdle();

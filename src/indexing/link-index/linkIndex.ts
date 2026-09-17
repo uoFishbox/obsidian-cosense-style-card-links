@@ -71,28 +71,43 @@ export function getLookupKeyForEdge(key: EdgeKey): string | undefined {
 	return edge ? toCaseInsensitiveLookupKey(edge.path) : undefined;
 }
 
-/** Reads one canonical, sorted source row from Obsidian's completed link graph. */
+/** Reads a canonical host row, reusing the previous row when its edges are unchanged. */
 export function readCurrentSourceRow(
 	metadataCache: IMetadataCache,
 	sourcePath: string,
+	previousRow?: readonly SourceEdge[],
 ): readonly SourceEdge[] {
-	const row: SourceEdge[] = [];
 	const resolved = metadataCache.resolvedLinks[sourcePath];
+	const unresolved = metadataCache.unresolvedLinks[sourcePath];
+	let countsByKey: Map<EdgeKey, number> | undefined;
+	if (unresolved) {
+		for (const rawPath in unresolved) {
+			if (!Object.prototype.hasOwnProperty.call(unresolved, rawPath)) continue;
+			const count = unresolved[rawPath];
+			if (!isPositiveCount(count)) continue;
+			countsByKey ??= new Map();
+			const key = unresolvedEdgeKey(rawPath);
+			countsByKey.set(key, (countsByKey.get(key) ?? 0) + count);
+		}
+	}
+
+	// Startup resolve events often repeat the entire graph. Compare counts before
+	// allocating and sorting another edge array for each unchanged source.
+	if (previousRow && matchesHostCounts(previousRow, resolved, countsByKey)) {
+		return previousRow;
+	}
+
+	const row: SourceEdge[] = [];
 	if (resolved) {
-		for (const [destinationPath, count] of Object.entries(resolved)) {
+		for (const destinationPath in resolved) {
+			if (!Object.prototype.hasOwnProperty.call(resolved, destinationPath))
+				continue;
+			const count = resolved[destinationPath];
 			if (!isPositiveCount(count)) continue;
 			row.push({ key: resolvedEdgeKey(destinationPath), count });
 		}
 	}
-
-	const unresolved = metadataCache.unresolvedLinks[sourcePath];
-	if (unresolved) {
-		const countsByKey = new Map<EdgeKey, number>();
-		for (const [rawPath, count] of Object.entries(unresolved)) {
-			if (!isPositiveCount(count)) continue;
-			const key = unresolvedEdgeKey(rawPath);
-			countsByKey.set(key, (countsByKey.get(key) ?? 0) + count);
-		}
+	if (countsByKey) {
 		for (const [key, count] of countsByKey) {
 			row.push({ key, count });
 		}
@@ -100,6 +115,28 @@ export function readCurrentSourceRow(
 
 	row.sort(compareSourceEdges);
 	return row;
+}
+
+function matchesHostCounts(
+	row: readonly SourceEdge[],
+	resolved: Record<string, number> | undefined,
+	unresolved: ReadonlyMap<EdgeKey, number> | undefined,
+): boolean {
+	let edgeCount = unresolved?.size ?? 0;
+	if (resolved) {
+		for (const path in resolved) {
+			if (!Object.prototype.hasOwnProperty.call(resolved, path)) continue;
+			if (isPositiveCount(resolved[path])) edgeCount++;
+		}
+	}
+	if (edgeCount !== row.length) return false;
+	for (const edge of row) {
+		const count = edge.key.startsWith(RESOLVED_EDGE_PREFIX)
+			? resolved?.[edge.key.slice(RESOLVED_EDGE_PREFIX.length)]
+			: unresolved?.get(edge.key);
+		if (count !== edge.count) return false;
+	}
+	return true;
 }
 
 /** Collects the union of sources currently exposed by the host graph. */

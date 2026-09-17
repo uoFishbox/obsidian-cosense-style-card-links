@@ -673,6 +673,61 @@ describe("IndexUpdateQueue", () => {
 		);
 	});
 
+	test("initial timing separates metadata waiting from catch-up updates during startup resolves", async () => {
+		vi.stubEnv("NODE_ENV", "development");
+		let now = 0;
+		const clock = vi.spyOn(performance, "now").mockImplementation(() => now);
+		const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+		const harness = createHarness();
+		try {
+			let finishBuild: (() => void) | undefined;
+			harness.indexingService.rebuildIndexesTimeSliced.mockImplementationOnce(
+				() =>
+					new Promise<void>((resolve) => {
+						finishBuild = resolve;
+					}),
+			);
+			harness.indexingService.applyFileChangesTimeSliced.mockImplementationOnce(
+				async () => {
+					now += 25;
+				},
+			);
+			await startInitialScan(harness);
+			const created = createMockTFile("new.md");
+			harness.setVaultFile(created);
+			harness.emitVaultEvent("create", created);
+			for (let index = 0; index < 1000; index++) {
+				const source = createMockTFile(`source-${index}.md`);
+				harness.setVaultFile(source);
+				harness.emitMetadataEvent("resolve", source);
+			}
+			now = 100;
+			finishBuild?.();
+			await flushAsyncTasks();
+			expect(harness.stagedRebuilds[0].commit).not.toHaveBeenCalled();
+			now += 30000;
+			harness.emitMetadataEvent("resolved");
+			await harness.waitForIndexIdle();
+			expect(
+				harness.indexingService.applyFileChangesTimeSliced.mock.calls[0][0],
+			).toHaveLength(1001);
+			expect(log).toHaveBeenCalledWith(
+				"[IndexUpdateQueue] Initial index timing (ms):",
+				expect.objectContaining({
+					buildMs: 100,
+					catchUpMs: 30025,
+					catchUpMetadataWaitMs: 30000,
+					catchUpUpdateMs: 25,
+				}),
+			);
+		} finally {
+			harness.queue.destroy();
+			clock.mockRestore();
+			log.mockRestore();
+			vi.unstubAllEnvs();
+		}
+	});
+
 	test("initial scan ignores startup resolves without a create or rename", async () => {
 		const harness = createHarness();
 		const firstSource = createMockTFile("notes/first-source.md");

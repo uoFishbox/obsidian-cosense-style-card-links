@@ -153,13 +153,14 @@ export class IncrementalIndexUpdater {
 		presentationMayHaveChanged: boolean,
 	): void {
 		const previousRow = run.state.outgoing.get(sourcePath);
-		const nextRow = readCurrentSourceRow(this.metadataCache, sourcePath);
-		const structurallyChanged = reconcileSourceRow(
-			run.state,
+		const nextRow = readCurrentSourceRow(
+			this.metadataCache,
 			sourcePath,
-			nextRow,
-			run,
+			previousRow,
 		);
+		const structurallyChanged =
+			nextRow !== previousRow &&
+			reconcileSourceRow(run.state, sourcePath, nextRow, run);
 
 		if (presentationMayHaveChanged) {
 			run.markPresentationRows(previousRow, nextRow);

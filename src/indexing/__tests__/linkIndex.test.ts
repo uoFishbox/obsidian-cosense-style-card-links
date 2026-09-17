@@ -9,6 +9,43 @@ import {
 } from "../link-index/linkIndex";
 
 describe("two-map link index", () => {
+	test("reuses unchanged rows after normalizing unresolved aliases and ignoring invalid counts", () => {
+		const { mockMetadataCache } = new VaultEnvironmentBuilder([]).build();
+		mockMetadataCache.resolvedLinks["source.md"] = {
+			"Target.md": 2,
+			"empty.md": 0,
+		};
+		mockMetadataCache.unresolvedLinks["source.md"] = {
+			Foo: 1,
+			"foo.md": 2,
+			ignored: NaN,
+		};
+		const previous = readCurrentSourceRow(mockMetadataCache, "source.md");
+		mockMetadataCache.unresolvedLinks["source.md"] = { "FOO.md": 3 };
+		expect(readCurrentSourceRow(mockMetadataCache, "source.md", previous)).toBe(
+			previous,
+		);
+	});
+
+	test.each<{ resolved: Record<string, number>; unresolved: Record<string, number> }>(
+		[
+			{ resolved: { "Other/Target.md": 1 }, unresolved: {} },
+			{ resolved: { "Target.md": 2 }, unresolved: {} },
+			{ resolved: { "Target.md": 1, "Extra.md": 1 }, unresolved: {} },
+			{ resolved: {}, unresolved: {} },
+			{ resolved: {}, unresolved: { Target: 1 } },
+		],
+	)("does not reuse a row when destinations or counts change: %j", (next) => {
+		const { mockMetadataCache } = new VaultEnvironmentBuilder([]).build();
+		mockMetadataCache.resolvedLinks["source.md"] = { "Target.md": 1 };
+		const previous = readCurrentSourceRow(mockMetadataCache, "source.md");
+		mockMetadataCache.resolvedLinks["source.md"] = next.resolved;
+		mockMetadataCache.unresolvedLinks["source.md"] = next.unresolved;
+		const actual = readCurrentSourceRow(mockMetadataCache, "source.md", previous);
+		expect(actual).not.toBe(previous);
+		expect(actual).toEqual(readCurrentSourceRow(mockMetadataCache, "source.md"));
+	});
+
 	test("resolved and unresolved identities occupy separate namespaces", () => {
 		expect(resolvedEdgeKey("Foo.md")).not.toBe(unresolvedEdgeKey("Foo.md"));
 		expect(unresolvedEdgeKey("Foo")).toBe(unresolvedEdgeKey("FOO.md"));
