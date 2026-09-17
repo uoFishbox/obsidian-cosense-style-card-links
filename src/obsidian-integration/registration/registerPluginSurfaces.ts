@@ -75,7 +75,7 @@ function registerViews(plugin: PluginHost, viewServices: ViewServices): void {
 }
 
 function registerCommands(plugin: PluginHost, deps: RegisterPluginSurfacesDeps): void {
-	const text = getMainUiTranslations(plugin.settings.language);
+	const text = getMainUiTranslations("en");
 	plugin.addCommand({
 		id: "toggle-scroll-to-two-hop-links",
 		name: text.scrollToTwoHopLinks,
