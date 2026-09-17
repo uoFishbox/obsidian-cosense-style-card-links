@@ -44,6 +44,11 @@ interface LinkResolutionAmbiguityIndex {
 	readonly baseNameCounts: Map<string, number>;
 }
 
+interface MutableSourceEdge {
+	readonly key: string;
+	count: number;
+}
+
 /** Builds the canonical index directly from every file's parsed metadata. */
 export async function buildLinkIndexArtifactsChunked(
 	vault: IVault,
@@ -158,13 +163,17 @@ function* readSourceRowFromMetadataChunked(
 	ambiguityIndex: LinkResolutionAmbiguityIndex,
 	yieldScheduler: YieldScheduler,
 ): YieldStepGenerator<readonly SourceEdge[]> {
-	const countsByKey = new Map<string, number>();
+	const edgesByKey = new Map<string, MutableSourceEdge>();
+	const sourceEdges: MutableSourceEdge[] = [];
 	let referenceCount = 0;
+	const referenceGroups: readonly (readonly LinkReference[] | undefined)[] = [
+		cache?.links,
+		cache?.embeds,
+		cache?.frontmatterLinks,
+	];
 
-	function* visitReferences(
-		references: readonly LinkReference[] | undefined,
-	): YieldStepGenerator {
-		if (!references) return;
+	for (const references of referenceGroups) {
+		if (!references) continue;
 
 		for (const reference of references) {
 			const rawLinkPath = getLinkpath(reference.link);
@@ -184,7 +193,14 @@ function* readSourceRowFromMetadataChunked(
 					: resolvedEdgeMemo.global;
 				memo.set(rawLinkPath, key);
 			}
-			countsByKey.set(key, (countsByKey.get(key) ?? 0) + 1);
+			const existingEdge = edgesByKey.get(key);
+			if (existingEdge) {
+				existingEdge.count++;
+			} else {
+				const edge = { key, count: 1 };
+				edgesByKey.set(key, edge);
+				sourceEdges.push(edge);
+			}
 
 			referenceCount++;
 			const pendingYield = maybeYield(
@@ -196,13 +212,7 @@ function* readSourceRowFromMetadataChunked(
 		}
 	}
 
-	yield* visitReferences(cache?.links);
-	yield* visitReferences(cache?.embeds);
-	yield* visitReferences(cache?.frontmatterLinks);
-
-	return Array.from(countsByKey, ([key, count]) => ({ key, count })).sort(
-		compareSourceEdges,
-	);
+	return sourceEdges.sort(compareSourceEdges);
 }
 
 function createLinkResolutionAmbiguityIndex(
