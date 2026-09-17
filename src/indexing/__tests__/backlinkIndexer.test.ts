@@ -153,6 +153,25 @@ describe("buildLinkIndexArtifactsChunked", () => {
 		expect(yieldCount).toBe(2);
 	});
 
+	test("does not yield within a source below the 128-reference threshold", async () => {
+		const env = new VaultEnvironmentBuilder([
+			{
+				path: "source.md",
+				links: Array.from({ length: 127 }, (_, index) => `missing-${index}`),
+			},
+		]).build();
+		let yieldCount = 0;
+
+		await buildLinkIndexArtifactsChunked(env.mockVault, env.mockMetadataCache, {
+			yieldIntervalMs: 0,
+			yieldFn: async () => {
+				yieldCount++;
+			},
+		});
+
+		expect(yieldCount).toBe(0);
+	});
+
 	test("checks for yielding every 64 files", async () => {
 		const env = new VaultEnvironmentBuilder(
 			Array.from({ length: 64 }, (_, index) => ({

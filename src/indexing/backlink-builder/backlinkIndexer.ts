@@ -22,6 +22,7 @@ import {
 import {
 	createYieldScheduler,
 	defaultYieldToMainThread,
+	drainYieldSteps,
 	HEAVY_YIELD_CHECK_INTERVAL,
 	maybeYield,
 	YIELD_CHECK_INTERVAL,
@@ -47,6 +48,15 @@ interface LinkResolutionAmbiguityIndex {
 interface MutableSourceEdge {
 	readonly key: string;
 	count: number;
+}
+
+interface SourceRowBuilder {
+	readonly metadataCache: IMetadataCache;
+	readonly sourceFile: TFile;
+	readonly resolvedEdgeMemo: ResolvedEdgeMemo;
+	readonly ambiguityIndex: LinkResolutionAmbiguityIndex;
+	readonly edgesByKey: Map<string, MutableSourceEdge>;
+	readonly sourceEdges: MutableSourceEdge[];
 }
 
 /** Builds the canonical index directly from every file's parsed metadata. */
@@ -95,22 +105,29 @@ export async function buildLinkIndexArtifactsChunked(
 
 		if (shouldIndexLinks) {
 			linkCapableFileCount++;
-			if (countLinkReferences(cache) > 0) {
+			const linkReferenceCount = countLinkReferences(cache);
+			if (linkReferenceCount > 0) {
 				resolvedEdgeMemo.local.clear();
-				const sourceRowSteps = readSourceRowFromMetadataChunked(
-					metadataCache,
-					file,
-					cache,
-					resolvedEdgeMemo,
-					ambiguityIndex,
-					yieldScheduler,
-				);
-				let sourceRowStep = sourceRowSteps.next();
-				while (!sourceRowStep.done) {
-					await sourceRowStep.value;
-					sourceRowStep = sourceRowSteps.next();
-				}
-				addInitialSourceRow(linkIndex, file.path, sourceRowStep.value);
+				const sourceRow =
+					linkReferenceCount < HEAVY_YIELD_CHECK_INTERVAL
+						? readSourceRowFromMetadata(
+								metadataCache,
+								file,
+								cache,
+								resolvedEdgeMemo,
+								ambiguityIndex,
+							)
+						: await drainYieldSteps(
+								readSourceRowFromMetadataChunked(
+									metadataCache,
+									file,
+									cache,
+									resolvedEdgeMemo,
+									ambiguityIndex,
+									yieldScheduler,
+								),
+							);
+				addInitialSourceRow(linkIndex, file.path, sourceRow);
 				indexedSourceCount++;
 			}
 		}
@@ -163,8 +180,12 @@ function* readSourceRowFromMetadataChunked(
 	ambiguityIndex: LinkResolutionAmbiguityIndex,
 	yieldScheduler: YieldScheduler,
 ): YieldStepGenerator<readonly SourceEdge[]> {
-	const edgesByKey = new Map<string, MutableSourceEdge>();
-	const sourceEdges: MutableSourceEdge[] = [];
+	const builder = createSourceRowBuilder(
+		metadataCache,
+		sourceFile,
+		resolvedEdgeMemo,
+		ambiguityIndex,
+	);
 	let referenceCount = 0;
 	const referenceGroups: readonly (readonly LinkReference[] | undefined)[] = [
 		cache?.links,
@@ -176,31 +197,7 @@ function* readSourceRowFromMetadataChunked(
 		if (!references) continue;
 
 		for (const reference of references) {
-			const rawLinkPath = getLinkpath(reference.link);
-			let key =
-				resolvedEdgeMemo.local.get(rawLinkPath) ??
-				resolvedEdgeMemo.global.get(rawLinkPath);
-			if (key === undefined) {
-				const destination = metadataCache.getFirstLinkpathDest(
-					rawLinkPath,
-					sourceFile.path,
-				);
-				key = destination
-					? resolvedEdgeKey(destination.path)
-					: unresolvedEdgeKey(rawLinkPath);
-				const memo = isAmbiguousRawLinkPath(rawLinkPath, ambiguityIndex)
-					? resolvedEdgeMemo.local
-					: resolvedEdgeMemo.global;
-				memo.set(rawLinkPath, key);
-			}
-			const existingEdge = edgesByKey.get(key);
-			if (existingEdge) {
-				existingEdge.count++;
-			} else {
-				const edge = { key, count: 1 };
-				edgesByKey.set(key, edge);
-				sourceEdges.push(edge);
-			}
+			addReferenceToSourceRow(builder, reference);
 
 			referenceCount++;
 			const pendingYield = maybeYield(
@@ -212,7 +209,88 @@ function* readSourceRowFromMetadataChunked(
 		}
 	}
 
-	return sourceEdges.sort(compareSourceEdges);
+	return builder.sourceEdges.sort(compareSourceEdges);
+}
+
+function readSourceRowFromMetadata(
+	metadataCache: IMetadataCache,
+	sourceFile: TFile,
+	cache: CachedMetadataWithLinkReferences | null,
+	resolvedEdgeMemo: ResolvedEdgeMemo,
+	ambiguityIndex: LinkResolutionAmbiguityIndex,
+): readonly SourceEdge[] {
+	const builder = createSourceRowBuilder(
+		metadataCache,
+		sourceFile,
+		resolvedEdgeMemo,
+		ambiguityIndex,
+	);
+
+	if (cache?.links) {
+		for (const reference of cache.links) {
+			addReferenceToSourceRow(builder, reference);
+		}
+	}
+	if (cache?.embeds) {
+		for (const reference of cache.embeds) {
+			addReferenceToSourceRow(builder, reference);
+		}
+	}
+	if (cache?.frontmatterLinks) {
+		for (const reference of cache.frontmatterLinks) {
+			addReferenceToSourceRow(builder, reference);
+		}
+	}
+
+	return builder.sourceEdges.sort(compareSourceEdges);
+}
+
+function createSourceRowBuilder(
+	metadataCache: IMetadataCache,
+	sourceFile: TFile,
+	resolvedEdgeMemo: ResolvedEdgeMemo,
+	ambiguityIndex: LinkResolutionAmbiguityIndex,
+): SourceRowBuilder {
+	return {
+		metadataCache,
+		sourceFile,
+		resolvedEdgeMemo,
+		ambiguityIndex,
+		edgesByKey: new Map(),
+		sourceEdges: [],
+	};
+}
+
+function addReferenceToSourceRow(
+	builder: SourceRowBuilder,
+	reference: LinkReference,
+): void {
+	const rawLinkPath = getLinkpath(reference.link);
+	let key =
+		builder.resolvedEdgeMemo.local.get(rawLinkPath) ??
+		builder.resolvedEdgeMemo.global.get(rawLinkPath);
+	if (key === undefined) {
+		const destination = builder.metadataCache.getFirstLinkpathDest(
+			rawLinkPath,
+			builder.sourceFile.path,
+		);
+		key = destination
+			? resolvedEdgeKey(destination.path)
+			: unresolvedEdgeKey(rawLinkPath);
+		const memo = isAmbiguousRawLinkPath(rawLinkPath, builder.ambiguityIndex)
+			? builder.resolvedEdgeMemo.local
+			: builder.resolvedEdgeMemo.global;
+		memo.set(rawLinkPath, key);
+	}
+	const existingEdge = builder.edgesByKey.get(key);
+	if (existingEdge) {
+		existingEdge.count++;
+		return;
+	}
+
+	const edge = { key, count: 1 };
+	builder.edgesByKey.set(key, edge);
+	builder.sourceEdges.push(edge);
 }
 
 function createLinkResolutionAmbiguityIndex(
