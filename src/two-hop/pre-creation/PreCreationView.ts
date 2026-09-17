@@ -97,7 +97,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	}
 
 	getIcon(): IconName {
-		return "file-plus-2";
+		return "file-question-mark";
 	}
 
 	public usesSidebarLinkSurface(): boolean {
