@@ -10,6 +10,7 @@ import type { RebuildOptions } from "../indexState";
 import {
 	createEmptyLinkIndex,
 	resolvedEdgeKey,
+	setIncomingSource,
 	type LinkIndex,
 	type SourceEdge,
 	unresolvedEdgeKey,
@@ -163,12 +164,7 @@ function addInitialSourceRow(
 ): void {
 	index.outgoing.set(sourcePath, row);
 	for (const edge of row) {
-		let sources = index.incoming.get(edge.key);
-		if (!sources) {
-			sources = new Map();
-			index.incoming.set(edge.key, sources);
-		}
-		sources.set(sourcePath, edge.count);
+		setIncomingSource(index, edge.key, sourcePath, edge.count);
 	}
 }
 

@@ -1,14 +1,71 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { VaultEnvironmentBuilder } from "testing/helpers/VaultEnvironmentBuilder";
 import {
 	createEmptyLinkIndex,
 	readCurrentSourceRow,
 	reconcileSourceRow,
 	resolvedEdgeKey,
+	setIncomingSource,
 	unresolvedEdgeKey,
 } from "../link-index/linkIndex";
+import { collectSourcePathsForLookupKeys } from "../backlink-builder/lookupGraphQueries";
 
 describe("two-map link index", () => {
+	test("lookup queries visit only matching buckets and deduplicate sources", () => {
+		const index = createEmptyLinkIndex();
+		const keys = [
+			resolvedEdgeKey("Target.md"),
+			resolvedEdgeKey("target.md"),
+			unresolvedEdgeKey("TARGET"),
+		];
+		for (const key of keys) setIncomingSource(index, key, "shared.md", 1);
+		setIncomingSource(index, keys[2], "unresolved-source.md", 2);
+		for (let i = 0; i < 100; i++) {
+			setIncomingSource(index, resolvedEdgeKey(`other-${i}.md`), "other.md", 1);
+		}
+		const getBucket = vi.spyOn(index.incoming, "get");
+		const iterateBuckets = vi.spyOn(index.incoming, Symbol.iterator);
+
+		expect(
+			collectSourcePathsForLookupKeys(index, [
+				"target.md",
+				"target.md",
+				"absent.md",
+			]),
+		).toEqual(new Set(["shared.md", "unresolved-source.md"]));
+		expect(getBucket.mock.calls.map(([key]) => key)).toEqual(keys);
+		expect(iterateBuckets).not.toHaveBeenCalled();
+	});
+
+	test("lookup buckets survive partial removal and disappear after their last source", () => {
+		const index = createEmptyLinkIndex();
+		const sink = { markChangedEdge: () => undefined };
+		const resolved = [{ key: resolvedEdgeKey("Target.md"), count: 1 }];
+		const unresolved = [{ key: unresolvedEdgeKey("target"), count: 1 }];
+		reconcileSourceRow(index, "first.md", resolved, sink);
+		reconcileSourceRow(index, "second.md", resolved, sink);
+		reconcileSourceRow(index, "missing.md", unresolved, sink);
+
+		reconcileSourceRow(index, "first.md", [], sink);
+		expect(collectSourcePathsForLookupKeys(index, ["target.md"])).toEqual(
+			new Set(["second.md", "missing.md"]),
+		);
+		reconcileSourceRow(index, "second.md", [], sink);
+		expect(index.edgeKeysByLookupKey.get("target.md")).toEqual(
+			new Set([unresolved[0].key]),
+		);
+		reconcileSourceRow(index, "missing.md", [], sink);
+		expect(index.edgeKeysByLookupKey.size).toBe(0);
+		expect(collectSourcePathsForLookupKeys(index, ["target.md"])).toEqual(
+			new Set(),
+		);
+
+		reconcileSourceRow(index, "first.md", resolved, sink);
+		expect(collectSourcePathsForLookupKeys(index, ["target.md"])).toEqual(
+			new Set(["first.md"]),
+		);
+	});
+
 	test("reuses unchanged rows after normalizing unresolved aliases and ignoring invalid counts", () => {
 		const { mockMetadataCache } = new VaultEnvironmentBuilder([]).build();
 		mockMetadataCache.resolvedLinks["source.md"] = {

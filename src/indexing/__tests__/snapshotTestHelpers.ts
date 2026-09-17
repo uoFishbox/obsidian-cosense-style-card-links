@@ -18,6 +18,10 @@ export function serializeSnapshot(snapshot: MutableIndexState): unknown {
 				[key, Array.from(sources.entries()).sort(compareEntries)] as const,
 		).sort(compareEntries),
 		outgoing: Array.from(snapshot.outgoing.entries()).sort(compareEntries),
+		edgeKeysByLookupKey: Array.from(
+			snapshot.edgeKeysByLookupKey,
+			([key, edges]) => [key, Array.from(edges).sort()] as const,
+		).sort(compareEntries),
 	};
 }
 

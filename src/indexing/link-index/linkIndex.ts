@@ -17,11 +17,14 @@ export interface SourceEdge {
 export interface LinkIndex {
 	incoming: Map<EdgeKey, Map<string, number>>;
 	outgoing: Map<string, readonly SourceEdge[]>;
+	/** Incoming bucket identities grouped by their case-insensitive lookup key. */
+	edgeKeysByLookupKey: Map<string, Set<EdgeKey>>;
 }
 
 export interface ReadonlyLinkIndex {
 	readonly incoming: ReadonlyMap<EdgeKey, ReadonlyMap<string, number>>;
 	readonly outgoing: ReadonlyMap<string, readonly SourceEdge[]>;
+	readonly edgeKeysByLookupKey: ReadonlyMap<string, ReadonlySet<EdgeKey>>;
 }
 
 export type EdgeIdentity =
@@ -37,6 +40,7 @@ export function createEmptyLinkIndex(): LinkIndex {
 	return {
 		incoming: new Map(),
 		outgoing: new Map(),
+		edgeKeysByLookupKey: new Map(),
 	};
 }
 
@@ -211,7 +215,8 @@ export function visitSourceRowKeys(
 	}
 }
 
-function setIncomingSource(
+/** Sets a reverse edge, registering new buckets for lookup-key queries. */
+export function setIncomingSource(
 	index: LinkIndex,
 	key: EdgeKey,
 	sourcePath: string,
@@ -221,6 +226,15 @@ function setIncomingSource(
 	if (!sources) {
 		sources = new Map();
 		index.incoming.set(key, sources);
+		const lookupKey = getLookupKeyForEdge(key);
+		if (lookupKey) {
+			let edgeKeys = index.edgeKeysByLookupKey.get(lookupKey);
+			if (!edgeKeys) {
+				edgeKeys = new Set();
+				index.edgeKeysByLookupKey.set(lookupKey, edgeKeys);
+			}
+			edgeKeys.add(key);
+		}
 	}
 	sources.set(sourcePath, count);
 }
@@ -235,6 +249,12 @@ function removeIncomingSource(
 	sources.delete(sourcePath);
 	if (sources.size === 0) {
 		index.incoming.delete(key);
+		const lookupKey = getLookupKeyForEdge(key);
+		if (!lookupKey) return;
+		const edgeKeys = index.edgeKeysByLookupKey.get(lookupKey);
+		if (!edgeKeys) return;
+		edgeKeys.delete(key);
+		if (edgeKeys.size === 0) index.edgeKeysByLookupKey.delete(lookupKey);
 	}
 }
 

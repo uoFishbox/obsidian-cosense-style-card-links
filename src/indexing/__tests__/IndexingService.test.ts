@@ -59,11 +59,11 @@ describe("IndexingService", () => {
 			).toEqual(["note1.md", "note2.md"]);
 		});
 
-		test("can retrieve source paths for a lookupKey", async () => {
+		test("full rebuild registers case-insensitive source lookup buckets", async () => {
 			const { service } = new VaultEnvironmentBuilder([
-				{ path: "note1.md", links: ["note3"] },
-				{ path: "note2.md", links: ["note3"] },
-				{ path: "note3.md" },
+				{ path: "note1.md", links: ["Note3"] },
+				{ path: "note2.md", links: ["Note3"] },
+				{ path: "Note3.md" },
 			]).build();
 
 			await service.rebuildIndexesTimeSliced();
