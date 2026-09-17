@@ -12,7 +12,11 @@
 	aria-live="polite"
 	aria-busy="true"
 >
-	<div class="cosense-card-links__loading-spinner"></div>
+	<div class="cosense-card-links__loading-loader" aria-hidden="true">
+		<span class="cosense-card-links__loading-dot"></span>
+		<span class="cosense-card-links__loading-dot"></span>
+		<span class="cosense-card-links__loading-dot"></span>
+	</div>
 	{#if message}
 		<p class="cosense-card-links__loading-message">{message}</p>
 	{/if}

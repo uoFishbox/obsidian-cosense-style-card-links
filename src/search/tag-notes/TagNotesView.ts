@@ -25,6 +25,7 @@ import {
 	type ListViewUiState,
 } from "cards/list/model/listViewUiState";
 import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
+import { createLoadingIndicator } from "shared/ui/dom/loadingIndicator";
 import { VIEW_TYPE_TAG_NOTES } from "obsidian-integration/views/viewTypes";
 export { openTagNotesView } from "./openTagNotesView";
 export { VIEW_TYPE_TAG_NOTES } from "obsidian-integration/views/viewTypes";
@@ -251,16 +252,12 @@ export class TagNotesView extends AbstractSvelteListView<TaggedNote> {
 				this.infoTextEl = infoEl.createEl("p", {
 					text: text.loadingNotesWithTag(this.tag),
 				}) as HTMLParagraphElement;
-				const loadingEl = infoEl.createDiv({
-					cls: "cosense-card-links__loading-container",
-				});
-				loadingEl.createDiv({ cls: "cosense-card-links__loading-spinner" });
-				loadingEl.createEl("p", {
-					cls: "cosense-card-links__loading-message",
-					text: this.isLoadingNotes
+				createLoadingIndicator(
+					infoEl,
+					this.isLoadingNotes
 						? text.waitingForTagIndex
 						: text.preparingTagNotes,
-				});
+				);
 				return;
 			}
 

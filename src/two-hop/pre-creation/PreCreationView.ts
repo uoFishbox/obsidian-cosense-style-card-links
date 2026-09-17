@@ -28,6 +28,7 @@ import { getCardItemKey, type CardItem } from "cards/CardItem";
 import { materializePreCreationFile } from "./preCreationFileWorkflow";
 import { renamePreCreationUnresolvedLinks } from "./preCreationLinkRename";
 import { isPlainEnterAtContentEnd } from "shared/ui/dom/contentEditableCaret";
+import { createLoadingIndicator } from "shared/ui/dom/loadingIndicator";
 import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
 import { VIEW_TYPE_PRE_CREATE } from "obsidian-integration/views/viewTypes";
 import {
@@ -84,6 +85,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	private originalTitleText = "";
 	private originalLinktext = "";
 	private isRenaming = false;
+	private isIndexPending = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: PluginHost, viewServices: ViewServices) {
 		super(leaf, plugin, viewServices);
@@ -148,6 +150,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	protected onViewClose(): void {
 		this.inlineTitleEl = undefined;
 		this.createButtonEl = undefined;
+		this.isIndexPending = false;
 	}
 
 	private extractState(state: unknown): {
@@ -377,6 +380,29 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		return false;
 	}
 
+	/**
+	 * Keep receiving index updates while the pending indicator is on screen so
+	 * the readiness notification can swap it for the backlink list. The check is
+	 * based on the rendered state, not on the live index, because that
+	 * notification is dispatched after the index reports ready.
+	 */
+	protected isViewReady(): boolean {
+		return super.isViewReady() || this.isIndexPending;
+	}
+
+	protected refreshItemsForContext(context?: DataUpdateContext): void {
+		if (this.isIndexPending) {
+			if (!this.plugin.indexingService.isReady()) {
+				return;
+			}
+			// The initial rebuild finished: swap the pending indicator for the list.
+			this.render();
+			return;
+		}
+
+		super.refreshItemsForContext(context);
+	}
+
 	/** Resolve the source file for LinkContext. Return null if it cannot be found. */
 	private resolveSourceFile(): TFile | null {
 		if (!this.sourcePath) {
@@ -503,7 +529,26 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		this.createButtonEl.focus();
 
 		// Place the backlinks section directly under .cm-scroller (after .cm-sizer), as in the normal editor
-		this.mountBacklinksSection(scrollerEl);
+		if (this.plugin.indexingService.isReady()) {
+			this.isIndexPending = false;
+			this.mountBacklinksSection(scrollerEl);
+			return;
+		}
+
+		this.isIndexPending = true;
+		this.mountIndexPendingState(scrollerEl);
+	}
+
+	/**
+	 * The backlink list queries an index that may still be building. Show the
+	 * loading indicator instead of the misleading empty message.
+	 */
+	private mountIndexPendingState(parentEl: HTMLElement): void {
+		const text = getMainUiTranslations(this.plugin.settings.language);
+		const pendingEl = parentEl.createDiv({
+			cls: "cosense-card-links__temp-view cosense-card-links-pre-create__index-pending",
+		});
+		createLoadingIndicator(pendingEl, text.waitingForInitialIndex);
 	}
 
 	private mountBacklinksSection(parentEl: HTMLElement): void {
