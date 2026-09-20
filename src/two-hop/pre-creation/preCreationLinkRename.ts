@@ -23,8 +23,9 @@ export interface IndexUpdateBatch {
  *
  * This intentionally follows Orbital's rewrite strategy rather than relying on
  * FileManager.renameFile(): use the link index to narrow the source files, then
- * splice cached link/embedding ranges from the end of each document so offsets
- * remain valid. Frontmatter is handled separately through processFrontMatter.
+ * splice cached link/embedding ranges from the end of each Markdown document so
+ * offsets remain valid. Canvas files are rewritten through their JSON node model.
+ * Markdown frontmatter is handled separately through processFrontMatter.
  */
 export async function renamePreCreationUnresolvedLinks(
 	app: App,
@@ -56,10 +57,24 @@ export async function renamePreCreationUnresolvedLinks(
 	try {
 		let inspected = 0;
 		for (const file of candidates.values()) {
-			if (file.extension !== "md") continue;
+			if (file.extension !== "md" && file.extension !== "canvas") continue;
 			if (++inspected % 10 === 0) await defaultYieldToMainThread();
 
 			try {
+				if (file.extension === "canvas") {
+					const changed = await rewriteCanvasLinks(
+						app,
+						file,
+						fromPath,
+						toTarget,
+					);
+					if (changed > 0) {
+						result.filesUpdated++;
+						result.linksUpdated += changed;
+					}
+					continue;
+				}
+
 				const bodyCount = await rewriteBodyLinks(app, file, fromPath, toTarget);
 				const frontmatterCount = await rewriteFrontmatterLinks(
 					app,
@@ -132,6 +147,55 @@ async function rewriteBodyLinks(
 		return out;
 	});
 	return replaced;
+}
+
+async function rewriteCanvasLinks(
+	app: App,
+	file: TFile,
+	fromPath: string,
+	toTarget: string,
+): Promise<number> {
+	let replaced = 0;
+	await app.vault.process(file, (data) => {
+		const canvas: unknown = JSON.parse(data);
+		if (!isRecord(canvas) || !Array.isArray(canvas.nodes)) return data;
+
+		for (const value of canvas.nodes) {
+			if (!isRecord(value)) continue;
+
+			if (value.type === "file" && typeof value.file === "string") {
+				const reference = { link: value.file } as LinkReference;
+				if (isMatchingUnresolvedReference(app, file, reference, fromPath)) {
+					value.file = normalizeLinkToMarkdownPath(toTarget);
+					replaced++;
+				}
+				continue;
+			}
+
+			if (value.type !== "text" || typeof value.text !== "string") continue;
+			const rewritten = rewriteWikilinksInString(
+				app,
+				file,
+				value.text,
+				fromPath,
+				toTarget,
+			);
+			value.text = rewritten.value;
+			replaced += rewritten.count;
+		}
+
+		return replaced > 0 ? serializeCanvas(canvas, data) : data;
+	});
+	return replaced;
+}
+
+function serializeCanvas(canvas: Record<string, unknown>, original: string): string {
+	const indentation = original.match(/\r?\n([\t ]+)"/)?.[1];
+	const newline = original.includes("\r\n") ? "\r\n" : "\n";
+	const hasFinalNewline = original.endsWith("\n");
+	let serialized = JSON.stringify(canvas, null, indentation);
+	if (newline === "\r\n") serialized = serialized.split("\n").join(newline);
+	return hasFinalNewline ? `${serialized}${newline}` : serialized;
 }
 
 async function rewriteFrontmatterLinks(

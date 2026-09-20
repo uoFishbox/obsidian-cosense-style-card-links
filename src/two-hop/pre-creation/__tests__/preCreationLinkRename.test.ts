@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { renamePreCreationUnresolvedLinks } from "../preCreationLinkRename";
 
-function makeFile(path = "notes/source.md") {
-	return { path, extension: "md" } as any;
+function makeFile(path = "notes/source.md", extension = "md") {
+	return { path, extension } as any;
 }
 
-function makeApp(content: string, refs: any[]) {
-	const file = makeFile();
+function makeApp(content: string, refs: any[], file = makeFile()) {
 	let current = content;
 	const metadataCache = {
 		getFileCache: vi.fn(() => ({ links: refs })),
@@ -104,6 +103,72 @@ describe("renamePreCreationUnresolvedLinks", () => {
 
 		expect((app.vault as any).create).not.toHaveBeenCalled();
 		expect((app.fileManager as any).renameFile).not.toHaveBeenCalled();
+	});
+
+	it("renames matching links in canvas text and file nodes", async () => {
+		const file = makeFile("boards/source.canvas", "canvas");
+		const content = JSON.stringify(
+			{
+				nodes: [
+					{
+						id: "text",
+						type: "text",
+						text: "[[Old#Heading|Alias]] and ![[Other]]",
+					},
+					{
+						id: "file",
+						type: "file",
+						file: "Old.md",
+						subpath: "#Keep",
+					},
+				],
+				edges: [],
+			},
+			null,
+			"\t",
+		);
+		const { app, getContent } = makeApp(content, [], file);
+
+		const result = await renamePreCreationUnresolvedLinks(
+			app,
+			makeIndexingService(file),
+			makeIndexUpdateBatch(),
+			"Old",
+			"New",
+		);
+
+		const canvas = JSON.parse(getContent());
+		expect(canvas.nodes[0].text).toBe("[[New#Heading|Alias]] and ![[Other]]");
+		expect(canvas.nodes[1]).toMatchObject({
+			file: "New.md",
+			subpath: "#Keep",
+		});
+		expect(result).toMatchObject({ filesUpdated: 1, linksUpdated: 2, failed: [] });
+		expect(app.fileManager.processFrontMatter).not.toHaveBeenCalled();
+	});
+
+	it("reports malformed canvas JSON without replacing its contents", async () => {
+		const file = makeFile("boards/source.canvas", "canvas");
+		const content = "{not-json";
+		const { app, getContent } = makeApp(content, [], file);
+
+		const result = await renamePreCreationUnresolvedLinks(
+			app,
+			makeIndexingService(file),
+			makeIndexUpdateBatch(),
+			"Old",
+			"New",
+		);
+
+		expect(getContent()).toBe(content);
+		expect(result.filesUpdated).toBe(0);
+		expect(result.linksUpdated).toBe(0);
+		expect(result.failed).toEqual([
+			{
+				path: "boards/source.canvas",
+				reason: expect.any(String),
+			},
+		]);
 	});
 
 	it("waits outside the index update batch", async () => {
