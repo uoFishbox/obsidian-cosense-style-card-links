@@ -19,7 +19,7 @@ vi.mock("two-hop/state/TwoHopState.svelte", () => ({
 	TwoHopState: MockApplicationStore,
 }));
 
-import { TwoHopStatePool, RECENT_TWO_HOP_STATE_LIMIT } from "../TwoHopStatePool";
+import { TwoHopStatePool } from "../TwoHopStatePool";
 
 function createPool() {
 	const builders: Array<() => void> = [];
@@ -42,7 +42,7 @@ describe("TwoHopStatePool", () => {
 		createdStores.length = 0;
 	});
 
-	it("reuses an acquired store until its idle entry is cleared", () => {
+	it("shares an active store and destroys it after its last owner releases", () => {
 		const { pool } = createPool();
 		const builder = vi.fn();
 		const resolver = vi.fn();
@@ -65,35 +65,20 @@ describe("TwoHopStatePool", () => {
 		expect(second).toBe(first);
 		expect(createdStores).toHaveLength(1);
 		pool.release("leaf-1", "notes/alpha.md");
-		pool.clearIdleStore("leaf-1", "notes/alpha.md");
 		expect(createdStores[0].destroy).not.toHaveBeenCalled();
 
 		pool.release("leaf-1", "notes/alpha.md");
-		pool.clearIdleStore("leaf-1", "notes/alpha.md");
 		expect(createdStores[0].destroy).toHaveBeenCalledTimes(1);
-	});
 
-	it("evicts the least recently used idle store", () => {
-		const { pool } = createPool();
-		const builder = vi.fn();
-		const resolver = vi.fn();
-
-		for (let index = 0; index < RECENT_TWO_HOP_STATE_LIMIT + 1; index += 1) {
-			const path = `notes/${index}.md`;
-			pool.acquire(
-				"leaf-1",
-				path,
-				DEFAULT_SETTINGS,
-				builder as never,
-				resolver as never,
-			);
-			pool.release("leaf-1", path);
-		}
-
-		expect(createdStores[0].destroy).toHaveBeenCalledTimes(1);
-		for (const store of createdStores.slice(1)) {
-			expect(store.destroy).not.toHaveBeenCalled();
-		}
+		const next = pool.acquire(
+			"leaf-1",
+			"notes/alpha.md",
+			DEFAULT_SETTINGS,
+			builder as never,
+			resolver as never,
+		);
+		expect(next).not.toBe(first);
+		expect(createdStores).toHaveLength(2);
 	});
 
 	it("releases the leaf builder after its last store is removed", () => {
@@ -107,7 +92,6 @@ describe("TwoHopStatePool", () => {
 			vi.fn() as never,
 		);
 		pool.release("leaf-1", "notes/alpha.md");
-		pool.clearIdleStore("leaf-1", "notes/alpha.md");
 
 		const nextBuilder = pool.getOrCreateDisplayDataBuilder("leaf-1");
 		expect(nextBuilder).not.toBe(firstBuilder);

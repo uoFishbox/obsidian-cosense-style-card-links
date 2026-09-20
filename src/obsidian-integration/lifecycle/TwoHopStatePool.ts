@@ -4,9 +4,6 @@ import type { SortOption } from "cards/sorting";
 import type { DisplayDataBuilder } from "two-hop/display/displayDataBuilder";
 import { TwoHopState } from "two-hop/state/TwoHopState.svelte";
 import type { ResolveTwoHopLinks } from "two-hop/state/TwoHopLinksLoader";
-import { RECENT_TWO_HOP_STATE_LIMIT } from "./twoHopStatePoolConfig";
-
-export { RECENT_TWO_HOP_STATE_LIMIT } from "./twoHopStatePoolConfig";
 
 export interface TwoHopStatePoolOptions {
 	indexingService: IIndexingService;
@@ -15,13 +12,15 @@ export interface TwoHopStatePoolOptions {
 	updateContentSearch?: (enabled: boolean) => void;
 }
 
-/** Manages TwoHopState ownership, reference counts, and idle LRU reuse. */
+interface ActiveTwoHopStateEntry {
+	state: TwoHopState;
+	refCount: number;
+}
+
+/** Shares active TwoHopState instances and destroys them when their last owner releases. */
 export class TwoHopStatePool {
-	private readonly stores = new Map<string, TwoHopState>();
-	private readonly refCounts = new Map<string, number>();
-	private readonly lastAccess = new Map<string, number>();
+	private readonly activeStates = new Map<string, ActiveTwoHopStateEntry>();
 	private readonly displayDataBuilders = new Map<string, DisplayDataBuilder>();
-	private accessSequence = 0;
 
 	constructor(private readonly options: TwoHopStatePoolOptions) {}
 
@@ -61,116 +60,43 @@ export class TwoHopStatePool {
 		resolveTwoHopLinks: ResolveTwoHopLinks,
 	): TwoHopState {
 		const key = buildStoreKey(leafId, filePath);
-		let store = this.stores.get(key);
-		if (!store) {
-			store = this.create(settings, buildDisplayData, resolveTwoHopLinks);
-			this.stores.set(key, store);
+		const activeEntry = this.activeStates.get(key);
+		if (activeEntry) {
+			activeEntry.refCount += 1;
+			return activeEntry.state;
 		}
-		this.touch(key);
-		this.refCounts.set(key, (this.refCounts.get(key) ?? 0) + 1);
-		return store;
+
+		const state = this.create(settings, buildDisplayData, resolveTwoHopLinks);
+		this.activeStates.set(key, { state, refCount: 1 });
+		return state;
 	}
 
 	release(leafId: string, filePath: string): void {
 		const key = buildStoreKey(leafId, filePath);
-		if (!this.stores.has(key)) {
-			this.refCounts.delete(key);
+		const activeEntry = this.activeStates.get(key);
+		if (!activeEntry) return;
+
+		activeEntry.refCount -= 1;
+		if (activeEntry.refCount > 0) {
 			return;
 		}
 
-		const nextRefCount = (this.refCounts.get(key) ?? 0) - 1;
-		if (nextRefCount > 0) {
-			this.refCounts.set(key, nextRefCount);
-			return;
-		}
-
-		this.refCounts.set(key, 0);
-		this.touch(key);
-		this.trimIdleStores();
-	}
-
-	/** Releases one owner and destroys the store when it becomes idle. */
-	dispose(leafId: string, filePath: string): void {
-		const key = buildStoreKey(leafId, filePath);
-		const store = this.stores.get(key);
-		if (!store) {
-			this.deleteEntry(key);
-			this.maybeReleaseDisplayDataBuilder(leafId);
-			return;
-		}
-
-		const nextRefCount = (this.refCounts.get(key) ?? 0) - 1;
-		if (nextRefCount > 0) {
-			this.refCounts.set(key, nextRefCount);
-			return;
-		}
-
-		store.destroy();
-		this.deleteEntry(key);
+		activeEntry.state.destroy();
+		this.activeStates.delete(key);
 		this.maybeReleaseDisplayDataBuilder(leafId);
-	}
-
-	clearIdleStore(leafId: string, filePath: string): void {
-		const key = buildStoreKey(leafId, filePath);
-		if ((this.refCounts.get(key) ?? 0) > 0) return;
-
-		this.stores.get(key)?.destroy();
-		this.deleteEntry(key);
-		this.maybeReleaseDisplayDataBuilder(leafId);
-	}
-
-	trimIdleStores(): void {
-		const idleEntries: Array<{
-			key: string;
-			store: TwoHopState;
-			lastAccess: number;
-		}> = [];
-		for (const [key, store] of this.stores) {
-			if ((this.refCounts.get(key) ?? 0) !== 0) {
-				continue;
-			}
-			idleEntries.push({
-				key,
-				store,
-				lastAccess: this.lastAccess.get(key) ?? 0,
-			});
-		}
-
-		if (idleEntries.length <= RECENT_TWO_HOP_STATE_LIMIT) return;
-
-		idleEntries.sort((left, right) => left.lastAccess - right.lastAccess);
-		const evictionCount = idleEntries.length - RECENT_TWO_HOP_STATE_LIMIT;
-		for (let index = 0; index < evictionCount; index += 1) {
-			const { key, store } = idleEntries[index];
-			store.destroy();
-			this.deleteEntry(key);
-			this.maybeReleaseDisplayDataBuilder(readLeafId(key));
-		}
 	}
 
 	destroy(): void {
-		for (const store of this.stores.values()) {
-			store.destroy();
+		for (const { state } of this.activeStates.values()) {
+			state.destroy();
 		}
-		this.stores.clear();
-		this.refCounts.clear();
-		this.lastAccess.clear();
+		this.activeStates.clear();
 		this.displayDataBuilders.clear();
-	}
-
-	private touch(key: string): void {
-		this.lastAccess.set(key, ++this.accessSequence);
-	}
-
-	private deleteEntry(key: string): void {
-		this.stores.delete(key);
-		this.refCounts.delete(key);
-		this.lastAccess.delete(key);
 	}
 
 	private maybeReleaseDisplayDataBuilder(leafId: string): void {
 		const prefix = `${leafId}:`;
-		for (const key of this.stores.keys()) {
+		for (const key of this.activeStates.keys()) {
 			if (key.startsWith(prefix)) return;
 		}
 		this.displayDataBuilders.delete(leafId);
@@ -179,9 +105,4 @@ export class TwoHopStatePool {
 
 function buildStoreKey(leafId: string, filePath: string): string {
 	return `${leafId}:${filePath}`;
-}
-
-function readLeafId(storeKey: string): string {
-	const separatorIndex = storeKey.indexOf(":");
-	return separatorIndex === -1 ? storeKey : storeKey.slice(0, separatorIndex);
 }

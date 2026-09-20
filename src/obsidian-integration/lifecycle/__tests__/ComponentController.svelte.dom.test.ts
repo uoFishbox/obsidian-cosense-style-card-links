@@ -89,10 +89,7 @@ vi.mock("obsidian", () => {
 
 import { TFile, MarkdownView, WorkspaceLeaf } from "obsidian";
 import { createMockTFile } from "testing/__mocks__/testHelpers";
-import {
-	ComponentController,
-	RECENT_TWO_HOP_STATE_LIMIT,
-} from "../ComponentController";
+import { ComponentController } from "../ComponentController";
 import { TwoHopStatePool } from "../TwoHopStatePool";
 import { mountTwoHopLinksRootView } from "two-hop/ui/mountTwoHopLinksRootView";
 import { unmount } from "svelte";
@@ -416,7 +413,7 @@ describe("ComponentController mountComponentsForView", () => {
 		expect(getUiStatesFromMountCalls()[1].searchInputValue).toBe("");
 	});
 
-	it("reuses a recent store and builder when revisiting a file in the same leaf", async () => {
+	it("recreates the store and builder when revisiting a file", async () => {
 		const { controller, createDisplayDataBuilder, resolveTwoHopLinks, view } =
 			createController();
 		const alpha = createMockTFile("notes/alpha.md");
@@ -433,34 +430,30 @@ describe("ComponentController mountComponentsForView", () => {
 		controller.mountComponentsForView(view, alpha);
 		await flushMicrotasks();
 
-		expect(createDisplayDataBuilder).toHaveBeenCalledTimes(1);
-		expect(resolveTwoHopLinks).toHaveBeenCalledTimes(2);
+		expect(createDisplayDataBuilder).toHaveBeenCalledTimes(3);
+		expect(resolveTwoHopLinks).toHaveBeenCalledTimes(3);
 
 		const allStores = getStoresFromMountCalls();
 		const finalAlphaStore = allStores[allStores.length - 1] as {
 			destroy: () => void;
 		};
-		expect(finalAlphaStore).toBe(alphaStore);
-		expect(alphaDestroySpy).not.toHaveBeenCalled();
+		expect(finalAlphaStore).not.toBe(alphaStore);
+		expect(alphaDestroySpy).toHaveBeenCalledTimes(1);
 	});
 
-	it("evicts the least recently used idle store when the cache limit is exceeded", async () => {
+	it("destroys the previous store when navigating to another file", async () => {
 		const { controller, view } = createController();
-		const files = Array.from(
-			{ length: RECENT_TWO_HOP_STATE_LIMIT + 2 },
-			(_, index) => createMockTFile(`notes/file-${index + 1}.md`),
-		);
+		const firstFile = createMockTFile("notes/first.md");
+		const secondFile = createMockTFile("notes/second.md");
 
-		controller.mountComponentsForView(view, files[0]);
+		controller.mountComponentsForView(view, firstFile);
 		await flushMicrotasks();
 		const firstMountStores = getStoresFromMountCalls();
 		const firstStore = firstMountStores[0] as { destroy: () => void };
 		const firstDestroySpy = vi.spyOn(firstStore, "destroy");
 
-		for (const file of files.slice(1)) {
-			controller.mountComponentsForView(view, file);
-			await flushMicrotasks();
-		}
+		controller.mountComponentsForView(view, secondFile);
+		await flushMicrotasks();
 
 		expect(firstDestroySpy).toHaveBeenCalledTimes(1);
 	});

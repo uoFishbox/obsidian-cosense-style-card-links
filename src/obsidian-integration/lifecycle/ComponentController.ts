@@ -22,8 +22,6 @@ import { createInlineSurfaceLayoutController } from "shared/ui/dom/inlineSurface
 import type { TwoHopStatePool, TwoHopStatePoolOptions } from "./TwoHopStatePool";
 import type { KeyboardNavigationSurfaceRegistry } from "obsidian-integration/navigation/keyboardNavigationSurface";
 
-export { RECENT_TWO_HOP_STATE_LIMIT } from "./twoHopStatePoolConfig";
-
 export type ComponentInstance = SvelteComponentInstance;
 
 interface MountedComponent {
@@ -230,10 +228,6 @@ export class ComponentController implements IComponentManager {
 		);
 	}
 
-	public clearStore(leafId: string, filePath: string): void {
-		this.twoHopStatePool?.clearIdleStore(leafId, filePath);
-	}
-
 	// ========== Component Lifecycle Management ==========
 
 	private syncComponentForView(
@@ -360,7 +354,7 @@ export class ComponentController implements IComponentManager {
 		} catch (error) {
 			layoutController.dispose();
 			if (shouldReleaseStoreOnError) {
-				twoHopStatePool.dispose(leafId, file.path);
+				twoHopStatePool.release(leafId, file.path);
 			}
 			ErrorHandler.handleMountError(error, file.path);
 			throw error;
