@@ -82,7 +82,7 @@ describe("ListControls", () => {
 		expect(button).toHaveTextContent("Created");
 		// The field icon and the "opens a menu" affordance are addressed by the
 		// plugin's own icon contract, not by class names or sibling order.
-		expect(button.querySelector('[data-icon="calendar-plus"]')).toBeInTheDocument();
+		expect(button.querySelector('[data-icon="clock-plus"]')).toBeInTheDocument();
 		expect(
 			button.querySelector('[data-icon="chevrons-up-down"]'),
 		).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe("ListControls", () => {
 		).toEqual([
 			{ title: "Title", icon: "type", checked: false },
 			{ title: "Backlinks", icon: "links-coming-in", checked: false },
-			{ title: "Created", icon: "calendar-plus", checked: true },
+			{ title: "Created", icon: "clock-plus", checked: true },
 			{ title: "File size", icon: "hard-drive", checked: false },
 		]);
 		expect(button).toHaveAttribute("aria-expanded", "true");
@@ -147,8 +147,8 @@ describe("ListControls", () => {
 	it.each([
 		["Title", "type", "alphabetical", "alphabetical-reverse"],
 		["Backlinks", "links-coming-in", "backlink-count-reverse", "backlink-count"],
-		["Created", "calendar-plus", "created-date-reverse", "created-date"],
-		["Modified", "calendar-sync", "modified-date-reverse", "modified-date"],
+		["Created", "clock-plus", "created-date-reverse", "created-date"],
+		["Modified", "clock", "modified-date-reverse", "modified-date"],
 		["File size", "hard-drive", "file-size-reverse", "file-size"],
 	] as const)(
 		"selects %s while preserving the default/reverse state",
@@ -253,7 +253,7 @@ describe("ListControls", () => {
 		// the trigger falls back to the generic "Select" label without a field icon.
 		expect(sortMenuTrigger).toHaveTextContent("Select");
 		expect(
-			sortMenuTrigger.querySelector('[data-icon="calendar-sync"]'),
+			sortMenuTrigger.querySelector('[data-icon="clock"]'),
 		).not.toBeInTheDocument();
 		expect(
 			sortMenuTrigger.querySelector('[data-icon="chevrons-up-down"]'),
@@ -261,9 +261,7 @@ describe("ListControls", () => {
 		expect(shortcut).toHaveAttribute("tabindex", "0");
 		expect(shortcut).toHaveAttribute("aria-pressed", "true");
 		expect(shortcut).not.toHaveAttribute("title");
-		expect(
-			shortcut.querySelector('[data-icon="calendar-sync"]'),
-		).toBeInTheDocument();
+		expect(shortcut.querySelector('[data-icon="clock"]')).toBeInTheDocument();
 		expect(shortcut).toHaveTextContent("Modified");
 
 		await view.rerender({ sortOption: "alphabetical" });
