@@ -10,7 +10,13 @@ import {
 import { generateVideoPreview } from "../renderers/videoPreviewRenderer";
 import { resolveWorkspaceDocument } from "obsidian-integration/workspace/workspaceDocuments";
 
-const TEXT_PREVIEW_EMBED_HOSTS = ["x.com", "twitter.com", "youtube.com", "youtu.be"];
+const TEXT_PREVIEW_EMBED_HOSTS = [
+	"x.com",
+	"twitter.com",
+	"youtube.com",
+	"youtu.be",
+	"vimeo.com",
+];
 
 function parseHttpUrl(target: string): URL | undefined {
 	try {
