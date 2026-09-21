@@ -189,18 +189,17 @@ export function createCardPreviewRenderer(
 
 				if (previewForRender.type === "image") {
 					if (isRenderStale(signal)) return false;
-					const imageSrc = toPreviewImageSrc(previewForRender.content);
-					const image = container.ownerDocument.createElement("img");
-					image.alt = `preview for ${file.basename}`;
-					image.loading = "lazy";
-					image.decoding = "async";
-					image.fetchPriority = "low";
+					const image = createPreviewImage(
+						container.ownerDocument,
+						previewForRender,
+						file,
+					);
 
 					return enqueueImageDomCommit({
 						targetKey: domCommitTargetKey,
 						isStale: () => isRenderStale(signal),
 						commit: () => {
-							image.src = imageSrc;
+							image.src = toPreviewImageSrc(previewForRender.content);
 							container.replaceChildren(image);
 							callbacks?.onCommitted?.("image", "detachable");
 							return true;
@@ -438,15 +437,9 @@ async function renderPreviewContent(
 	if (signal?.aborted) return;
 
 	if (preview.type === "image") {
-		element.createEl("img", {
-			attr: {
-				alt: `preview for ${file.basename}`,
-				loading: "lazy",
-				decoding: "async",
-				fetchpriority: "low",
-				src: toPreviewImageSrc(preview.content),
-			},
-		});
+		const image = createPreviewImage(element.ownerDocument, preview, file);
+		image.src = toPreviewImageSrc(preview.content);
+		element.appendChild(image);
 		return;
 	}
 
@@ -467,6 +460,32 @@ async function renderPreviewContent(
 	}
 }
 
+function createPreviewImage(
+	document: Document,
+	preview: Extract<PreviewData, { type: "image" }>,
+	file: TFile,
+): HTMLImageElement {
+	const image = document.createElement("img");
+	image.alt = `preview for ${file.basename}`;
+	image.loading = "lazy";
+	image.decoding = "async";
+	image.fetchPriority = "low";
+
+	const fallbackSrc = preview.fallbackContent
+		? toPreviewImageSrc(preview.fallbackContent)
+		: undefined;
+	if (fallbackSrc) {
+		image.addEventListener(
+			"error",
+			() => {
+				image.src = fallbackSrc;
+			},
+			{ once: true },
+		);
+	}
+	return image;
+}
+
 function normalizePreviewData(preview: unknown): PreviewData {
 	if (isPreviewData(preview)) return preview;
 	return { type: "empty", content: "" };
@@ -478,12 +497,18 @@ function isPreviewData(preview: unknown): preview is PreviewData {
 	const candidate = preview as {
 		type?: unknown;
 		content?: unknown;
+		fallbackContent?: unknown;
 		render?: unknown;
 	};
+	if (candidate.type === "image") {
+		return (
+			typeof candidate.content === "string" &&
+			(candidate.fallbackContent === undefined ||
+				typeof candidate.fallbackContent === "string")
+		);
+	}
 	if (
-		(candidate.type === "text" ||
-			candidate.type === "image" ||
-			candidate.type === "empty") &&
+		(candidate.type === "text" || candidate.type === "empty") &&
 		typeof candidate.content === "string"
 	) {
 		return true;

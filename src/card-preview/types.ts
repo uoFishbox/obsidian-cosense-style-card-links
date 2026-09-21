@@ -17,6 +17,8 @@ export type PreviewData =
 	| {
 			type: "image";
 			content: string;
+			/** Used once when the primary external image cannot be loaded. */
+			fallbackContent?: string;
 			byteSize?: number;
 	  }
 	| {

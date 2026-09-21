@@ -1,4 +1,5 @@
 import type { TFile } from "obsidian";
+import { defaultYieldToMainThread } from "indexing/timeSlicing";
 import { resolveWorkspaceDocument } from "obsidian-integration/workspace/workspaceDocuments";
 import type { PreviewData } from "../types";
 import { generateCanvasPreview } from "../renderers/canvasPreviewRenderer";
@@ -8,6 +9,7 @@ import {
 } from "../renderers/imagePreviewRenderer";
 import { generateVideoPreview } from "../renderers/videoPreviewRenderer";
 import { getContentSnippetAsync } from "../text/previewTextProcessingAsync";
+import { extractFirstYouTubeThumbnail } from "../text/youtubeThumbnail";
 import { resolveEmbeddedMediaPreview } from "../strategies/EmbeddedMediaStrategy";
 import { createAbortError, isAbortError } from "./previewAbort";
 import { isCanvas, isImage, isSource, isVideo } from "./previewContent";
@@ -67,6 +69,7 @@ async function resolveMarkdownPreview(
 		(await tryResolve(resolveFrontmatterPropertyPreview, file, context, signal)) ??
 		(await tryResolve(resolveFrontmatterImagePreview, file, context, signal)) ??
 		(await tryResolve(resolveEmbeddedMediaPreview, file, context, signal)) ??
+		(await tryResolve(resolveYouTubeThumbnailPreview, file, context, signal)) ??
 		(await tryResolve(resolveTextSnippetPreview, file, context, signal)) ??
 		emptyPreview()
 	);
@@ -156,6 +159,28 @@ async function resolveFrontmatterImagePreview(
 	const image = context.metadataCache.getFileCache(file)?.frontmatter?.image;
 	if (typeof image !== "string" || image.trim().length === 0) return undefined;
 	return await getFrontmatterImage(file, context.metadataCache, context.vault);
+}
+
+async function resolveYouTubeThumbnailPreview(
+	file: TFile,
+	context: PreviewContext,
+	signal?: AbortSignal,
+): Promise<PreviewData | undefined> {
+	if (file.extension !== "md" || signal?.aborted) return undefined;
+
+	const content = await context.getContent(signal);
+	const thumbnail = await extractFirstYouTubeThumbnail(content, {
+		maxScanChars: 200_000,
+		yieldToMainThread: defaultYieldToMainThread,
+		signal,
+	});
+	if (!thumbnail || signal?.aborted) return undefined;
+
+	return {
+		type: "image",
+		content: thumbnail.maxResolutionUrl,
+		fallbackContent: thumbnail.fallbackUrl,
+	};
 }
 
 async function resolveTextSnippetPreview(

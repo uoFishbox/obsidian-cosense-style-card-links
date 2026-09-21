@@ -157,6 +157,25 @@ describe("PreviewService.getPreview", () => {
 		});
 	});
 
+	describe("YouTube thumbnail retrieval", () => {
+		test("uses a YouTube URL in note content as an image preview", async () => {
+			const file = createMockTFileAsPlainObject("video-note.md");
+			const videoId = "dQw4w9WgXcQ";
+			(metadataCache.getFileCache as Mock).mockReturnValue({});
+			(vault.cachedRead as Mock).mockResolvedValue(
+				`Watch https://www.youtube.com/watch?v=${videoId}`,
+			);
+
+			const result = await previewService.getPreview(file);
+
+			expect(result).toEqual({
+				type: "image",
+				content: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+				fallbackContent: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+			});
+		});
+	});
+
 	test("shares cachedRead during a single preview generation", async () => {
 		const file = createMockTFileAsPlainObject("note.md");
 		(vault.cachedRead as Mock).mockResolvedValue("plain text only");

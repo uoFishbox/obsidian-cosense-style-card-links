@@ -389,6 +389,24 @@ describe("card preview renderer contract", () => {
 		expect(domCommitScope.schedule).toHaveBeenCalledOnce();
 	});
 
+	it("falls back when a primary image cannot be loaded", async () => {
+		const host = document.createElement("div");
+		const file = createMockTFile("notes/youtube.md");
+		const getPreview = vi.fn(async () => ({
+			type: "image" as const,
+			content: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+			fallbackContent: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+		}));
+
+		createRenderer(getPreview)(host, createRequest(file));
+
+		await waitFor(() => expect(host.querySelector("img")).not.toBeNull());
+		const image = host.querySelector("img");
+		expect(image?.src).toContain("maxresdefault.jpg");
+		image?.dispatchEvent(new Event("error"));
+		expect(image?.src).toContain("hqdefault.jpg");
+	});
+
 	it.each([
 		{
 			preview: {

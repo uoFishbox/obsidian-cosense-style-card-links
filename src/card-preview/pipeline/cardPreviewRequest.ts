@@ -42,6 +42,10 @@ function getDomPreviewOverrideId(preview: DomPreviewOverride): number {
 
 export function createPreviewOverrideIdentity(preview: PreviewData | null): string {
 	if (!preview) return "none";
+	if (preview.type === "image") {
+		const content = `${preview.content}\u0000${preview.fallbackContent ?? ""}`;
+		return `${preview.type}:${hashPreviewContent(content)}`;
+	}
 	if (preview.type !== "dom") {
 		return `${preview.type}:${hashPreviewContent(preview.content)}`;
 	}
