@@ -97,6 +97,7 @@
 	role={interactive ? "button" : undefined}
 	tabindex={interactive ? 0 : undefined}
 	aria-label={interactive ? ariaLabel : undefined}
+	data-ccl-tooltip={interactive ? ariaLabel : undefined}
 	aria-hidden={interactive ? undefined : "true"}
 	data-ccl-interaction-handle={interactive ? interactionHandle : undefined}
 	draggable={interactive && draggable && !Platform.isMobile ? true : undefined}

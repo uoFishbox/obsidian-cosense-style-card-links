@@ -19,6 +19,7 @@ import type { ProgrammaticScrollSnapshot } from "cards/virtualization/public";
 import { createCardSurfaceNavigation } from "./surfaceNavigation";
 import { ensureCardRenderShadowSurface } from "cards/components/cardRenderShadowSurface";
 import { installShadowHoverPopoverBridge } from "hover-popover/shadowHoverPopoverBridge";
+import { installShadowTooltipBridge } from "tooltip/shadowTooltipBridge";
 import { createVirtualCellBindingRegistry } from "./cellBindingRegistry";
 
 export interface CardSurfaceInteractionParams {
@@ -164,6 +165,15 @@ export function createCardSurfaceInteractions({
 			registry: interactionRegistry,
 			appContext,
 		});
+	});
+
+	$effect(() => {
+		const shadowRoot = getShadowRoot();
+		if (!shadowRoot) {
+			return;
+		}
+
+		return installShadowTooltipBridge(shadowRoot);
 	});
 
 	$effect(() => {

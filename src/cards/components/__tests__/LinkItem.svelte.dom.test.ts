@@ -81,6 +81,7 @@ describe("LinkItem", () => {
 		const card = container.querySelector<HTMLElement>(".cosense-card-links__box");
 
 		expect(card).toHaveAttribute("draggable", "true");
+		expect(card).toHaveAttribute("data-ccl-tooltip", "draggable-target-card");
 	});
 
 	it("does not make card body draggable when draggable is disabled", () => {
@@ -133,6 +134,7 @@ describe("LinkItem", () => {
 		expect(card).not.toHaveAttribute("role");
 		expect(card).not.toHaveAttribute("tabindex");
 		expect(card).not.toHaveAttribute("data-ccl-interaction-handle");
+		expect(card).not.toHaveAttribute("data-ccl-tooltip");
 		expect(card).not.toHaveAttribute("draggable");
 
 		await rerender({
@@ -151,6 +153,7 @@ describe("LinkItem", () => {
 			"data-ccl-interaction-handle",
 			"token-reusable-card",
 		);
+		expect(card).toHaveAttribute("data-ccl-tooltip", "visible-target-card");
 		expect(card).toHaveAttribute("draggable", "true");
 	});
 

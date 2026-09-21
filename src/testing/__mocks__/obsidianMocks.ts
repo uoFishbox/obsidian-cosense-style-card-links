@@ -2,6 +2,26 @@ import type { IconName, MenuPositionDef } from "obsidian";
 
 export function addIcon(_iconId: string, _svgContent: string): void {}
 
+export function displayTooltip(
+	_target: HTMLElement,
+	_content: string | DocumentFragment,
+	_options?: { placement?: string; delay?: number },
+): void {}
+
+export function setTooltip(
+	target: HTMLElement,
+	content: string,
+	options?: { placement?: string; delay?: number },
+): void {
+	target.setAttribute("aria-label", content);
+	if (options?.placement) {
+		target.dataset.tooltipPosition = options.placement;
+	}
+	if (options?.delay !== undefined) {
+		target.dataset.tooltipDelay = String(options.delay);
+	}
+}
+
 export function setIcon(parent: HTMLElement, icon: IconName): void {
 	parent.dataset.icon = icon;
 	parent.replaceChildren(
