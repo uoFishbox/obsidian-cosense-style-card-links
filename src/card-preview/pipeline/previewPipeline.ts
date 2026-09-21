@@ -9,6 +9,10 @@ import {
 } from "../renderers/imagePreviewRenderer";
 import { generateVideoPreview } from "../renderers/videoPreviewRenderer";
 import { getContentSnippetAsync } from "../text/previewTextProcessingAsync";
+import {
+	extractFirstVimeoVideo,
+	resolveVimeoThumbnailUrl,
+} from "../text/vimeoThumbnail";
 import { extractFirstYouTubeThumbnail } from "../text/youtubeThumbnail";
 import { resolveEmbeddedMediaPreview } from "../strategies/EmbeddedMediaStrategy";
 import { createAbortError, isAbortError } from "./previewAbort";
@@ -70,6 +74,7 @@ async function resolveMarkdownPreview(
 		(await tryResolve(resolveFrontmatterImagePreview, file, context, signal)) ??
 		(await tryResolve(resolveEmbeddedMediaPreview, file, context, signal)) ??
 		(await tryResolve(resolveYouTubeThumbnailPreview, file, context, signal)) ??
+		(await tryResolve(resolveVimeoThumbnailPreview, file, context, signal)) ??
 		(await tryResolve(resolveTextSnippetPreview, file, context, signal)) ??
 		emptyPreview()
 	);
@@ -181,6 +186,25 @@ async function resolveYouTubeThumbnailPreview(
 		content: thumbnail.maxResolutionUrl,
 		fallbackContent: thumbnail.fallbackUrl,
 	};
+}
+
+async function resolveVimeoThumbnailPreview(
+	file: TFile,
+	context: PreviewContext,
+	signal?: AbortSignal,
+): Promise<PreviewData | undefined> {
+	if (file.extension !== "md" || signal?.aborted) return undefined;
+
+	const content = await context.getContent(signal);
+	const video = await extractFirstVimeoVideo(content, {
+		maxScanChars: 200_000,
+		yieldToMainThread: defaultYieldToMainThread,
+		signal,
+	});
+	if (!video || signal?.aborted) return undefined;
+
+	const thumbnailUrl = await resolveVimeoThumbnailUrl(video.videoUrl, signal);
+	return thumbnailUrl ? { type: "image", content: thumbnailUrl } : undefined;
 }
 
 async function resolveTextSnippetPreview(

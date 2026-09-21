@@ -157,6 +157,8 @@ describe("EmbeddedMediaStrategy", () => {
 		"https://youtube.com/watch?v=123",
 		"https://youtu.be/123",
 		"https://www.youtube.com/watch?v=123",
+		"https://vimeo.com/76979871",
+		"https://player.vimeo.com/video/76979871",
 	])("Markdown embed %s is not treated as an image", async (embedUrl) => {
 		const strategy = createEmbeddedMediaStrategy();
 		const file = createMockTFileAsPlainObject("note.md");

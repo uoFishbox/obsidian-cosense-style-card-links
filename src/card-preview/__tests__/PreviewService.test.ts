@@ -1,5 +1,5 @@
 import { afterEach, describe, test, expect, vi, beforeEach, type Mock } from "vitest";
-import { MarkdownRenderer } from "obsidian";
+import { MarkdownRenderer, requestUrl } from "obsidian";
 import {
 	createPreviewService,
 	type DisposablePreviewService,
@@ -34,6 +34,7 @@ vi.mock("obsidian", () => ({
 	},
 	TFile: class {},
 	MarkdownRenderer: { render: vi.fn().mockResolvedValue(undefined) },
+	requestUrl: vi.fn(),
 }));
 
 function createMockMetadataCache(): IMetadataCache {
@@ -172,6 +173,29 @@ describe("PreviewService.getPreview", () => {
 				type: "image",
 				content: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
 				fallbackContent: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+			});
+		});
+	});
+
+	describe("Vimeo thumbnail retrieval", () => {
+		test("uses Vimeo oEmbed for a Vimeo URL in note content", async () => {
+			const file = createMockTFileAsPlainObject("vimeo-note.md");
+			const videoUrl = "https://vimeo.com/76979871";
+			const thumbnailUrl =
+				"https://i.vimeocdn.com/video/example-thumbnail_640.jpg";
+			(metadataCache.getFileCache as Mock).mockReturnValue({});
+			(vault.cachedRead as Mock).mockResolvedValue(`Watch ${videoUrl}`);
+			(requestUrl as unknown as Mock).mockResolvedValue({
+				status: 200,
+				json: { thumbnail_url: thumbnailUrl },
+			});
+
+			const result = await previewService.getPreview(file);
+
+			expect(result).toEqual({ type: "image", content: thumbnailUrl });
+			expect(requestUrl).toHaveBeenCalledWith({
+				url: `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`,
+				throw: false,
 			});
 		});
 	});
