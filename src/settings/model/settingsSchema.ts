@@ -6,20 +6,26 @@ import {
 	MOBILE_LONG_PRESS_ACTIONS,
 	SETTINGS_SCHEMA_VERSION,
 	TWO_HOP_HEADER_SORT_ORDERS,
+	type ConfigSettings,
+	type PersistedPluginData,
 	type PluginSettings,
 } from "./settings";
 
 type UnknownSettings = Readonly<Record<string, unknown>>;
 
 /**
- * Validates unknown persisted data into PluginSettings, normalizing each
- * invalid field to its default. Unknown and obsolete fields are discarded.
+ * Validates the current storage envelope into runtime settings. Data from a
+ * different schema version is intentionally reset instead of migrated.
  */
 export function parsePluginSettings(raw: unknown): PluginSettings {
-	const settings = isUnknownSettings(raw) ? raw : {};
+	if (!isCurrentPersistedPluginData(raw)) {
+		return { ...DEFAULT_SETTINGS };
+	}
+
+	const settings = raw.settings;
+	const preferences = raw.preferences;
 
 	return {
-		settingsSchemaVersion: SETTINGS_SCHEMA_VERSION,
 		language: enumSetting(settings.language, LANGUAGES, DEFAULT_SETTINGS.language),
 		displayMode: enumSetting(
 			settings.displayMode,
@@ -81,7 +87,7 @@ export function parsePluginSettings(raw: unknown): PluginSettings {
 			DEFAULT_SETTINGS.twoHopHeaderSortOrder,
 		),
 		lastUsedSortOption: enumSetting(
-			settings.lastUsedSortOption,
+			preferences.lastUsedSortOption,
 			SORT_OPTIONS,
 			DEFAULT_SETTINGS.lastUsedSortOption,
 		),
@@ -149,7 +155,7 @@ export function parsePluginSettings(raw: unknown): PluginSettings {
 			DEFAULT_SETTINGS.enableUnresolvedLinkDecoration,
 		),
 		enableContentSearch: booleanSetting(
-			settings.enableContentSearch,
+			preferences.enableContentSearch,
 			DEFAULT_SETTINGS.enableContentSearch,
 		),
 		experimentalCosenseTitleEditing: booleanSetting(
@@ -168,6 +174,33 @@ export function parsePluginSettings(raw: unknown): PluginSettings {
 			settings.priorityFrontmatterKeyForTitle,
 			DEFAULT_SETTINGS.priorityFrontmatterKeyForTitle,
 		),
+	};
+}
+
+export function isCurrentPersistedPluginData(raw: unknown): raw is Readonly<{
+	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
+	settings: UnknownSettings;
+	preferences: UnknownSettings;
+}> {
+	return (
+		isUnknownSettings(raw) &&
+		raw.schemaVersion === SETTINGS_SCHEMA_VERSION &&
+		isUnknownSettings(raw.settings) &&
+		isUnknownSettings(raw.preferences)
+	);
+}
+
+/** Converts runtime settings into the versioned storage envelope. */
+export function serializePluginSettings(settings: PluginSettings): PersistedPluginData {
+	const { lastUsedSortOption, enableContentSearch, ...configuration } = settings;
+
+	return {
+		schemaVersion: SETTINGS_SCHEMA_VERSION,
+		settings: { ...configuration } satisfies ConfigSettings,
+		preferences: {
+			lastUsedSortOption,
+			enableContentSearch,
+		},
 	};
 }
 

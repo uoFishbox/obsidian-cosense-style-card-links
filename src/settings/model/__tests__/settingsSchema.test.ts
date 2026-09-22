@@ -1,166 +1,163 @@
 import { describe, expect, it } from "vitest";
-import { parsePluginSettings } from "settings/model/settingsSchema";
+import {
+	parsePluginSettings,
+	serializePluginSettings,
+} from "settings/model/settingsSchema";
 import { DEFAULT_SETTINGS } from "settings/model/defaults";
-import { SETTINGS_SCHEMA_VERSION, type PluginSettings } from "settings/model/settings";
+import {
+	SETTINGS_SCHEMA_VERSION,
+	type ConfigSettings,
+	type UserPreferences,
+} from "settings/model/settings";
 
-describe("parsePluginSettings", () => {
+function persistedData(
+	settings: Partial<ConfigSettings> = {},
+	preferences: Partial<UserPreferences> = {},
+): unknown {
+	return {
+		schemaVersion: SETTINGS_SCHEMA_VERSION,
+		settings,
+		preferences,
+	};
+}
+
+describe("settings schema", () => {
 	it.each(["relevance", "relevance-reverse"] as const)(
-		"restores the %s sort selection",
+		"restores the %s sort preference",
 		(sortOption) => {
 			expect(
-				parsePluginSettings({ lastUsedSortOption: sortOption })
-					.lastUsedSortOption,
+				parsePluginSettings(
+					persistedData({}, { lastUsedSortOption: sortOption }),
+				).lastUsedSortOption,
 			).toBe(sortOption);
 		},
 	);
+
 	it.each([undefined, null, "true", 1, false])(
 		"keeps experimental title editing disabled for %s",
 		(value) => {
 			expect(
-				parsePluginSettings({ experimentalCosenseTitleEditing: value })
-					.experimentalCosenseTitleEditing,
+				parsePluginSettings(
+					persistedData({ experimentalCosenseTitleEditing: value as never }),
+				).experimentalCosenseTitleEditing,
 			).toBe(false);
 		},
 	);
 
-	it("preserves an explicit opt-in to experimental title editing", () => {
-		expect(
-			parsePluginSettings({ experimentalCosenseTitleEditing: true })
-				.experimentalCosenseTitleEditing,
-		).toBe(true);
-	});
-
-	it("preserves experimental Shadow DOM CSS only when it is a string", () => {
+	it("preserves valid experimental values", () => {
 		const css = ".card { color: rebeccapurple; }";
-		expect(parsePluginSettings({ experimentalShadowDomCss: css })).toMatchObject({
-			experimentalShadowDomCss: css,
-		});
-		expect(
-			parsePluginSettings({ experimentalShadowDomCss: 123 })
-				.experimentalShadowDomCss,
-		).toBe("");
-	});
-
-	it("accepts a fully valid settings object unchanged", () => {
-		const raw: PluginSettings = { ...DEFAULT_SETTINGS, language: "ja" };
-
-		expect(parsePluginSettings(raw)).toEqual(raw);
-	});
-
-	it("parses highlight on open as a boolean", () => {
-		expect(parsePluginSettings({ highlightOnOpen: false }).highlightOnOpen).toBe(
-			false,
+		const settings = parsePluginSettings(
+			persistedData({
+				experimentalCosenseTitleEditing: true,
+				experimentalShadowDomCss: css,
+			}),
 		);
-		expect(parsePluginSettings({ highlightOnOpen: "always" }).highlightOnOpen).toBe(
-			DEFAULT_SETTINGS.highlightOnOpen,
+
+		expect(settings.experimentalCosenseTitleEditing).toBe(true);
+		expect(settings.experimentalShadowDomCss).toBe(css);
+	});
+
+	it("accepts a fully valid storage envelope unchanged", () => {
+		const runtimeSettings = { ...DEFAULT_SETTINGS, language: "ja" as const };
+
+		expect(parsePluginSettings(serializePluginSettings(runtimeSettings))).toEqual(
+			runtimeSettings,
 		);
 	});
 
-	it("falls back to defaults for invalid enum values", () => {
-		const settings = parsePluginSettings({
-			language: "fr",
-			displayMode: "floating",
-			lastUsedSortOption: "unknown-sort",
-			quickSortField1: "unknown-field",
-			quickSortField2: 2,
-		});
+	it("falls back per field for invalid current-version data", () => {
+		const settings = parsePluginSettings(
+			persistedData(
+				{
+					language: "fr" as never,
+					displayMode: "floating" as never,
+					dedupeCards: "yes" as never,
+					frontmatterKeyCreatedDate: 123 as never,
+					quickSortField1: "unknown-field" as never,
+					quickSortField2: 2 as never,
+				},
+				{ lastUsedSortOption: "unknown-sort" as never },
+			),
+		);
 
-		expect(settings.language).toBe("en");
-		expect(settings.displayMode).toBe("editor-inline");
-		expect(settings.lastUsedSortOption).toBe("alphabetical");
-		expect(settings.quickSortField1).toBe(DEFAULT_SETTINGS.quickSortField1);
-		expect(settings.quickSortField2).toBe(DEFAULT_SETTINGS.quickSortField2);
-	});
-
-	it("restores configured pinned sort fields", () => {
-		const settings = parsePluginSettings({
-			quickSortField1: "relevance",
-			quickSortField2: "file-size",
-		});
-
-		expect(settings.quickSortField1).toBe("relevance");
-		expect(settings.quickSortField2).toBe("file-size");
-	});
-
-	it("falls back to defaults for invalid boolean and string values", () => {
-		const settings = parsePluginSettings({
-			dedupeCards: "yes",
-			frontmatterKeyCreatedDate: 123,
-		});
-
+		expect(settings.language).toBe(DEFAULT_SETTINGS.language);
+		expect(settings.displayMode).toBe(DEFAULT_SETTINGS.displayMode);
 		expect(settings.dedupeCards).toBe(DEFAULT_SETTINGS.dedupeCards);
 		expect(settings.frontmatterKeyCreatedDate).toBe(
 			DEFAULT_SETTINGS.frontmatterKeyCreatedDate,
 		);
+		expect(settings.lastUsedSortOption).toBe(DEFAULT_SETTINGS.lastUsedSortOption);
+		expect(settings.quickSortField1).toBe(DEFAULT_SETTINGS.quickSortField1);
+		expect(settings.quickSortField2).toBe(DEFAULT_SETTINGS.quickSortField2);
 	});
 
-	it("floors positive fractional user settings instead of discarding them", () => {
-		const settings = parsePluginSettings({
-			cardWidthPx: 140.9,
-		});
+	it("normalizes numeric settings", () => {
+		const settings = parsePluginSettings(
+			persistedData({
+				cardWidthPx: 140.9,
+				cardGapPx: 0,
+				cardHeightRatio: 0,
+				cardMaxColumns: Number.POSITIVE_INFINITY,
+				previewMaxChars: "500" as never,
+			}),
+		);
 
 		expect(settings.cardWidthPx).toBe(140);
-	});
-
-	it("accepts zero card gap", () => {
-		const settings = parsePluginSettings({
-			cardGapPx: 0,
-		});
-
 		expect(settings.cardGapPx).toBe(0);
-	});
-
-	it("falls back to defaults for out-of-range or non-numeric numbers", () => {
-		const settings = parsePluginSettings({
-			cardHeightRatio: 0,
-			cardGapPx: Number.NaN,
-			cardMaxColumns: Number.POSITIVE_INFINITY,
-			previewMaxChars: "500",
-		});
-
 		expect(settings.cardHeightRatio).toBe(DEFAULT_SETTINGS.cardHeightRatio);
-		expect(settings.cardGapPx).toBe(DEFAULT_SETTINGS.cardGapPx);
 		expect(settings.cardMaxColumns).toBe(DEFAULT_SETTINGS.cardMaxColumns);
 		expect(settings.previewMaxChars).toBe(DEFAULT_SETTINGS.previewMaxChars);
 	});
 
-	it("strips unknown and obsolete keys", () => {
+	it("strips unknown keys from current-version data", () => {
 		const settings = parsePluginSettings({
-			obsoleteSetting: { retained: false },
-			twoHopListMode: "precise-virtual",
-			enableTwoRowMountedOverscan: true,
-			renderCodeBlockTypes: ["mermaid"],
-			previewActivationAheadRows: 2,
-			previewDomCommitsPerSecond: 40,
-			searchPreviewSeekThresholdChars: 20,
-			searchPreviewSeekBufferChars: 8,
-			enableProgressiveTwoHopBuild: false,
-			maxOutgoingToProcess: 10,
+			schemaVersion: SETTINGS_SCHEMA_VERSION,
+			settings: {
+				...DEFAULT_SETTINGS,
+				obsoleteSetting: { retained: false },
+				previewActivationAheadRows: 2,
+			},
+			preferences: {},
 		});
 
 		expect(settings).not.toHaveProperty("obsoleteSetting");
-		expect(settings).not.toHaveProperty("twoHopListMode");
-		expect(settings).not.toHaveProperty("enableTwoRowMountedOverscan");
-		expect(settings).not.toHaveProperty("renderCodeBlockTypes");
 		expect(settings).not.toHaveProperty("previewActivationAheadRows");
-		expect(settings).not.toHaveProperty("previewDomCommitsPerSecond");
-		expect(settings).not.toHaveProperty("searchPreviewSeekThresholdChars");
-		expect(settings).not.toHaveProperty("searchPreviewSeekBufferChars");
-		expect(settings).not.toHaveProperty("enableProgressiveTwoHopBuild");
-		expect(settings).not.toHaveProperty("maxOutgoingToProcess");
 	});
 
-	it("always reports the current schema version", () => {
-		const fromMissing = parsePluginSettings({});
-		const fromStale = parsePluginSettings({ settingsSchemaVersion: 999 });
-
-		expect(fromMissing.settingsSchemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
-		expect(fromStale.settingsSchemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
+	it("resets old flat data and mismatched schema versions", () => {
+		expect(parsePluginSettings({ ...DEFAULT_SETTINGS, language: "ja" })).toEqual(
+			DEFAULT_SETTINGS,
+		);
+		expect(
+			parsePluginSettings({
+				schemaVersion: SETTINGS_SCHEMA_VERSION - 1,
+				settings: { language: "ja" },
+				preferences: {},
+			}),
+		).toEqual(DEFAULT_SETTINGS);
 	});
 
-	it("returns full defaults for non-object input", () => {
+	it("returns full defaults for malformed envelopes", () => {
 		expect(parsePluginSettings(null)).toEqual(DEFAULT_SETTINGS);
 		expect(parsePluginSettings("corrupted")).toEqual(DEFAULT_SETTINGS);
 		expect(parsePluginSettings([1, 2])).toEqual(DEFAULT_SETTINGS);
+	});
+
+	it("serializes configuration and preferences separately", () => {
+		const serialized = serializePluginSettings({
+			...DEFAULT_SETTINGS,
+			language: "ja",
+			lastUsedSortOption: "modified-date",
+			enableContentSearch: true,
+		});
+
+		expect(serialized.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
+		expect(serialized.settings.language).toBe("ja");
+		expect(serialized.settings).not.toHaveProperty("lastUsedSortOption");
+		expect(serialized.settings).not.toHaveProperty("enableContentSearch");
+		expect(serialized.preferences).toEqual({
+			lastUsedSortOption: "modified-date",
+			enableContentSearch: true,
+		});
 	});
 });

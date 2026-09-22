@@ -30,6 +30,18 @@ function getOptionLabel(option: SelectOption, lang: Language): string {
 	return option.label;
 }
 
+function getDescription(
+	definition: SettingDefinition,
+	settings: PluginSettings,
+	lang: Language,
+): string {
+	const key =
+		typeof definition.descriptionKey === "function"
+			? definition.descriptionKey(settings)
+			: definition.descriptionKey;
+	return t(key, lang);
+}
+
 function reportSettingUpdateError(error: unknown): void {
 	console.error("設定の更新に失敗しました:", error);
 }
@@ -43,7 +55,8 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 	}
 
 	getSettingDefinitions(): ObsidianSettingDefinitionItem[] {
-		const lang = this.pluginInstance.settings.language;
+		const settings = this.pluginInstance.settings;
+		const lang = settings.language;
 		const items: ObsidianSettingDefinitionItem[] = [];
 
 		for (const section of SECTION_ORDER) {
@@ -59,7 +72,7 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 			const settingItems = sectionSettings.map(
 				(definition): SettingGroupItem => ({
 					name: t(definition.translationKey, lang),
-					desc: t(definition.descriptionKey, lang),
+					desc: getDescription(definition, settings, lang),
 					render: (setting) => this.renderControl(setting, definition, lang),
 				}),
 			);
@@ -86,6 +99,7 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 	): void {
 		const currentSettings = this.pluginInstance.settings;
 		const currentValue = currentSettings[definition.settingKey];
+		setting.setDisabled(definition.disabled?.(currentSettings) ?? false);
 
 		switch (definition.controlType) {
 			case "toggle":
@@ -95,12 +109,9 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 							.updateSetting(
 								definition.settingKey,
 								value as PluginSettings[typeof definition.settingKey],
-								definition.immediate ? { immediate: true } : undefined,
 							)
 							.then(() => {
-								if (definition.settingKey === "language") {
-									this.update();
-								}
+								if (definition.refreshOnChange) this.update();
 							})
 							.catch(reportSettingUpdateError);
 					}),
@@ -116,10 +127,12 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 							.updateSetting(
 								definition.settingKey,
 								value as PluginSettings[typeof definition.settingKey],
-								definition.immediate ? { immediate: true } : undefined,
 							)
 							.then(() => {
-								if (definition.settingKey === "language") {
+								if (
+									definition.settingKey === "language" ||
+									definition.refreshOnChange
+								) {
 									this.update();
 								}
 							})
@@ -141,16 +154,14 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 						.onChange((value) => {
 							const parsed = definition.parse(value, currentSettings);
 							if (parsed === undefined) {
+								text.inputEl.setCustomValidity(
+									t("invalidSettingValue", lang),
+								);
 								return;
 							}
+							text.inputEl.setCustomValidity("");
 							void this.pluginInstance
-								.updateSetting(
-									definition.settingKey,
-									parsed,
-									definition.immediate
-										? { immediate: true }
-										: undefined,
-								)
+								.updateSetting(definition.settingKey, parsed)
 								.catch(reportSettingUpdateError);
 						}),
 				);
@@ -169,16 +180,14 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 						.onChange((value) => {
 							const parsed = definition.parse(value, currentSettings);
 							if (parsed === undefined) {
+								text.inputEl.setCustomValidity(
+									t("invalidSettingValue", lang),
+								);
 								return;
 							}
+							text.inputEl.setCustomValidity("");
 							void this.pluginInstance
-								.updateSetting(
-									definition.settingKey,
-									parsed,
-									definition.immediate
-										? { immediate: true }
-										: undefined,
-								)
+								.updateSetting(definition.settingKey, parsed)
 								.catch(reportSettingUpdateError);
 						})
 						.then((component) => {

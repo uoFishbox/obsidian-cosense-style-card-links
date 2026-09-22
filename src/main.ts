@@ -159,13 +159,12 @@ export default class CosenseCardLinksPlugin extends Plugin implements PluginHost
 	public async updateSetting<K extends keyof PluginSettings>(
 		key: K,
 		value: PluginSettings[K],
-		options: { immediate?: boolean } = {},
 	): Promise<void> {
 		if (Object.is(this.settings[key], value)) {
 			return;
 		}
 
-		const updatePromise = this.settingsManager.update(key, value, options);
+		const updatePromise = this.settingsManager.update(key, value);
 		this.runtime.applySettingsSideEffects([key]);
 		await updatePromise;
 	}

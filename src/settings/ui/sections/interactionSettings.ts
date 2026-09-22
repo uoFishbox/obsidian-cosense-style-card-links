@@ -1,15 +1,15 @@
-import type { SettingDefinition } from "./settingDefinition";
+import { defineDropdown, type SettingDefinition } from "./settingDefinition";
 
 export const INTERACTION_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 	{
-		section: "interaction",
+		section: "advanced",
 		settingKey: "experimentalCosenseTitleEditing",
 		controlType: "toggle",
 		translationKey: "experimentalCosenseTitleEditing",
 		descriptionKey: "experimentalCosenseTitleEditingDesc",
 	},
 	{
-		section: "interaction",
+		section: "advanced",
 		settingKey: "experimentalShadowDomCss",
 		controlType: "textarea",
 		translationKey: "experimentalShadowDomCss",
@@ -32,19 +32,18 @@ export const INTERACTION_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> =
 		translationKey: "highlightInPopoverOnHover",
 		descriptionKey: "highlightInPopoverOnHoverDesc",
 	},
-	{
+	defineDropdown({
 		section: "interaction",
 		settingKey: "mobileLongPressAction",
-		controlType: "dropdown",
 		translationKey: "longPressActionMobile",
 		descriptionKey: "longPressActionMobileDesc",
 		options: [
 			{ value: "preview", label: "showPreview", isTranslationKey: true },
 			{ value: "menu", label: "showMenu", isTranslationKey: true },
 		],
-	},
+	}),
 	{
-		section: "interaction",
+		section: "unresolvedLinks",
 		settingKey: "enableUnresolvedLinkModal",
 		controlType: "toggle",
 		translationKey: "openUnresolvedNoteView",

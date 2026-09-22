@@ -1,36 +1,18 @@
 import type { Workspace } from "obsidian";
-import { CARD_LAYOUT_SETTING_KEYS, type PluginSettings } from "settings/model";
+import type { PluginSettings } from "settings/model";
 import type { IndexingService } from "indexing/index-service/IndexingService";
 import type { SortService } from "cards/sorting/SortService";
 import type { DisplayModeController } from "two-hop/display/DisplayModeController";
 import type { EmptyViewController } from "obsidian-integration/lifecycle/emptyViewController";
 import type { ViewUpdateOrchestrator } from "obsidian-integration/lifecycle/viewUpdateOrchestrator";
-/**
- * View types whose layouts are affected by LAYOUT_AFFECTING_SETTINGS.
- * Each view exposes `refreshFromSettings()` to re-render with new settings.
- */
+import { collectSettingImpacts } from "./settingImpacts";
+/** View types that can re-render themselves after a settings change. */
 const LAYOUT_REFRESHABLE_VIEW_TYPES: ReadonlyArray<string> = [
 	"cosense-card-links-all-notes-view",
 	"cosense-card-links-view",
 	"cosense-card-links-tag-notes-view",
 	"cosense-card-links-pre-create-view",
 ];
-
-const LAYOUT_AFFECTING_SETTINGS = new Set<keyof PluginSettings>([
-	...CARD_LAYOUT_SETTING_KEYS,
-	"displayMode",
-	"enableTagFeatures",
-	"experimentalShadowDomCss",
-	"language",
-	"quickSortField1",
-	"quickSortField2",
-]);
-
-const NON_SORT_INVALIDATING_SETTINGS = new Set<keyof PluginSettings>([
-	"lastUsedSortOption",
-	"quickSortField1",
-	"quickSortField2",
-]);
 
 interface RefreshableFromSettings {
 	refreshFromSettings(): void;
@@ -62,7 +44,7 @@ export interface SettingsSideEffectControllerDeps {
 export function createSettingsSideEffectController(
 	deps: SettingsSideEffectControllerDeps,
 ): (changedKeys: Iterable<keyof PluginSettings>) => void {
-	function refreshLayoutAffectedViews(): void {
+	function refreshCardViews(): void {
 		for (const viewType of LAYOUT_REFRESHABLE_VIEW_TYPES) {
 			for (const leaf of deps.workspace.getLeavesOfType(viewType)) {
 				if (isRefreshableFromSettings(leaf.view)) {
@@ -79,17 +61,15 @@ export function createSettingsSideEffectController(
 		if (changedKeySet.size === 0) {
 			return;
 		}
+		const impacts = collectSettingImpacts(changedKeySet);
 
-		if (changedKeySet.has("enableUnresolvedLinkDecoration")) {
+		if (impacts.has("update-decorated-views")) {
 			deps.viewUpdateOrchestrator.updateAllViews();
 		}
-		if (changedKeySet.has("enableEmptyViewAllNotesInNewTab")) {
+		if (impacts.has("sync-empty-view")) {
 			deps.emptyViewController.sync();
 		}
-		if (changedKeySet.has("language")) {
-			deps.viewUpdateOrchestrator.updateAllViews();
-		}
-		if (changedKeySet.has("enableTagFeatures")) {
+		if (impacts.has("rebuild-tag-index")) {
 			deps.indexingService.invalidateAll();
 			void deps.indexingService
 				.enqueueRebuild("settings-change")
@@ -101,31 +81,16 @@ export function createSettingsSideEffectController(
 				});
 		}
 
-		let invalidatesSort = false;
-		let reactivatesDisplayMode = false;
-		let refreshesLayout = false;
-		for (const key of changedKeySet) {
-			if (!NON_SORT_INVALIDATING_SETTINGS.has(key)) {
-				invalidatesSort = true;
-			}
-			if (key !== "lastUsedSortOption" && key !== "enableContentSearch") {
-				reactivatesDisplayMode = true;
-			}
-			if (LAYOUT_AFFECTING_SETTINGS.has(key)) {
-				refreshesLayout = true;
-			}
-		}
-
-		if (invalidatesSort) {
+		if (impacts.has("invalidate-sort")) {
 			deps.sortService.invalidateCache();
 			deps.bumpSortContextVersion();
 			deps.invalidateAllNotesSorting();
 		}
-		if (reactivatesDisplayMode) {
+		if (impacts.has("reactivate-display-mode")) {
 			deps.displayModeManager.handleSettingsChange();
 		}
-		if (refreshesLayout) {
-			refreshLayoutAffectedViews();
+		if (impacts.has("refresh-card-views")) {
+			refreshCardViews();
 		}
 	};
 }

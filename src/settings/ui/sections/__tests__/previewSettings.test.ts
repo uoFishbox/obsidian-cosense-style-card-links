@@ -23,5 +23,7 @@ describe("PREVIEW_SETTING_DEFINITIONS", () => {
 
 		expect(definition.parse("0", DEFAULT_SETTINGS)).toBe(0);
 		expect(definition.parse("-1", DEFAULT_SETTINGS)).toBeUndefined();
+		expect(definition.parse("12px", DEFAULT_SETTINGS)).toBeUndefined();
+		expect(definition.parse("1.5", DEFAULT_SETTINGS)).toBeUndefined();
 	});
 });

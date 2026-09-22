@@ -8,7 +8,7 @@ import type { SettingDefinition } from "./settingDefinition";
 
 export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "cardWidthPx",
 		controlType: "text",
 		translationKey: "cardWidth",
@@ -18,7 +18,7 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "cardHeightRatio",
 		controlType: "text",
 		translationKey: "cardHeightRatio",
@@ -28,7 +28,7 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "cardGapPx",
 		controlType: "text",
 		translationKey: "cardGap",
@@ -38,7 +38,7 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "cardMaxColumns",
 		controlType: "text",
 		translationKey: "cardMaxColumns",
@@ -48,7 +48,7 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "priorityFrontmatterKeyForPreview",
 		controlType: "text",
 		translationKey: "priorityFrontmatterKeyForPreview",
@@ -58,7 +58,7 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => (typeof value === "string" ? value : ""),
 	},
 	{
-		section: "preview",
+		section: "cards",
 		settingKey: "priorityFrontmatterKeyForTitle",
 		controlType: "text",
 		translationKey: "priorityFrontmatterKeyForTitle",

@@ -34,6 +34,5 @@ export interface PluginHost extends Plugin {
 	updateSetting<K extends keyof PluginSettings>(
 		key: K,
 		value: PluginSettings[K],
-		options?: { immediate?: boolean },
 	): Promise<void>;
 }

@@ -3,9 +3,18 @@ import type { Language } from "settings/model";
 export type TranslationKey =
 	| "language"
 	| "languageDesc"
-	| "display"
+	| "general"
+	| "resultsAndSorting"
+	| "sectionTags"
+	| "sectionUnresolvedLinks"
+	| "sectionCanvas"
+	| "sectionNewTab"
+	| "advanced"
+	| "invalidSettingValue"
 	| "displayMode"
-	| "displayModeDesc"
+	| "displayModeEditorInlineDesc"
+	| "displayModeSidebarDesc"
+	| "displayModeHybridDesc"
 	| "defaultVisibleLinkCount"
 	| "defaultVisibleLinkCountDesc"
 	| "loadMoreLinkIncrement"
@@ -46,7 +55,6 @@ export type TranslationKey =
 	| "followSelectedCanvasFileNodeDesc"
 	| "highlightUnresolvedLinks"
 	| "highlightUnresolvedLinksDesc"
-	| "preview"
 	| "priorityFrontmatterKeyForPreview"
 	| "priorityFrontmatterKeyForPreviewDesc"
 	| "priorityFrontmatterKeyForTitle"
@@ -66,12 +74,10 @@ export type TranslationKey =
 	| "openTagSearchDedicatedViewDesc"
 	| "openUnresolvedNoteView"
 	| "openUnresolvedNoteViewDesc"
-	| "emptyViewAllNotesSection"
 	| "showAllNotesNewTab"
 	| "showAllNotesNewTabDesc"
 	| "pinBookmarkedToTopInAllNotes"
 	| "pinBookmarkedToTopInAllNotesDesc"
-	| "dateSortingSettings"
 	| "frontmatterKeyCreationDate"
 	| "frontmatterKeyCreationDateDesc"
 	| "frontmatterKeyModificationDate"
@@ -83,8 +89,6 @@ export type TranslationKey =
 	| "linkCountAscending"
 	| "showPreview"
 	| "showMenu"
-	| "tags"
-	| "canvas"
 	| "card";
 
 const translations: Record<Language, Record<TranslationKey, string>> = {
@@ -97,10 +101,20 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"Append CSS to card-rendering Shadow DOM surfaces. Changes apply immediately. Invalid CSS may break card display.",
 		language: "Language",
 		languageDesc: "Select the display language for the UI.",
-		display: "Display",
+		general: "General",
+		resultsAndSorting: "Results and sorting",
+		sectionTags: "Tags",
+		sectionUnresolvedLinks: "Unresolved links",
+		sectionCanvas: "Canvas",
+		sectionNewTab: "New tabs and all notes",
+		advanced: "Advanced",
+		invalidSettingValue: "Enter a valid value.",
 		displayMode: "Display mode",
-		displayModeDesc:
-			"Where to display 2-hop links. Hybrid mode displays them below the editor in Markdown view and in the sidebar otherwise.",
+		displayModeEditorInlineDesc:
+			"Displays 2-hop links below the editor for Markdown files only. Links are not displayed for other file types.",
+		displayModeSidebarDesc: "Displays 2-hop links in the sidebar for all files.",
+		displayModeHybridDesc:
+			"Displays 2-hop links below the editor for Markdown files and in the sidebar for all other file types.",
 		defaultVisibleLinkCount: "Default visible link count",
 		defaultVisibleLinkCountDesc:
 			"The default number of links to display in each section.",
@@ -155,7 +169,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightUnresolvedLinks: "Highlight unresolved links with single Backlink",
 		highlightUnresolvedLinksDesc:
 			"Change the appearance of unresolved links that have only one Backlink.",
-		preview: "Preview",
 		priorityFrontmatterKeyForPreview: "Priority frontmatter key for preview",
 		priorityFrontmatterKeyForPreviewDesc:
 			"If specified, the value of this property will be displayed as plain text in the preview instead of the file content.",
@@ -177,14 +190,12 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		openUnresolvedNoteView: "Check Backlinks when creating unresolved links",
 		openUnresolvedNoteViewDesc:
 			"When clicking on an unresolved link with two or more Backlinks, open a temporary pre-creation view before creating a new file.",
-		emptyViewAllNotesSection: "New Tab",
 		showAllNotesNewTab: "Show all notes in New Tab (Empty View)",
 		showAllNotesNewTabDesc:
 			"When enabled, opening a New Tab with Empty View shows all markdown notes as cards with infinite scroll.",
 		pinBookmarkedToTopInAllNotes: "Pin bookmarked notes to top",
 		pinBookmarkedToTopInAllNotesDesc:
 			"Pin bookmarked notes to the top of the All Notes view.",
-		dateSortingSettings: "Date Sorting Settings",
 		frontmatterKeyCreationDate: "Frontmatter key to use for creation date",
 		frontmatterKeyCreationDateDesc:
 			"If specified, use the value of this key instead of the file's creation date (e.g., created). If empty, use the file's creation date.",
@@ -198,8 +209,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		linkCountAscending: "Link count (ascending)",
 		showPreview: "Show preview",
 		showMenu: "Show menu",
-		tags: "Tags",
-		canvas: "Canvas",
 		card: "Card",
 	},
 	ja: {
@@ -211,10 +220,21 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"カード描画用 Shadow DOM に CSS を追加します。変更はすぐに反映されます。不正な CSS によりカード表示が崩れる場合があります。",
 		language: "言語",
 		languageDesc: "UIの表示言語を選択します。",
-		display: "表示",
+		general: "一般",
+		resultsAndSorting: "結果と並び替え",
+		sectionTags: "タグ",
+		sectionUnresolvedLinks: "未解決リンク",
+		sectionCanvas: "Canvas",
+		sectionNewTab: "新規タブとすべてのノート",
+		advanced: "高度な設定",
+		invalidSettingValue: "有効な値を入力してください。",
 		displayMode: "表示モード",
-		displayModeDesc:
-			"2ホップリンクを表示する場所を設定します。ハイブリッドモードでは、Markdownビューではエディタの下に、それ以外ではサイドバーに表示されます。",
+		displayModeEditorInlineDesc:
+			"Markdownファイルでのみ、2ホップリンクをエディタの下に表示します。Markdown以外のファイルでは表示しません。",
+		displayModeSidebarDesc:
+			"すべてのファイルで、2ホップリンクをサイドバーに表示します。",
+		displayModeHybridDesc:
+			"Markdownファイルでは2ホップリンクをエディタの下に表示し、それ以外のファイルではサイドバーに表示します。",
 		defaultVisibleLinkCount: "デフォルトの表示リンク数",
 		defaultVisibleLinkCountDesc:
 			"各セクションにデフォルトで表示するリンク数を設定します。",
@@ -267,7 +287,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightUnresolvedLinks: "バックリンクが1つのみの未解決リンクをハイライト",
 		highlightUnresolvedLinksDesc:
 			"バックリンクが1つのみの未解決リンクの外観を変更します。",
-		preview: "プレビュー",
 		priorityFrontmatterKeyForPreview: "プレビュー優先フロントマターキー",
 		priorityFrontmatterKeyForPreviewDesc:
 			"指定した場合、このプロパティの値がファイルコンテンツの代わりにプレビューにプレーンテキストとして表示されます。",
@@ -290,14 +309,12 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		openUnresolvedNoteView: "未解決リンク作成時にバックリンクを確認",
 		openUnresolvedNoteViewDesc:
 			"2つ以上のバックリンクを持つ未解決リンクをクリックした際、新しいファイルを作成する前に一時的な作成前ビューを開きます。",
-		emptyViewAllNotesSection: "新規タブ",
 		showAllNotesNewTab: "新しいタブ（空のビュー）ですべてのノートを表示",
 		showAllNotesNewTabDesc:
 			"有効にすると、空のビューで新しいタブを開く際、すべてのマークダウンノートを無限スクロール付きのカードとして表示します。",
 		pinBookmarkedToTopInAllNotes: "ブックマークしたノートを先頭に固定",
 		pinBookmarkedToTopInAllNotesDesc:
 			"すべてのノートビューで、ブックマークしたノートをリストの先頭に固定します。",
-		dateSortingSettings: "日付ソート設定",
 		frontmatterKeyCreationDate: "作成日に使用するフロントマターキー",
 		frontmatterKeyCreationDateDesc:
 			"指定した場合、ファイルの作成日の代わりにこのキーの値を使用します（例: created）。空の場合、ファイルの作成日を使用します。",
@@ -311,8 +328,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		linkCountAscending: "リンク数（昇順）",
 		showPreview: "プレビューを表示",
 		showMenu: "メニューを表示",
-		tags: "タグ",
-		canvas: "Canvas",
 		card: "カード",
 	},
 };

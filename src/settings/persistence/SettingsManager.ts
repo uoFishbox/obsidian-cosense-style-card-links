@@ -1,23 +1,23 @@
 import {
 	DEFAULT_SETTINGS,
+	isCurrentPersistedPluginData,
 	parsePluginSettings,
+	serializePluginSettings,
+	type PersistedPluginData,
 	type PluginSettings,
 } from "settings/model";
 
 const SAVE_DEBOUNCE_DELAY_MS = 100;
 
-interface UpdateOptions {
-	immediate?: boolean;
-}
-
 interface SettingsPersistenceHost {
 	settings: PluginSettings;
 	loadData(): Promise<unknown>;
-	saveData(settings: PluginSettings): Promise<void>;
+	saveData(data: PersistedPluginData): Promise<void>;
 }
 
 export class SettingsManager {
-	private saveDebounceTimer: number | undefined = undefined;
+	private saveDebounceTimer: ReturnType<typeof globalThis.setTimeout> | undefined =
+		undefined;
 
 	constructor(private plugin: SettingsPersistenceHost) {}
 
@@ -25,6 +25,9 @@ export class SettingsManager {
 		try {
 			const data = await this.plugin.loadData();
 			this.replaceSettings(parsePluginSettings(data));
+			if (!isCurrentPersistedPluginData(data)) {
+				await this.persistSettings();
+			}
 		} catch (error) {
 			console.error("設定の読み込みに失敗しました:", error);
 			this.replaceSettings(DEFAULT_SETTINGS);
@@ -40,7 +43,7 @@ export class SettingsManager {
 	private scheduleSave(): void {
 		this.cancelScheduledSave();
 
-		this.saveDebounceTimer = window.setTimeout(async () => {
+		this.saveDebounceTimer = globalThis.setTimeout(async () => {
 			this.saveDebounceTimer = undefined;
 			try {
 				await this.persistSettings();
@@ -55,35 +58,25 @@ export class SettingsManager {
 			return;
 		}
 
-		window.clearTimeout(this.saveDebounceTimer);
+		globalThis.clearTimeout(this.saveDebounceTimer);
 		this.saveDebounceTimer = undefined;
 	}
 
 	private async persistSettings(): Promise<void> {
 		try {
-			await this.plugin.saveData(this.plugin.settings);
+			await this.plugin.saveData(serializePluginSettings(this.plugin.settings));
 		} catch (error) {
 			console.error("設定の保存に失敗しました:", error);
 			throw error;
 		}
 	}
 
-	private async save(options: UpdateOptions): Promise<void> {
-		if (options.immediate) {
-			await this.saveImmediate();
-			return;
-		}
-
-		this.scheduleSave();
-	}
-
 	async update<K extends keyof PluginSettings>(
 		key: K,
 		value: PluginSettings[K],
-		options: UpdateOptions = {},
 	): Promise<void> {
 		this.replaceSettings({ ...this.plugin.settings, [key]: value });
-		await this.save(options);
+		this.scheduleSave();
 	}
 
 	private replaceSettings(settings: PluginSettings): void {

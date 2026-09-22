@@ -1,7 +1,20 @@
-import { parsePositiveInteger, parseTrimmedString } from "./settingDefinition";
+import {
+	defineDropdown,
+	parsePositiveInteger,
+	parseTrimmedString,
+} from "./settingDefinition";
 import type { SelectOption, SettingDefinition } from "./settingDefinition";
+import type { QuickSortField } from "cards/sorting";
+import type { DisplayMode } from "settings/model";
+import type { TranslationKey } from "../translations";
 
-const QUICK_SORT_OPTIONS: readonly SelectOption[] = [
+const DISPLAY_MODE_DESCRIPTION_KEYS = {
+	"editor-inline": "displayModeEditorInlineDesc",
+	"sidebar-view": "displayModeSidebarDesc",
+	hybrid: "displayModeHybridDesc",
+} as const satisfies Record<DisplayMode, TranslationKey>;
+
+const QUICK_SORT_OPTIONS: readonly SelectOption<QuickSortField>[] = [
 	{ value: "none", label: "none", isTranslationKey: true },
 	{ value: "relevance", label: "sortRelevance", isTranslationKey: true },
 	{ value: "title", label: "sortTitle", isTranslationKey: true },
@@ -12,24 +25,23 @@ const QUICK_SORT_OPTIONS: readonly SelectOption[] = [
 ];
 
 export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
-	{
-		section: "language",
+	defineDropdown({
+		section: "general",
 		settingKey: "language",
-		controlType: "dropdown",
 		translationKey: "language",
 		descriptionKey: "languageDesc",
-		immediate: true,
 		options: [
 			{ value: "en", label: "English" },
 			{ value: "ja", label: "日本語" },
 		],
-	},
-	{
-		section: "display",
+	}),
+	defineDropdown({
+		section: "general",
 		settingKey: "displayMode",
-		controlType: "dropdown",
 		translationKey: "displayMode",
-		descriptionKey: "displayModeDesc",
+		descriptionKey: (settings) =>
+			DISPLAY_MODE_DESCRIPTION_KEYS[settings.displayMode],
+		refreshOnChange: true,
 		options: [
 			{
 				value: "editor-inline",
@@ -39,9 +51,9 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 			{ value: "sidebar-view", label: "sidebar", isTranslationKey: true },
 			{ value: "hybrid", label: "hybrid", isTranslationKey: true },
 		],
-	},
+	}),
 	{
-		section: "display",
+		section: "results",
 		settingKey: "defaultVisibleLinkCount",
 		controlType: "text",
 		translationKey: "defaultVisibleLinkCount",
@@ -50,7 +62,7 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "display",
+		section: "results",
 		settingKey: "loadMoreLinkIncrement",
 		controlType: "text",
 		translationKey: "loadMoreLinkIncrement",
@@ -59,7 +71,7 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "display",
+		section: "cards",
 		settingKey: "sectionMarginBottomPx",
 		controlType: "text",
 		translationKey: "sectionMarginBottom",
@@ -69,17 +81,15 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => String(value ?? ""),
 	},
 	{
-		section: "display",
+		section: "results",
 		settingKey: "useMergedLinksSection",
 		controlType: "toggle",
 		translationKey: "mergeBacklinkOutgoing",
 		descriptionKey: "mergeBacklinkOutgoingDesc",
-		immediate: true,
 	},
-	{
-		section: "display",
+	defineDropdown({
+		section: "results",
 		settingKey: "twoHopHeaderSortOrder",
-		controlType: "dropdown",
 		translationKey: "twoHopHeaderSortOrder",
 		descriptionKey: "twoHopHeaderSortOrderDesc",
 		options: [
@@ -90,27 +100,23 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 				isTranslationKey: true,
 			},
 		],
-	},
-	{
-		section: "display",
+	}),
+	defineDropdown({
+		section: "results",
 		settingKey: "quickSortField1",
-		controlType: "dropdown",
 		translationKey: "quickSortField1",
 		descriptionKey: "quickSortFieldDesc",
-		immediate: true,
 		options: QUICK_SORT_OPTIONS,
-	},
-	{
-		section: "display",
+	}),
+	defineDropdown({
+		section: "results",
 		settingKey: "quickSortField2",
-		controlType: "dropdown",
 		translationKey: "quickSortField2",
 		descriptionKey: "quickSortFieldDesc",
-		immediate: true,
 		options: QUICK_SORT_OPTIONS,
-	},
+	}),
 	{
-		section: "display",
+		section: "results",
 		settingKey: "dedupeCards",
 		controlType: "toggle",
 		translationKey: "hideDuplicateNotes",
@@ -122,6 +128,7 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		controlType: "toggle",
 		translationKey: "enableTagFeatures",
 		descriptionKey: "enableTagFeaturesDesc",
+		refreshOnChange: true,
 	},
 	{
 		section: "tags",
@@ -129,9 +136,10 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		controlType: "toggle",
 		translationKey: "showTagsSection",
 		descriptionKey: "showTagsSectionDesc",
+		disabled: (settings) => !settings.enableTagFeatures,
 	},
 	{
-		section: "display",
+		section: "results",
 		settingKey: "excludeAttachments",
 		controlType: "toggle",
 		translationKey: "hideAttachments",
@@ -145,7 +153,7 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		descriptionKey: "followSelectedCanvasFileNodeDesc",
 	},
 	{
-		section: "display",
+		section: "unresolvedLinks",
 		settingKey: "enableUnresolvedLinkDecoration",
 		controlType: "toggle",
 		translationKey: "highlightUnresolvedLinks",
@@ -157,23 +165,26 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		controlType: "toggle",
 		translationKey: "openTagSearchDedicatedView",
 		descriptionKey: "openTagSearchDedicatedViewDesc",
+		disabled: (settings) => !settings.enableTagFeatures,
 	},
 	{
-		section: "emptyViewAllNotes",
+		section: "newTab",
 		settingKey: "enableEmptyViewAllNotesInNewTab",
 		controlType: "toggle",
 		translationKey: "showAllNotesNewTab",
 		descriptionKey: "showAllNotesNewTabDesc",
+		refreshOnChange: true,
 	},
 	{
-		section: "emptyViewAllNotes",
+		section: "newTab",
 		settingKey: "pinBookmarkedToTopInAllNotes",
 		controlType: "toggle",
 		translationKey: "pinBookmarkedToTopInAllNotes",
 		descriptionKey: "pinBookmarkedToTopInAllNotesDesc",
+		disabled: (settings) => !settings.enableEmptyViewAllNotesInNewTab,
 	},
 	{
-		section: "dateSortingSettings",
+		section: "results",
 		settingKey: "frontmatterKeyCreatedDate",
 		controlType: "text",
 		translationKey: "frontmatterKeyCreationDate",
@@ -183,7 +194,7 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		format: (value) => (typeof value === "string" ? value : ""),
 	},
 	{
-		section: "dateSortingSettings",
+		section: "results",
 		settingKey: "frontmatterKeyModifiedDate",
 		controlType: "text",
 		translationKey: "frontmatterKeyModificationDate",
