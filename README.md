@@ -1,8 +1,8 @@
 # Cosense-style Card Links
 
-最大 2 ホップ先までの関連リンクを Cosense 風のカード形式で表示する Obsidian プラグインです。カード内には簡易的なプレビューを表示します。
+最大 2 ホップ先までの関連リンクを [Cosense](https://scrapbox.io) 風のカード形式で表示する Obsidian プラグインです。
 
-カード内のプレビューは以下に対応しています。
+カード内には簡易的なプレビューを表示します。プレビューは以下に対応しています。
 
 - 通常のテキスト
 - コードブロック
@@ -24,7 +24,7 @@
 
 ![alt text](docs/screenshots/backlink_and_outgoinglink.png)
 
-アクティブなノートのBacklinkとOutgoing linkをカード形式で表示します。
+ノートのBacklinkとOutgoing linkをカード形式で表示します。
 
 ![alt text](docs/screenshots/backlink_hover.png)
 
@@ -38,12 +38,12 @@ BacklinkとOutgoing linkを統合して一つのセクションに表示する�
 
 ![リンクでつながるノートを探索する様子](docs/screenshots/connect_links.gif)
 
-アクティブなノート (`Note 1`) の Outgoing link (`topic`) と同じリンクが別のノート (`Note 2`)にもある場合、Outgoing linkを介してそのノートをカードで相互に表示します。
+現在のノートと共通の Outgoing linkを持つ別のノートがある場合、そのリンクを介して関連ノートがカード形式で相互に表示されます。
 
-**このとき、Outgoing link (`topic`) のノートが存在していなくても2つのノートは接続されます。**
+**このとき、このリンク先のノート自体がまだ作成されていなくても、ノート同士は接続されます。**
 
-アクティブなノートでしか言及されていないリンクはエディタ上では赤色で表示され、「New links」 としてカードで表示されます。
-言及されているノート数が2以上になった場合、 Obsidian デフォルトの色で表示されます。
+なお、そのノートでしか参照されていないリンクはエディタ上では赤色で表示され、「New links」 としてカードで表示されます。
+参照されているノート数が2つ以上の場合、 Obsidian デフォルトの色で表示されます。
 
 ![alt text](docs/screenshots/base.png)
 
@@ -53,7 +53,7 @@ baseやcanvas上でもエディタ内と同様にリンクの色が変化しま�
 
 ![alt text](docs/screenshots/unresolved_link_view.gif)
 
-Obsidian では、未解決リンクを「作成せず開く」ことができません。このプラグインでは、未解決リンクを開くと、その場でノートを作成せずに、未解決リンクを参照しているノートをカード形式で表示します。これにより、ファイルの存在を意識することなく全てのリンクを閲覧できます。
+Obsidian では、未解決リンクを「作成せず開く」ことができません。このプラグインでは、未解決リンクを「まだ実体はないが概念としては存在するノート」として開き、それを参照するノートをカード形式で表示します。これにより、不要なファイルを増やさずにリンク関係を閲覧でき、必要なときだけ実体化できます。
 
 ノートを作成したい場合は、開いた直後にEnterキーを押すか、「Create file」ボタンを押すことでノートを作成できます。
 
@@ -81,7 +81,11 @@ Obsidian では、未解決リンクを「作成せず開く」ことができ�
 	- **注意:** 実装の都合上、obsidianのコアプラグインの `core search` プラグインを有効化しないとタグをクリックでカードグリッドが表示されません。
 - **Obsidian CLI 連携 (実験的)** — 1 ホップ／2 ホップのコンテキストを含むページの確認、近傍のノートの検索、関連カードの表示、安全なリンク先置換の機能があります。(標準的なファイル操作と検索には、Obsidian 組み込みの CLI を使用してください。)
 	- [Cosense-style Card Links エージェントスキル](skills/cosense-style-card-links/SKILL.md)をインストールするには、`skills/cosense-style-card-links/` をエージェントのスキルディレクトリへコピーしてください。
-- **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasでもoutgoing link/backlinkが使えるようになります。
+- **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasのリンクがサイドバーで閲覧できるようになります。
+
+## インストール
+
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) を導入し、`https://github.com/uoFishbox/obsidian-cosense-style-card-links` を追加してください。
 
 ## 開発
 
