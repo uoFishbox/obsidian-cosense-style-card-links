@@ -85,7 +85,9 @@ Obsidian では、未解決リンクを「作成せず開く」ことができ�
 
 ## インストール
 
-[BRAT](https://github.com/TfTHacker/obsidian42-brat) を導入し、`https://github.com/uoFishbox/obsidian-cosense-style-card-links` を追加してください。
+本プラグインは Obsidian Community Plugins への登録を行っていません。
+
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) を導入し、`https://github.com/uoFishbox/obsidian-cosense-style-card-links`  を追加してインストールしてください。
 
 ## 開発
 
