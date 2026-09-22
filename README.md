@@ -1,64 +1,95 @@
 # Cosense-style Card Links
 
-Render Obsidian links as Cosense-style preview cards and explore your vault through two-hop link navigation.
+最大 2 ホップ先までの関連リンクを Cosense 風のカード形式で表示する Obsidian プラグインです。カード内には簡易的なプレビューを表示します。
 
-## Features
+カード内のプレビューは以下に対応しています。
 
-- **Cosense-style card links** — See linked notes as visual preview cards with excerpts, titles, and metadata.
-- **Two-hop links** — Discover notes that are two links away from the current note.
-- **Backlinks & outgoing links** — Browse incoming and outgoing references in a unified card layout.
-- **Tag notes view** — Open any tag as a card grid of matching notes.
-- **Display modes** — Choose between a separate view, inline below the editor, or a hybrid layout.
-- **Search & filter** — Quickly filter cards by keyword.
-- **Keyboard navigation** — Move through cards without leaving the keyboard.
-- **Hover previews** — Preview a note in a popover by hovering a card.
-- **Unresolved note creation** — Create missing notes directly from unresolved links.
-- **Canvas integration** — Follow selected canvas nodes and drop cards onto the canvas.
-- **Customizable appearance** — Adjust card size, gaps, columns, preview length, and more in settings.
-- **Obsidian CLI integration** — Inspect pages with one/two-hop context, search neighborhoods, open related cards, and replace link targets with a dry run option. Standard file and search operations use Obsidian's built-in CLI.
+- 通常のテキスト
+- コードブロック
+- 数式
+- 画像 (ローカルファイル/外部リンク)
+- 動画のサムネイル (ローカルファイル)
+- YouTube/Vimeo のサムネイル
+- canvasファイルのサムネイル
 
-## Usage
+![エディター下部に表示されたカード](docs/screenshots/below_editor.png)
 
-- Open the **Two Hop Links** view from the command palette or sidebar.
-- Use the plugin settings to choose your preferred display mode and card style.
-- Click a card to open the note, or hover for a quick preview.
-- Use the search box and keyboard shortcuts to navigate large collections.
+> [!warning] 注意
+> 数万ファイル規模の保管庫では、起動直後のインデックス作成に数秒程度の時間がかかります。
+> インデックス作成後は軽量な差分更新でインデックスを更新するため、ノートの編集の妨げになることはありません。
 
-The [Cosense-style Card Links agent skill](skills/cosense-style-card-links/SKILL.md) teaches agents how to use the seven extension commands. Copy `skills/cosense-style-card-links/` into your agent's skills directory to install it.
+## 機能
 
-## Development
+### Backlink と Outgoing Link をカードで表示
+
+![alt text](docs/screenshots/backlink_and_outgoinglink.png)
+
+アクティブなノートのBacklinkとOutgoing linkをカード形式で表示します。
+
+![alt text](docs/screenshots/backlink_hover.png)
+
+カード上でCtrl + マウスオーバーで page preview が表示されます。リンク先の情報がある場合はその場所をハイライトします。
+
+![alt text](docs/screenshots/merged_links.png)
+
+BacklinkとOutgoing linkを統合して一つのセクションに表示することもできます。
+
+### 2 ホップ先のリンクをカードで表示
+
+![リンクでつながるノートを探索する様子](docs/screenshots/connect_links.gif)
+
+アクティブなノート (`Note 1`) の Outgoing link (`topic`) と同じリンクが別のノート (`Note 2`)にもある場合、Outgoing linkを介してそのノートをカードで相互に表示します。
+
+**このとき、Outgoing link (`topic`) のノートが存在していなくても2つのノートは接続されます。**
+
+アクティブなノートでしか言及されていないリンクはエディタ上では赤色で表示され、「New links」 としてカードで表示されます。
+言及されているノート数が2以上になった場合、 Obsidian デフォルトの色で表示されます。
+
+![alt text](docs/screenshots/base.png)
+
+baseやcanvas上でもエディタ内と同様にリンクの色が変化します。
+
+### 未解決リンクの被リンクを表示
+
+![alt text](docs/screenshots/unresolved_link_view.gif)
+
+Obsidian では、未解決リンクを「作成せず開く」ことができません。このプラグインでは、未解決リンクを開くと、その場でノートを作成せずに、未解決リンクを参照しているノートをカード形式で表示します。これにより、ファイルの存在を意識することなく全てのリンクを閲覧できます。
+
+ノートを作成したい場合は、開いた直後にEnterキーを押すか、「Create file」ボタンを押すことでノートを作成できます。
+
+また、Obsidian では、未解決リンクを未解決のまま一括でリネームすることができませんが、このビューからは、ファイルを作成せずに一括でリネームすることができます。
+
+### すべてのノートをカードで表示
+
+新しいタブにすべてのノートがカード形式で表示されます。
+
+![すべてのノートをカードで表示した画面](docs/screenshots/all_notes.png)
+
+### カードの検索・フィルタリング
+
+![alt text](docs/screenshots/search.gif)
+
+表示されたカードのタイトルとコンテンツを検索・フィルタリングできます。マッチしたカードのみが表示され、マッチしたワードはハイライトされます。
+
+検索バー横のボタンをクリックして、検索対象を タイトルのみ/全文検索 のいずれかに切り替えることができます。
+
+### その他の機能
+
+- **表示モード**: サイドバー、エディター下部への表示、または両方を組み合わせたレイアウトから選べます。
+	- pdf, base, canvas, その他の添付ファイルのbacklinkを表示するには、`Sidebar` もしくは `Hybrid` を選択してください。
+- **タグビュー**: 任意のタグをクリックすると、該当するノートをカードグリッドで表示できます。
+	- **注意:** 実装の都合上、obsidianのコアプラグインの `core search` プラグインを有効化しないとタグをクリックでカードグリッドが表示されません。
+- **Obsidian CLI 連携 (実験的)** — 1 ホップ／2 ホップのコンテキストを含むページの確認、近傍のノートの検索、関連カードの表示、安全なリンク先置換の機能があります。(標準的なファイル操作と検索には、Obsidian 組み込みの CLI を使用してください。)
+	- [Cosense-style Card Links エージェントスキル](skills/cosense-style-card-links/SKILL.md)をインストールするには、`skills/cosense-style-card-links/` をエージェントのスキルディレクトリへコピーしてください。
+- **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasでもoutgoing link/backlinkが使えるようになります。
+
+## 開発
 
 ```bash
 bun install
 bun run dev
 ```
 
-Run tests:
-
-```bash
-bun run test
-```
-
-Before creating a release, run the same checks used by CI:
-
-```bash
-bun install --frozen-lockfile
-bun run check
-bun run test
-bun run build
-```
-
-Bump the version and push the generated commit and tag:
-
-```bash
-npm version patch
-git push origin main --follow-tags
-```
-
-Use `minor` or `major` instead of `patch` when appropriate. GitHub Actions
-validates the tag and metadata, rebuilds the plugin from `bun.lock`, and creates
-a draft release containing `main.js`, `styles.css`, and `manifest.json`.
-
-## License
+## ライセンス
 
 MIT
