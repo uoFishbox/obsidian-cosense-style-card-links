@@ -24,7 +24,7 @@
 
 ![alt text](docs/screenshots/backlink_and_outgoinglink.png)
 
-アクティブなノートのBacklinkとOutgoing linkをカード形式で表示します。
+ノートのBacklinkとOutgoing linkをカード形式で表示します。
 
 ![alt text](docs/screenshots/backlink_hover.png)
 
@@ -38,12 +38,12 @@ BacklinkとOutgoing linkを統合して一つのセクションに表示する�
 
 ![リンクでつながるノートを探索する様子](docs/screenshots/connect_links.gif)
 
-アクティブなノート (`Note 1`) の Outgoing link (`topic`) と同じリンクが別のノート (`Note 2`)にもある場合、Outgoing linkを介してそのノートをカードで相互に表示します。
+現在のノートと共通の Outgoing linkを持つ別のノートがある場合、そのリンクを介して関連ノートがカード形式で相互に表示されます。
 
-**このとき、Outgoing link (`topic`) のノートが存在していなくても2つのノートは接続されます。**
+**このとき、このリンク先のノート自体がまだ作成されていなくても、ノート同士は接続されます。**
 
-アクティブなノートでしか言及されていないリンクはエディタ上では赤色で表示され、「New links」 としてカードで表示されます。
-言及されているノート数が2以上になった場合、 Obsidian デフォルトの色で表示されます。
+なお、そのノートでしか参照されていないリンクはエディタ上では赤色で表示され、「New links」 としてカードで表示されます。
+参照されているノート数が2つ以上の場合、 Obsidian デフォルトの色で表示されます。
 
 ![alt text](docs/screenshots/base.png)
 
