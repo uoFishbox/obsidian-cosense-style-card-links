@@ -103,10 +103,7 @@
 	draggable={interactive && draggable && !Platform.isMobile ? true : undefined}
 >
 	<div class="cosense-card-links__box-title-wrapper">
-		<div
-			class="cosense-card-links__box-title"
-			class:has-file-icon={fileIconName !== null}
-		>
+		<div class="cosense-card-links__box-title">
 			{#if fileIconName}
 				<span class="cosense-card-links__file-icon">
 					<Icon name={fileIconName} width={16} height={16} />

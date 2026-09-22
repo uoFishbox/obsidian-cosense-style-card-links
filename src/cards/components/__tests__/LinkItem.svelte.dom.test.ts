@@ -64,7 +64,6 @@ describe("LinkItem", () => {
 		).toHaveTextContent("canvas");
 
 		const title = container.querySelector(".cosense-card-links__box-title");
-		expect(title).toHaveClass("has-file-icon");
 		expect(title?.children).toHaveLength(1);
 		expect(title?.children[0]).toHaveClass("cosense-card-links__file-icon");
 	});
