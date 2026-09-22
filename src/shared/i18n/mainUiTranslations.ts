@@ -188,7 +188,7 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		openInNewTab: "新しいタブで開く",
 		openNonMarkdownFile:
 			"リンクを表示するにはMarkdown以外のファイルを開いてください。",
-		outgoingLinks: "発リンク",
+		outgoingLinks: "アウトゴーイングリンク",
 		preparingTagNotes: "タグ付きノートを準備しています。",
 		relevance: "関連度",
 		search: "検索...",

@@ -126,6 +126,7 @@ export const CARD_RENDER_SHADOW_CSS = String.raw`
 	background-color: var(--color-accent);
 	border: none;
 	cursor: default;
+	padding: var(--ccl-box-padding);
 }
 
 .cosense-card-links__twohop-header {
