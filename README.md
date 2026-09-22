@@ -83,6 +83,10 @@ Obsidian では、未解決リンクを「作成せず開く」ことができ�
 	- [Cosense-style Card Links エージェントスキル](skills/cosense-style-card-links/SKILL.md)をインストールするには、`skills/cosense-style-card-links/` をエージェントのスキルディレクトリへコピーしてください。
 - **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasのリンクがサイドバーで閲覧できるようになります。
 
+## インストール
+
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) を導入し、`https://github.com/uoFishbox/obsidian-cosense-style-card-links` を追加してください。
+
 ## 開発
 
 ```bash
