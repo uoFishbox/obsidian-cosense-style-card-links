@@ -51,6 +51,13 @@ export class TFile {
 
 export class App {}
 
+export class Notice {
+	constructor(
+		public message: string | DocumentFragment,
+		public timeout?: number,
+	) {}
+}
+
 export class FileSystemAdapter {
 	getBasePath(): string {
 		return "";

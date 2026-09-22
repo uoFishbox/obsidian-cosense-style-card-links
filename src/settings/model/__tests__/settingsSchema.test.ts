@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	loadPluginSettings,
 	parsePluginSettings,
 	serializePluginSettings,
 } from "settings/model/settingsSchema";
@@ -124,17 +125,54 @@ describe("settings schema", () => {
 		expect(settings).not.toHaveProperty("previewActivationAheadRows");
 	});
 
-	it("resets old flat data and mismatched schema versions", () => {
+	it("migrates schema version 1 through versions 2 and 3", () => {
+		const result = loadPluginSettings({
+			...DEFAULT_SETTINGS,
+			settingsSchemaVersion: 1,
+			language: "ja",
+			highlightOnOpen: "never",
+			lastUsedSortOption: "modified-date",
+			enableContentSearch: true,
+		});
+
+		expect(result.status).toBe("migrated");
+		if (result.status !== "migrated") return;
+		expect(result.fromVersion).toBe(1);
+		expect(result.settings.language).toBe("ja");
+		expect(result.settings.highlightOnOpen).toBe(false);
+		expect(result.settings.lastUsedSortOption).toBe("modified-date");
+		expect(result.settings.enableContentSearch).toBe(true);
+	});
+
+	it("migrates schema version 2 into the current envelope", () => {
+		const result = loadPluginSettings({
+			...DEFAULT_SETTINGS,
+			settingsSchemaVersion: 2,
+			language: "ja",
+			lastUsedSortOption: "created-date",
+			enableContentSearch: true,
+		});
+
+		expect(result.status).toBe("migrated");
+		if (result.status !== "migrated") return;
+		expect(result.fromVersion).toBe(2);
+		expect(result.settings.language).toBe("ja");
+		expect(result.settings.lastUsedSortOption).toBe("created-date");
+		expect(result.settings.enableContentSearch).toBe(true);
+	});
+
+	it("does not interpret unversioned or unsupported data as current", () => {
 		expect(parsePluginSettings({ ...DEFAULT_SETTINGS, language: "ja" })).toEqual(
 			DEFAULT_SETTINGS,
 		);
-		expect(
-			parsePluginSettings({
-				schemaVersion: SETTINGS_SCHEMA_VERSION - 1,
-				settings: { language: "ja" },
-				preferences: {},
-			}),
-		).toEqual(DEFAULT_SETTINGS);
+
+		const result = loadPluginSettings({
+			schemaVersion: SETTINGS_SCHEMA_VERSION + 1,
+			settings: { language: "ja" },
+			preferences: {},
+		});
+		expect(result.status).toBe("unsupported-schema");
+		expect(result.settings).toEqual(DEFAULT_SETTINGS);
 	});
 
 	it("returns full defaults for malformed envelopes", () => {

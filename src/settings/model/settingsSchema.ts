@@ -12,16 +12,77 @@ import {
 } from "./settings";
 
 type UnknownSettings = Readonly<Record<string, unknown>>;
+type LegacySchemaVersion = 1 | 2;
+type CurrentPersistedPluginData = Readonly<{
+	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
+	settings: UnknownSettings;
+	preferences: UnknownSettings;
+}>;
+
+export type PluginSettingsLoadResult =
+	| { status: "current"; settings: PluginSettings }
+	| {
+			status: "migrated";
+			settings: PluginSettings;
+			fromVersion: LegacySchemaVersion;
+	  }
+	| { status: "missing"; settings: PluginSettings }
+	| { status: "invalid"; settings: PluginSettings }
+	| {
+			status: "unsupported-schema";
+			settings: PluginSettings;
+			storedVersion: unknown;
+	  };
 
 /**
- * Validates the current storage envelope into runtime settings. Data from a
- * different schema version is intentionally reset instead of migrated.
+ * Resolves persisted data without treating unsupported or malformed schemas as
+ * safe to overwrite. Known legacy versions are migrated through each version.
  */
-export function parsePluginSettings(raw: unknown): PluginSettings {
-	if (!isCurrentPersistedPluginData(raw)) {
-		return { ...DEFAULT_SETTINGS };
+export function loadPluginSettings(raw: unknown): PluginSettingsLoadResult {
+	if (raw === null || raw === undefined) {
+		return { status: "missing", settings: { ...DEFAULT_SETTINGS } };
+	}
+	if (!isUnknownSettings(raw)) {
+		return { status: "invalid", settings: { ...DEFAULT_SETTINGS } };
+	}
+	if ("schemaVersion" in raw) {
+		if (raw.schemaVersion !== SETTINGS_SCHEMA_VERSION) {
+			return {
+				status: "unsupported-schema",
+				settings: { ...DEFAULT_SETTINGS },
+				storedVersion: raw.schemaVersion,
+			};
+		}
+		if (!isCurrentPersistedPluginData(raw)) {
+			return { status: "invalid", settings: { ...DEFAULT_SETTINGS } };
+		}
+		return { status: "current", settings: parseCurrentPluginSettings(raw) };
 	}
 
+	const migrated = migrateLegacyPluginData(raw);
+	if (migrated !== null) {
+		return {
+			status: "migrated",
+			settings: parseCurrentPluginSettings(migrated.data),
+			fromVersion: migrated.fromVersion,
+		};
+	}
+	if ("settingsSchemaVersion" in raw) {
+		return {
+			status: "unsupported-schema",
+			settings: { ...DEFAULT_SETTINGS },
+			storedVersion: raw.settingsSchemaVersion,
+		};
+	}
+	return { status: "invalid", settings: { ...DEFAULT_SETTINGS } };
+}
+
+/** Validates persisted data into runtime settings. */
+export function parsePluginSettings(raw: unknown): PluginSettings {
+	return loadPluginSettings(raw).settings;
+}
+
+function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSettings {
 	const settings = raw.settings;
 	const preferences = raw.preferences;
 
@@ -177,17 +238,62 @@ export function parsePluginSettings(raw: unknown): PluginSettings {
 	};
 }
 
-export function isCurrentPersistedPluginData(raw: unknown): raw is Readonly<{
-	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
-	settings: UnknownSettings;
-	preferences: UnknownSettings;
-}> {
+export function isCurrentPersistedPluginData(
+	raw: unknown,
+): raw is CurrentPersistedPluginData {
 	return (
 		isUnknownSettings(raw) &&
 		raw.schemaVersion === SETTINGS_SCHEMA_VERSION &&
 		isUnknownSettings(raw.settings) &&
 		isUnknownSettings(raw.preferences)
 	);
+}
+
+function migrateLegacyPluginData(raw: UnknownSettings): Readonly<{
+	fromVersion: LegacySchemaVersion;
+	data: CurrentPersistedPluginData;
+}> | null {
+	if (raw.settingsSchemaVersion === 1) {
+		return {
+			fromVersion: 1,
+			data: migrateV2ToV3(migrateV1ToV2(raw)),
+		};
+	}
+	if (raw.settingsSchemaVersion === 2) {
+		return { fromVersion: 2, data: migrateV2ToV3(raw) };
+	}
+	return null;
+}
+
+function migrateV1ToV2(raw: UnknownSettings): UnknownSettings {
+	const highlightOnOpen =
+		raw.highlightOnOpen === "always"
+			? true
+			: raw.highlightOnOpen === "never"
+				? false
+				: raw.highlightOnOpen;
+
+	return {
+		...raw,
+		settingsSchemaVersion: 2,
+		highlightOnOpen,
+	};
+}
+
+function migrateV2ToV3(raw: UnknownSettings): CurrentPersistedPluginData {
+	const settings: Record<string, unknown> = { ...raw };
+	delete settings.settingsSchemaVersion;
+	delete settings.lastUsedSortOption;
+	delete settings.enableContentSearch;
+
+	return {
+		schemaVersion: 3,
+		settings,
+		preferences: {
+			lastUsedSortOption: raw.lastUsedSortOption,
+			enableContentSearch: raw.enableContentSearch,
+		},
+	};
 }
 
 /** Converts runtime settings into the versioned storage envelope. */

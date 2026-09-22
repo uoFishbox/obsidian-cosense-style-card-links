@@ -1,10 +1,11 @@
+import { Notice } from "obsidian";
 import {
 	DEFAULT_SETTINGS,
-	isCurrentPersistedPluginData,
-	parsePluginSettings,
+	loadPluginSettings,
 	serializePluginSettings,
 	type PersistedPluginData,
 	type PluginSettings,
+	type PluginSettingsLoadResult,
 } from "settings/model";
 
 const SAVE_DEBOUNCE_DELAY_MS = 100;
@@ -18,14 +19,22 @@ interface SettingsPersistenceHost {
 export class SettingsManager {
 	private saveDebounceTimer: ReturnType<typeof globalThis.setTimeout> | undefined =
 		undefined;
+	private persistenceBlocked = false;
 
 	constructor(private plugin: SettingsPersistenceHost) {}
 
 	async load(): Promise<void> {
 		try {
-			const data = await this.plugin.loadData();
-			this.replaceSettings(parsePluginSettings(data));
-			if (!isCurrentPersistedPluginData(data)) {
+			const result = loadPluginSettings(await this.plugin.loadData());
+			this.replaceSettings(result.settings);
+			const persistenceBlocked = isUnsafeToOverwrite(result);
+			this.persistenceBlocked = persistenceBlocked;
+
+			if (persistenceBlocked) {
+				showSettingsLoadWarning(result);
+				return;
+			}
+			if (result.status === "migrated" || result.status === "missing") {
 				await this.persistSettings();
 			}
 		} catch (error) {
@@ -42,6 +51,9 @@ export class SettingsManager {
 
 	private scheduleSave(): void {
 		this.cancelScheduledSave();
+		if (this.persistenceBlocked) {
+			return;
+		}
 
 		this.saveDebounceTimer = globalThis.setTimeout(async () => {
 			this.saveDebounceTimer = undefined;
@@ -63,6 +75,10 @@ export class SettingsManager {
 	}
 
 	private async persistSettings(): Promise<void> {
+		if (this.persistenceBlocked) {
+			return;
+		}
+
 		try {
 			await this.plugin.saveData(serializePluginSettings(this.plugin.settings));
 		} catch (error) {
@@ -88,4 +104,35 @@ export class SettingsManager {
 			await this.saveImmediate();
 		}
 	}
+}
+
+type UnsafePluginSettingsLoadResult = Extract<
+	PluginSettingsLoadResult,
+	{ status: "invalid" | "unsupported-schema" }
+>;
+
+function isUnsafeToOverwrite(
+	result: PluginSettingsLoadResult,
+): result is UnsafePluginSettingsLoadResult {
+	return result.status === "invalid" || result.status === "unsupported-schema";
+}
+
+function showSettingsLoadWarning(result: UnsafePluginSettingsLoadResult): void {
+	const detail =
+		result.status === "unsupported-schema"
+			? `unsupported schema version (${formatStoredVersion(result.storedVersion)})`
+			: "invalid data";
+	const message =
+		`Cosense-style card links: Settings contain ${detail}. ` +
+		"The original data was preserved and automatic settings saving was disabled.";
+
+	console.warn(message);
+	new Notice(message, 10_000);
+}
+
+function formatStoredVersion(version: unknown): string {
+	if (typeof version === "number" || typeof version === "string") {
+		return String(version);
+	}
+	return "unknown";
 }

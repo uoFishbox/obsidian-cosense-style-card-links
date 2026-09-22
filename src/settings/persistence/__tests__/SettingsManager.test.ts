@@ -7,20 +7,52 @@ import {
 import { SettingsManager } from "settings/persistence/SettingsManager";
 
 describe("SettingsManager", () => {
-	it("replaces legacy flat data with the current storage envelope", async () => {
+	it("migrates legacy flat data to the current storage envelope", async () => {
+		const legacySettings = {
+			...DEFAULT_SETTINGS,
+			settingsSchemaVersion: 2,
+			language: "ja",
+			lastUsedSortOption: "modified-date",
+		};
 		const plugin = {
 			settings: { ...DEFAULT_SETTINGS },
-			loadData: vi.fn().mockResolvedValue({ language: "ja" }),
+			loadData: vi.fn().mockResolvedValue(legacySettings),
 			saveData: vi.fn(),
 		};
 		const manager = new SettingsManager(plugin);
 
 		await manager.load();
 
-		expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
+		expect(plugin.settings.language).toBe("ja");
+		expect(plugin.settings.lastUsedSortOption).toBe("modified-date");
 		expect(plugin.saveData).toHaveBeenCalledWith(
-			serializePluginSettings(DEFAULT_SETTINGS),
+			serializePluginSettings(plugin.settings),
 		);
+	});
+
+	it("preserves unsupported schema data and disables automatic saving", async () => {
+		const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const storedData = {
+			schemaVersion: SETTINGS_SCHEMA_VERSION + 1,
+			settings: { language: "ja" },
+			preferences: {},
+		};
+		const plugin = {
+			settings: { ...DEFAULT_SETTINGS },
+			loadData: vi.fn().mockResolvedValue(storedData),
+			saveData: vi.fn(),
+		};
+		const manager = new SettingsManager(plugin);
+
+		await manager.load();
+		await manager.update("language", "ja");
+		await manager.destroy();
+
+		expect(plugin.saveData).not.toHaveBeenCalled();
+		expect(warning).toHaveBeenCalledWith(
+			expect.stringContaining("unsupported schema version"),
+		);
+		warning.mockRestore();
 	});
 
 	it("drops obsolete internal tuning settings while loading", async () => {
