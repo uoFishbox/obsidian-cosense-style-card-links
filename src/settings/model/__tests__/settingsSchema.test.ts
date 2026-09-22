@@ -45,6 +45,12 @@ describe("settings schema", () => {
 		},
 	);
 
+	it("defaults the image preview properties for existing versioned data", () => {
+		const settings = parsePluginSettings(persistedData());
+
+		expect(settings.priorityFrontmatterKeysForImagePreview).toBe("image");
+	});
+
 	it("preserves valid experimental values", () => {
 		const css = ".card { color: rebeccapurple; }";
 		const settings = parsePluginSettings(

@@ -60,6 +60,7 @@ export interface CardSettings {
 	previewMaxLines: number;
 	previewMaxChars: number;
 	previewVisualLineSafetyMargin: number;
+	priorityFrontmatterKeysForImagePreview: string;
 	priorityFrontmatterKeyForPreview: string;
 	priorityFrontmatterKeyForTitle: string;
 }

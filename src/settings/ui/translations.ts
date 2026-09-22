@@ -55,6 +55,8 @@ export type TranslationKey =
 	| "followSelectedCanvasFileNodeDesc"
 	| "highlightUnresolvedLinks"
 	| "highlightUnresolvedLinksDesc"
+	| "priorityFrontmatterKeysForImagePreview"
+	| "priorityFrontmatterKeysForImagePreviewDesc"
 	| "priorityFrontmatterKeyForPreview"
 	| "priorityFrontmatterKeyForPreviewDesc"
 	| "priorityFrontmatterKeyForTitle"
@@ -169,10 +171,13 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightUnresolvedLinks: "Highlight unresolved links with single Backlink",
 		highlightUnresolvedLinksDesc:
 			"Change the appearance of unresolved links that have only one Backlink.",
-		priorityFrontmatterKeyForPreview: "Priority frontmatter key for preview",
+		priorityFrontmatterKeysForImagePreview: "Priority properties for image preview",
+		priorityFrontmatterKeysForImagePreviewDesc:
+			"Comma-separated property names to use as image previews, in priority order. The first property containing a valid image URL or internal image link is used.",
+		priorityFrontmatterKeyForPreview: "Priority property for text preview",
 		priorityFrontmatterKeyForPreviewDesc:
 			"If specified, the value of this property will be displayed as plain text in the preview instead of the file content.",
-		priorityFrontmatterKeyForTitle: "Priority frontmatter key for card title",
+		priorityFrontmatterKeyForTitle: "Priority property for card title",
 		priorityFrontmatterKeyForTitleDesc:
 			"If specified, the value of this property will be displayed as the card title when it exists.",
 		interaction: "Interaction",
@@ -196,12 +201,12 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		pinBookmarkedToTopInAllNotes: "Pin bookmarked notes to top",
 		pinBookmarkedToTopInAllNotesDesc:
 			"Pin bookmarked notes to the top of the All Notes view.",
-		frontmatterKeyCreationDate: "Frontmatter key to use for creation date",
+		frontmatterKeyCreationDate: "Property to use for creation date",
 		frontmatterKeyCreationDateDesc:
-			"If specified, use the value of this key instead of the file's creation date (e.g., created). If empty, use the file's creation date.",
-		frontmatterKeyModificationDate: "Frontmatter key to use for modification date",
+			"If specified, use the value of this property instead of the file's creation date (e.g., created). If empty, use the file's creation date.",
+		frontmatterKeyModificationDate: "Property to use for modification date",
 		frontmatterKeyModificationDateDesc:
-			"If specified, use the value of this key instead of the file's modification date (e.g., updated). If empty, use the file's modification date.",
+			"If specified, use the value of this property instead of the file's modification date (e.g., updated). If empty, use the file's modification date.",
 		belowEditor: "Below editor",
 		sidebar: "Sidebar",
 		hybrid: "Hybrid",
@@ -287,11 +292,14 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightUnresolvedLinks: "バックリンクが1つのみの未解決リンクをハイライト",
 		highlightUnresolvedLinksDesc:
 			"バックリンクが1つのみの未解決リンクの外観を変更します。",
-		priorityFrontmatterKeyForPreview: "プレビュー優先フロントマターキー",
+		priorityFrontmatterKeysForImagePreview:
+			"画像プレビューに優先使用するプロパティ",
+		priorityFrontmatterKeysForImagePreviewDesc:
+			"画像プレビューとして使用するプロパティ名を優先順にカンマ区切りで指定します。有効な画像URLまたは内部画像リンクを含む最初のプロパティが使用されます。",
+		priorityFrontmatterKeyForPreview: "テキストプレビューに優先使用するプロパティ",
 		priorityFrontmatterKeyForPreviewDesc:
 			"指定した場合、このプロパティの値がファイルコンテンツの代わりにプレビューにプレーンテキストとして表示されます。",
-		priorityFrontmatterKeyForTitle:
-			"カードタイトルに優先表示するフロントマターキー",
+		priorityFrontmatterKeyForTitle: "カードタイトルに優先使用するプロパティ",
 		priorityFrontmatterKeyForTitleDesc:
 			"指定すると、そのプロパティが存在するノートでは、その値をカードのタイトルとして優先表示します。",
 		interaction: "操作",
@@ -315,12 +323,12 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		pinBookmarkedToTopInAllNotes: "ブックマークしたノートを先頭に固定",
 		pinBookmarkedToTopInAllNotesDesc:
 			"すべてのノートビューで、ブックマークしたノートをリストの先頭に固定します。",
-		frontmatterKeyCreationDate: "作成日に使用するフロントマターキー",
+		frontmatterKeyCreationDate: "作成日に使用するプロパティ",
 		frontmatterKeyCreationDateDesc:
-			"指定した場合、ファイルの作成日の代わりにこのキーの値を使用します（例: created）。空の場合、ファイルの作成日を使用します。",
-		frontmatterKeyModificationDate: "更新日に使用するフロントマターキー",
+			"指定した場合、ファイルの作成日の代わりにこのプロパティの値を使用します（例: created）。空の場合、ファイルの作成日を使用します。",
+		frontmatterKeyModificationDate: "更新日に使用するプロパティ",
 		frontmatterKeyModificationDateDesc:
-			"指定した場合、ファイルの更新日の代わりにこのキーの値を使用します（例: updated）。空の場合、ファイルの更新日を使用します。",
+			"指定した場合、ファイルの更新日の代わりにこのプロパティの値を使用します（例: updated）。空の場合、ファイルの更新日を使用します。",
 		belowEditor: "エディタの下",
 		sidebar: "サイドバー",
 		hybrid: "ハイブリッド",

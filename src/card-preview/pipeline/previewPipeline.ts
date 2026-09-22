@@ -161,9 +161,12 @@ async function resolveFrontmatterImagePreview(
 	signal?: AbortSignal,
 ): Promise<PreviewData | undefined> {
 	if (signal?.aborted) return undefined;
-	const image = context.metadataCache.getFileCache(file)?.frontmatter?.image;
-	if (typeof image !== "string" || image.trim().length === 0) return undefined;
-	return await getFrontmatterImage(file, context.metadataCache, context.vault);
+	return await getFrontmatterImage(
+		file,
+		context.metadataCache,
+		context.vault,
+		context.settings.priorityFrontmatterKeysForImagePreview,
+	);
 }
 
 async function resolveYouTubeThumbnailPreview(

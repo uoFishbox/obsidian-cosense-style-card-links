@@ -49,6 +49,16 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 	},
 	{
 		section: "cards",
+		settingKey: "priorityFrontmatterKeysForImagePreview",
+		controlType: "text",
+		translationKey: "priorityFrontmatterKeysForImagePreview",
+		descriptionKey: "priorityFrontmatterKeysForImagePreviewDesc",
+		placeholder: "image, cover, thumbnail",
+		parse: (value) => parseTrimmedString(value),
+		format: (value) => (typeof value === "string" ? value : ""),
+	},
+	{
+		section: "cards",
 		settingKey: "priorityFrontmatterKeyForPreview",
 		controlType: "text",
 		translationKey: "priorityFrontmatterKeyForPreview",

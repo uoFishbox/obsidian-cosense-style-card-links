@@ -142,6 +142,74 @@ describe("PreviewService.getPreview", () => {
 			expect(result.type).toBe("image");
 			expect(result.content).toBe(`app://local/${imageFile.path}`);
 		});
+
+		test("uses configured image properties in comma-separated priority order", async () => {
+			const file = createMockTFileAsPlainObject("note.md");
+			const coverUrl = "https://example.com/cover.jpg";
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeysForImagePreview: " cover, thumbnail ",
+			};
+			(metadataCache.getFileCache as Mock).mockReturnValue({
+				frontmatter: {
+					image: "https://example.com/default.jpg",
+					cover: coverUrl,
+					thumbnail: "https://example.com/thumbnail.jpg",
+				},
+			});
+			(vault.cachedRead as Mock).mockResolvedValue("");
+
+			const result = await previewService.getPreview(file);
+
+			expect(result).toEqual({ type: "image", content: coverUrl });
+		});
+
+		test("falls back to the next configured property with a valid image", async () => {
+			const file = createMockTFileAsPlainObject("note.md");
+			const imageFile = createMockTFileAsPlainObject("thumbnail.png", "png");
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeysForImagePreview: "cover, thumbnail",
+			};
+			(metadataCache.getFileCache as Mock).mockReturnValue({
+				frontmatter: {
+					cover: "not-an-image",
+					thumbnail: "[[thumbnail.png]]",
+				},
+			});
+			(metadataCache.getFirstLinkpathDest as Mock).mockReturnValue(imageFile);
+			(vault.cachedRead as Mock).mockResolvedValue("");
+
+			const result = await previewService.getPreview(file);
+
+			expect(result).toEqual({
+				type: "image",
+				content: `app://local/${imageFile.path}`,
+			});
+		});
+
+		test("invalidates the preview cache when configured image properties change", async () => {
+			const file = createMockTFileAsPlainObject("note.md");
+			const coverUrl = "https://example.com/cover.jpg";
+			const thumbnailUrl = "https://example.com/thumbnail.jpg";
+			(metadataCache.getFileCache as Mock).mockReturnValue({
+				frontmatter: { cover: coverUrl, thumbnail: thumbnailUrl },
+			});
+
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeysForImagePreview: "cover",
+			};
+			const cover = await previewService.getPreview(file);
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeysForImagePreview: "thumbnail",
+			};
+			const thumbnail = await previewService.getPreview(file);
+
+			expect(cover).toEqual({ type: "image", content: coverUrl });
+			expect(thumbnail).toEqual({ type: "image", content: thumbnailUrl });
+		});
 	});
 
 	describe("image retrieval from Markdown embeds", () => {

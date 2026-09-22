@@ -13,6 +13,20 @@ describe("PREVIEW_SETTING_DEFINITIONS", () => {
 		expect(settingKeys).not.toContain("previewVisualLineSafetyMargin");
 	});
 
+	it("defines a comma-separated image property setting", () => {
+		const definition = PREVIEW_SETTING_DEFINITIONS.find(
+			(candidate) =>
+				candidate.settingKey === "priorityFrontmatterKeysForImagePreview",
+		);
+
+		expect(definition?.controlType).toBe("text");
+		if (!definition || definition.controlType !== "text") return;
+
+		expect(definition.parse(" image, cover ", DEFAULT_SETTINGS)).toBe(
+			"image, cover",
+		);
+	});
+
 	it("accepts zero as the card gap", () => {
 		const definition = PREVIEW_SETTING_DEFINITIONS.find(
 			(candidate) => candidate.settingKey === "cardGapPx",

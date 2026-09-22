@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	enableUnresolvedLinkDecoration: true,
 	experimentalCosenseTitleEditing: false,
 	experimentalShadowDomCss: "",
+	priorityFrontmatterKeysForImagePreview: "image",
 	priorityFrontmatterKeyForPreview: "",
 	priorityFrontmatterKeyForTitle: "",
 	enableContentSearch: false,

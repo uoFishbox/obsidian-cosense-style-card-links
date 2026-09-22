@@ -15,13 +15,42 @@ export async function getFrontmatterImage(
 	file: TFile,
 	metadataCache: IMetadataCache,
 	vault: IVault,
+	frontmatterKeys: string,
 ): Promise<PreviewData | undefined> {
-	const metadata = getMetadata(file, metadataCache);
-	if (!metadata?.frontmatter?.image) {
-		return undefined;
+	const frontmatter = getMetadata(file, metadataCache)?.frontmatter;
+	if (!frontmatter) return undefined;
+
+	for (const key of parseFrontmatterKeys(frontmatterKeys)) {
+		const values = getImagePropertyValues(frontmatter[key]);
+		for (const value of values) {
+			const preview = resolveImagePropertyValue(value, metadataCache, vault);
+			if (preview) return preview;
+		}
 	}
 
-	const imageUrl = metadata.frontmatter.image.trim();
+	return undefined;
+}
+
+function parseFrontmatterKeys(value: string): string[] {
+	return value
+		.split(",")
+		.map((key) => key.trim())
+		.filter((key) => key.length > 0);
+}
+
+function getImagePropertyValues(value: unknown): string[] {
+	if (typeof value === "string") return [value];
+	if (!Array.isArray(value)) return [];
+	return value.filter((item): item is string => typeof item === "string");
+}
+
+function resolveImagePropertyValue(
+	value: string,
+	metadataCache: IMetadataCache,
+	vault: IVault,
+): PreviewData | undefined {
+	const imageUrl = value.trim();
+	if (!imageUrl) return undefined;
 
 	if (imageUrl.startsWith("http")) {
 		return { type: "image", content: imageUrl };
@@ -31,19 +60,16 @@ export async function getFrontmatterImage(
 		return { type: "image", content: toObsidianResourceUrl(imageUrl) };
 	}
 
-	// For internal links
 	const imageFileLink = imageUrl.match(/^\[\[([^\]]+)\]\]$/);
-	if (imageFileLink) {
-		const imageFile = resolveFile(imageFileLink[1], metadataCache);
-		if (imageFile) {
-			return {
-				type: "image",
-				content: vault.getResourcePath(imageFile),
-			};
-		}
-	}
+	if (!imageFileLink) return undefined;
 
-	return undefined;
+	const imageFile = resolveFile(imageFileLink[1], metadataCache);
+	if (!imageFile) return undefined;
+
+	return {
+		type: "image",
+		content: vault.getResourcePath(imageFile),
+	};
 }
 
 export function generateImagePreview(file: TFile, vault: IVault): PreviewData {

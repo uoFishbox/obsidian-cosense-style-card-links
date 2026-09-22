@@ -227,6 +227,10 @@ function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSett
 			settings.experimentalShadowDomCss,
 			DEFAULT_SETTINGS.experimentalShadowDomCss,
 		),
+		priorityFrontmatterKeysForImagePreview: stringSetting(
+			settings.priorityFrontmatterKeysForImagePreview,
+			DEFAULT_SETTINGS.priorityFrontmatterKeysForImagePreview,
+		),
 		priorityFrontmatterKeyForPreview: stringSetting(
 			settings.priorityFrontmatterKeyForPreview,
 			DEFAULT_SETTINGS.priorityFrontmatterKeyForPreview,

@@ -7,6 +7,7 @@ export interface PreviewRenderSettings {
 	readonly previewMaxChars: number;
 	readonly previewMaxLines: number;
 	readonly previewVisualLineSafetyMargin: number;
+	readonly priorityFrontmatterKeysForImagePreview: string;
 	readonly priorityFrontmatterKeyForPreview: string;
 }
 
@@ -41,6 +42,8 @@ export function createPreviewRenderSettings(
 		previewMaxChars: settings.previewMaxChars,
 		previewMaxLines: settings.previewMaxLines,
 		previewVisualLineSafetyMargin: settings.previewVisualLineSafetyMargin,
+		priorityFrontmatterKeysForImagePreview:
+			settings.priorityFrontmatterKeysForImagePreview,
 		priorityFrontmatterKeyForPreview: settings.priorityFrontmatterKeyForPreview,
 	});
 	settingsSnapshots.set(settings, snapshot);
@@ -95,6 +98,8 @@ function hasSamePreviewRenderSettings(
 		previous.previewMaxChars === next.previewMaxChars &&
 		previous.previewMaxLines === next.previewMaxLines &&
 		previous.previewVisualLineSafetyMargin === next.previewVisualLineSafetyMargin &&
+		previous.priorityFrontmatterKeysForImagePreview ===
+			next.priorityFrontmatterKeysForImagePreview &&
 		previous.priorityFrontmatterKeyForPreview ===
 			next.priorityFrontmatterKeyForPreview
 	);

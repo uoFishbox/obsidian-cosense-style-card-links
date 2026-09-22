@@ -17,6 +17,7 @@ export function buildPreviewContentSettingsSignature(
 	return [
 		settings.cardWidthPx,
 		settings.cardHeightRatio,
+		settings.priorityFrontmatterKeysForImagePreview,
 		settings.priorityFrontmatterKeyForPreview,
 		settings.previewMaxChars,
 		settings.previewMaxLines,

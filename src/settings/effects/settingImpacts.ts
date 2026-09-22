@@ -53,6 +53,7 @@ export const SETTING_IMPACTS = {
 	experimentalCosenseTitleEditing: STANDARD_IMPACTS,
 	experimentalShadowDomCss: [...STANDARD_IMPACTS, "refresh-card-views"],
 	enableContentSearch: ["invalidate-sort"],
+	priorityFrontmatterKeysForImagePreview: STANDARD_IMPACTS,
 	priorityFrontmatterKeyForPreview: STANDARD_IMPACTS,
 	priorityFrontmatterKeyForTitle: STANDARD_IMPACTS,
 } as const satisfies Record<keyof PluginSettings, ReadonlyArray<SettingImpact>>;
