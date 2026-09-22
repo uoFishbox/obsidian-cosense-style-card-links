@@ -1,6 +1,6 @@
 # Cosense-style Card Links
 
-最大 2 ホップ先までの関連リンクを Cosense 風のカード形式で表示する Obsidian プラグインです。
+最大 2 ホップ先までの関連リンクを [Cosense](https://scrapbox.io) 風のカード形式で表示する Obsidian プラグインです。
 
 カード内には簡易的なプレビューを表示します。プレビューは以下に対応しています。
 
@@ -81,7 +81,7 @@ Obsidian では、未解決リンクを「作成せず開く」ことができ�
 	- **注意:** 実装の都合上、obsidianのコアプラグインの `core search` プラグインを有効化しないとタグをクリックでカードグリッドが表示されません。
 - **Obsidian CLI 連携 (実験的)** — 1 ホップ／2 ホップのコンテキストを含むページの確認、近傍のノートの検索、関連カードの表示、安全なリンク先置換の機能があります。(標準的なファイル操作と検索には、Obsidian 組み込みの CLI を使用してください。)
 	- [Cosense-style Card Links エージェントスキル](skills/cosense-style-card-links/SKILL.md)をインストールするには、`skills/cosense-style-card-links/` をエージェントのスキルディレクトリへコピーしてください。
-- **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasでもoutgoing link/backlinkが使えるようになります。
+- **[obsidian-advanced-canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) との統合 (実験的)**: advanced canvasプラグインとの併用で、canvasのリンクがサイドバーで閲覧できるようになります。
 
 ## 開発
 
