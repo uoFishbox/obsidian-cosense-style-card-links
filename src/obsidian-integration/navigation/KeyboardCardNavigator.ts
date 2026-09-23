@@ -5,10 +5,12 @@ import {
 } from "cards/navigation/resultTargets";
 import { querySelectorAllIncludingShadow } from "shared/ui/dom/shadowDom";
 import { isElementVisible } from "shared/ui/dom/domUtils";
+import { getScrollMetrics } from "cards/virtualization/public";
 import {
 	createOwnerMouseEvent,
 	getOptionalOwnerWindow,
 	isHTMLElementLike,
+	isNodeLike,
 } from "shared/ui/dom/realmSafeDom";
 import {
 	scheduleAfterAnimationFrames,
@@ -16,6 +18,7 @@ import {
 } from "shared/ui/scheduling/frame";
 import {
 	collectVisibleKeyboardNavigationRows,
+	findKeyboardNavigationStart,
 	KEYBOARD_ROW_TOP_TOLERANCE_PX,
 	type KeyboardNavigationSurfaceRegistry,
 	type KeyboardNavigationRow,
@@ -35,7 +38,6 @@ export type {
 	KeyboardNavigationRow,
 } from "./keyboardNavigationSurface";
 
-const SHORT_HINT_KEYS = ["d", "f", "j", "k"] as const;
 const LONG_HINT_KEYS = ["a", "s", "d", "f", "j", "k", "l", ";"] as const;
 const HANDLED_HINT_KEYS = new Set<string>(LONG_HINT_KEYS);
 
@@ -51,11 +53,19 @@ export class KeyboardCardNavigator {
 	private rows: KeyboardNavigationRow[] = [];
 	private selectedRowIndex = -1;
 	private selectedItemIds = new Set<string>();
+	private selectedElements: HTMLElement[] = [];
 	private pendingLayoutTask: ScheduledFrameTask | null = null;
+	private pendingLoadMoreObserver: MutationObserver | null = null;
 	private keydownDocument: Document | null = null;
 	private unregisterWindowMigration: (() => void) | null = null;
 	private cachedScrollContainer: HTMLElement | null = null;
+	private internalScrollDepth = 0;
+	private internalScrollGraceTimer: number | null = null;
+	private internalScrollGraceWindow: Window | null = null;
+	private readonly internalScrollPositions = new Map<HTMLElement | Window, number>();
 	private readonly handleDocumentKeydownBound = this.handleDocumentKeydown.bind(this);
+	private readonly handleScrollBound = this.handleScroll.bind(this);
+	private readonly handleWheelBound = this.handleWheel.bind(this);
 
 	constructor(
 		private readonly surfaceRegistry: KeyboardNavigationSurfaceRegistry,
@@ -72,9 +82,7 @@ export class KeyboardCardNavigator {
 
 		const targetSurface = this.surfaceRegistry.findBestVisibleSurface();
 		if (!targetSurface) {
-			this.notify(
-				getMainUiTranslations(this.getLanguage()).noVisibleCardSurface,
-			);
+			this.notify(getMainUiTranslations(this.getLanguage()).noVisibleCardSurface);
 			return;
 		}
 
@@ -92,14 +100,16 @@ export class KeyboardCardNavigator {
 			this.unregisterWindowMigration = this.rootEl.onWindowMigrated(() => {
 				this.bindKeydownDocument();
 				this.cancelPendingLayoutTask();
+				this.clearInternalScrollGrace();
 				this.cachedScrollContainer = null;
+				this.internalScrollPositions.clear();
 				this.refreshRows(false);
 			});
 		}
 
 		this.rootEl.focus({ preventScroll: true });
 
-		if (!this.refreshRows(false)) {
+		if (!this.refreshRows(false) && !this.startAtFirstResult()) {
 			this.notify(getMainUiTranslations(this.getLanguage()).noVisibleCards);
 			this.deactivate();
 		}
@@ -111,6 +121,7 @@ export class KeyboardCardNavigator {
 		this.unbindKeydownDocument();
 
 		this.cancelPendingLayoutTask();
+		this.clearInternalScrollGrace();
 
 		this.clearSelectionState();
 
@@ -123,6 +134,7 @@ export class KeyboardCardNavigator {
 		this.selectedRowIndex = -1;
 		this.selectedItemIds.clear();
 		this.cachedScrollContainer = null;
+		this.internalScrollPositions.clear();
 	}
 
 	private unbindKeydownDocument(): void {
@@ -130,6 +142,17 @@ export class KeyboardCardNavigator {
 			"keydown",
 			this.handleDocumentKeydownBound,
 			GLOBAL_KEYBOARD_MODE_CAPTURE,
+		);
+		this.keydownDocument?.removeEventListener(
+			"scroll",
+			this.handleScrollBound,
+			true,
+		);
+		this.keydownDocument?.removeEventListener("wheel", this.handleWheelBound, true);
+		this.keydownDocument?.defaultView?.removeEventListener(
+			"scroll",
+			this.handleScrollBound,
+			true,
 		);
 		this.keydownDocument = null;
 	}
@@ -144,13 +167,112 @@ export class KeyboardCardNavigator {
 			this.handleDocumentKeydownBound,
 			GLOBAL_KEYBOARD_MODE_CAPTURE,
 		);
+		this.keydownDocument?.addEventListener("scroll", this.handleScrollBound, true);
+		this.keydownDocument?.addEventListener("wheel", this.handleWheelBound, true);
+		this.keydownDocument?.defaultView?.addEventListener(
+			"scroll",
+			this.handleScrollBound,
+			true,
+		);
+	}
+
+	private isOwnerWindow(target: EventTarget | null): boolean {
+		return (
+			!!this.rootEl &&
+			!!target &&
+			"document" in target &&
+			target.document === this.rootEl.ownerDocument
+		);
+	}
+
+	private isSurfaceScrollTarget(target: EventTarget | null): boolean {
+		if (!this.rootEl) return false;
+		if (target === this.rootEl.ownerDocument || this.isOwnerWindow(target)) {
+			return true;
+		}
+		return (
+			isNodeLike(target) &&
+			(this.rootEl.contains(target) || target.contains(this.rootEl))
+		);
+	}
+
+	private handleScroll(event: Event): void {
+		if (
+			!this.isSurfaceScrollTarget(event.target) ||
+			this.internalScrollDepth > 0 ||
+			this.internalScrollGraceTimer !== null ||
+			(this.selectedRowIndex < 0 && this.pendingLayoutTask !== null)
+		) {
+			return;
+		}
+		const target = event.target;
+		if (isHTMLElementLike(target)) {
+			if (this.internalScrollPositions.get(target) === target.scrollTop) return;
+		} else if (this.isOwnerWindow(target)) {
+			const ownerWindow = this.rootEl?.ownerDocument.defaultView;
+			if (
+				ownerWindow &&
+				this.internalScrollPositions.get(ownerWindow) === ownerWindow.scrollY
+			)
+				return;
+		}
+		this.deactivate();
+	}
+
+	private handleWheel(event: WheelEvent): void {
+		if (this.isSurfaceScrollTarget(event.target)) this.deactivate();
+	}
+
+	private clearInternalScrollGrace(): void {
+		if (this.internalScrollGraceTimer !== null) {
+			this.internalScrollGraceWindow?.clearTimeout(this.internalScrollGraceTimer);
+		}
+		this.internalScrollGraceTimer = null;
+		this.internalScrollGraceWindow = null;
+	}
+
+	private runInternalScroll(
+		target: HTMLElement | Window | null,
+		scroll: () => void,
+	): void {
+		const previousPosition = target
+			? isHTMLElementLike(target)
+				? target.scrollTop
+				: target.scrollY
+			: null;
+		this.internalScrollDepth += 1;
+		try {
+			scroll();
+		} finally {
+			this.internalScrollDepth -= 1;
+			if (target) {
+				const nextPosition = isHTMLElementLike(target)
+					? target.scrollTop
+					: target.scrollY;
+				this.internalScrollPositions.set(target, nextPosition);
+				if (nextPosition !== previousPosition) {
+					// Virtual rows and native scroll anchoring may adjust the position after
+					// the programmatic scroll event, once the new rows have been committed.
+					this.clearInternalScrollGrace();
+					const ownerWindow = this.rootEl?.ownerDocument.defaultView;
+					if (ownerWindow) {
+						this.internalScrollGraceWindow = ownerWindow;
+						this.internalScrollGraceTimer = ownerWindow.setTimeout(() => {
+							this.internalScrollGraceTimer = null;
+							this.internalScrollGraceWindow = null;
+						}, 300);
+					}
+				}
+			}
+		}
 	}
 
 	public moveRow(delta: -1 | 1): void {
-		if (!this.rootEl) {
+		if (!this.rootEl || (this.selectedRowIndex < 0 && this.pendingLayoutTask)) {
 			return;
 		}
 
+		this.cancelPendingLayoutTask();
 		if (!this.refreshRows(true)) {
 			this.deactivate();
 			return;
@@ -162,7 +284,8 @@ export class KeyboardCardNavigator {
 			return;
 		}
 
-		this.scrollToAdjacentRow(delta);
+		// The first row has no previous card; do not scroll the editor on ArrowUp.
+		if (delta > 0) this.scrollToAdjacentRow(delta);
 	}
 
 	public activateCardByHint(key: string): void {
@@ -258,15 +381,6 @@ export class KeyboardCardNavigator {
 			return true;
 		}
 
-		if (previousSelectedItemIds.size === 0) {
-			const fallbackIndex =
-				this.selectedRowIndex >= 0
-					? Math.min(this.selectedRowIndex, this.rows.length - 1)
-					: 0;
-			this.selectRow(Math.max(0, fallbackIndex));
-			return true;
-		}
-
 		const preservedIndex = this.rows.findIndex((row) =>
 			row.elements.some((element) => {
 				const itemId = getResultTargetIdentity(element);
@@ -276,8 +390,56 @@ export class KeyboardCardNavigator {
 		const nextIndex =
 			preservedIndex >= 0
 				? preservedIndex
-				: Math.min(this.selectedRowIndex, this.rows.length - 1);
-		this.selectRow(Math.max(0, nextIndex));
+				: this.selectedRowIndex >= 0
+					? Math.min(this.selectedRowIndex, this.rows.length - 1)
+					: 0;
+		// Refreshing a selection must not pull a boundary row back to the center.
+		this.selectRow(nextIndex, false);
+		return true;
+	}
+
+	private startAtFirstResult(): boolean {
+		const rootEl = this.rootEl;
+		const gridEl = rootEl && findKeyboardNavigationStart(rootEl);
+		if (!gridEl || !rootEl) return false;
+
+		const target = this.resolveScrollTarget();
+		const scrollContainer = isHTMLElementLike(target) ? target : null;
+		const metrics = getScrollMetrics(gridEl, scrollContainer);
+		const nextTop = Math.max(0, metrics.sectionTop);
+		if (target && nextTop !== metrics.scrollTop) {
+			this.runInternalScroll(target, () => {
+				if (isHTMLElementLike(target)) {
+					target.scrollTop = nextTop;
+				} else {
+					target.scrollTo({ top: nextTop });
+				}
+				target.dispatchEvent(this.createOwnerEvent(target, "scroll"));
+			});
+		}
+
+		const ownerWindow = getOptionalOwnerWindow(rootEl);
+		if (!ownerWindow) return false;
+		const awaitMountedRows = (remainingAttempts: number): void => {
+			this.pendingLayoutTask = scheduleAfterAnimationFrames(
+				ownerWindow,
+				2,
+				() => {
+					this.pendingLayoutTask = null;
+					if (this.rootEl !== rootEl) return;
+					if (this.refreshRows(false)) return;
+					if (remainingAttempts > 1 && findKeyboardNavigationStart(rootEl)) {
+						awaitMountedRows(remainingAttempts - 1);
+						return;
+					}
+					this.notify(
+						getMainUiTranslations(this.getLanguage()).noVisibleCards,
+					);
+					this.deactivate();
+				},
+			);
+		};
+		awaitMountedRows(15);
 		return true;
 	}
 
@@ -290,7 +452,7 @@ export class KeyboardCardNavigator {
 		return itemIds;
 	}
 
-	private selectRow(index: number): void {
+	private selectRow(index: number, center = true): void {
 		if (!this.rootEl || this.rows.length === 0) {
 			this.selectedRowIndex = -1;
 			this.selectedItemIds.clear();
@@ -298,12 +460,23 @@ export class KeyboardCardNavigator {
 		}
 
 		const clampedIndex = Math.max(0, Math.min(index, this.rows.length - 1));
-		this.selectedRowIndex = clampedIndex;
-		this.clearSelectionState();
-
 		const row = this.rows[clampedIndex];
+		const sameElements =
+			row.elements.length === this.selectedElements.length &&
+			row.elements.every(
+				(element, elementIndex) =>
+					element === this.selectedElements[elementIndex],
+			);
+		this.selectedRowIndex = clampedIndex;
 		this.selectedItemIds = this.collectRowItemIds(row);
-		this.centerRow(row);
+		if (sameElements) {
+			if (center) this.centerRow(row);
+			return;
+		}
+
+		this.clearSelectionState();
+		this.selectedElements = [...row.elements];
+		if (center) this.centerRow(row);
 		for (const element of row.elements) {
 			element.dataset.cclKbRowSelected = "1";
 		}
@@ -317,6 +490,7 @@ export class KeyboardCardNavigator {
 	}
 
 	private clearSelectionState(): void {
+		this.selectedElements = [];
 		if (!this.rootEl) {
 			return;
 		}
@@ -353,10 +527,12 @@ export class KeyboardCardNavigator {
 			delta,
 		);
 		const anchorTop = currentRow.top;
-		scrollKeyboardNavigationContainerBy(
-			scrollContainer,
-			delta * scrollStep,
-			this.createOwnerEvent.bind(this),
+		this.runInternalScroll(scrollContainer, () =>
+			scrollKeyboardNavigationContainerBy(
+				scrollContainer,
+				delta * scrollStep,
+				this.createOwnerEvent.bind(this),
+			),
 		);
 
 		const ownerWindow = getOptionalOwnerWindow(this.rootEl);
@@ -394,13 +570,16 @@ export class KeyboardCardNavigator {
 				return;
 			}
 
-			this.selectRow(delta > 0 ? this.rows.length - 1 : 0);
+			// No adjacent row was revealed; leave the boundary row where it scrolled.
+			this.selectRow(delta > 0 ? this.rows.length - 1 : 0, false);
 		});
 	}
 
 	private centerRow(row: KeyboardNavigationRow): void {
 		const target = this.resolveScrollTarget();
-		centerKeyboardNavigationRow(row, target, this.createOwnerEvent.bind(this));
+		this.runInternalScroll(target, () =>
+			centerKeyboardNavigationRow(row, target, this.createOwnerEvent.bind(this)),
+		);
 	}
 
 	private resolveScrollTarget(): HTMLElement | Window | null {
@@ -418,39 +597,67 @@ export class KeyboardCardNavigator {
 	): void {
 		this.cancelPendingLayoutTask();
 
-		loadMoreButton.click();
-
 		const ownerWindow = getOptionalOwnerWindow(loadMoreButton);
-		if (!ownerWindow) {
-			return;
+		const rootEl = this.rootEl;
+		if (!ownerWindow || !rootEl) return;
+		const previousRowElements = this.rows[rowIndex]?.elements ?? [];
+
+		const observer = new MutationObserver(() => scheduleRefresh());
+		this.pendingLoadMoreObserver = observer;
+		observer.observe(rootEl, { childList: true, subtree: true });
+		// Mutations inside a shadow root do not reach its host.
+		const renderRoot = loadMoreButton.getRootNode();
+		if (renderRoot !== rootEl && renderRoot !== rootEl.ownerDocument) {
+			observer.observe(renderRoot, { childList: true, subtree: true });
 		}
 
-		this.pendingLayoutTask = scheduleAfterAnimationFrames(ownerWindow, 1, () => {
-			this.pendingLayoutTask = null;
-
-			if (!this.rootEl) {
+		const refreshLoadedRows = (): void => {
+			if (this.pendingLoadMoreObserver !== observer || !this.rootEl) return;
+			const rows = collectVisibleKeyboardNavigationRows(this.rootEl);
+			const nextRow = rows[rowIndex];
+			// The old button can persist through several render/layout frames.
+			if (
+				!nextRow?.elements.some(
+					(element) =>
+						!this.isLoadMoreButton(element) &&
+						!previousRowElements.includes(element),
+				)
+			) {
 				return;
 			}
+			this.cancelPendingLayoutTask();
+			this.rows = rows;
+			this.selectRow(rowIndex);
+		};
+		const scheduleRefresh = (): void => {
+			this.pendingLayoutTask?.cancel();
+			this.pendingLayoutTask = scheduleAfterAnimationFrames(
+				ownerWindow,
+				1,
+				() => {
+					this.pendingLayoutTask = null;
+					refreshLoadedRows();
+				},
+			);
+		};
 
-			this.rows = collectVisibleKeyboardNavigationRows(this.rootEl);
-			if (this.rows.length === 0) {
-				this.deactivate();
-				return;
-			}
-
-			this.selectRow(Math.min(rowIndex, this.rows.length - 1));
-		});
+		loadMoreButton.click();
+		scheduleRefresh();
 	}
 
 	private cancelPendingLayoutTask(): void {
 		this.pendingLayoutTask?.cancel();
 		this.pendingLayoutTask = null;
+		this.pendingLoadMoreObserver?.disconnect();
+		this.pendingLoadMoreObserver = null;
 	}
 
 	private getHintKeysForRow(targetCount: number): string[] {
-		const keys =
-			targetCount <= SHORT_HINT_KEYS.length ? SHORT_HINT_KEYS : LONG_HINT_KEYS;
-		return keys.slice(0, targetCount);
+		const start = Math.max(
+			0,
+			Math.ceil((LONG_HINT_KEYS.length - Math.max(targetCount, 2)) / 2),
+		);
+		return LONG_HINT_KEYS.slice(start, start + targetCount);
 	}
 
 	private isLoadMoreButton(element: HTMLElement): element is HTMLButtonElement {

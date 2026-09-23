@@ -20,6 +20,9 @@
 	rowClassName="twohop-virtual-row"
 	cellClassName="twohop-virtual-cell"
 	contentHeight={grid.contentHeight}
+	hasNavigableResults={props.sections.some(
+		(section) => section.items.length > 0 || section.totalCount > 0,
+	)}
 	cellWidth={grid.layout.cellWidth}
 	rowHeight={grid.layout.rowHeight}
 	columns={grid.layout.columns}

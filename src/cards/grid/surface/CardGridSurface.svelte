@@ -21,6 +21,7 @@
 		rowClassName?: string;
 		cellClassName?: string;
 		contentHeight: number;
+		hasNavigableResults?: boolean;
 		cellWidth?: number;
 		rowHeight: number;
 		columns?: number;
@@ -61,6 +62,7 @@
 		rowClassName = "",
 		cellClassName = "",
 		contentHeight,
+		hasNavigableResults = false,
 		cellWidth = undefined,
 		rowHeight,
 		columns = 1,
@@ -112,6 +114,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions a11y_mouse_events_have_key_events -->
 <div
 	class={className}
+	data-ccl-navigation-results={hasNavigableResults ? "" : undefined}
 	bind:this={rootEl}
 	onclick={delegatedInteractions.handleClick}
 	onmousedown={delegatedInteractions.handleMouseDown}

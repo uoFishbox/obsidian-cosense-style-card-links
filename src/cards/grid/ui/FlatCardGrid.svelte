@@ -21,6 +21,7 @@
 		rowClassName="cosense-card-links__virtual-grid-row"
 		cellClassName="cosense-card-links__virtual-grid-cell"
 		contentHeight={list.contentHeight}
+		hasNavigableResults={list.itemCount > 0}
 		cellWidth={list.layout.cellWidth}
 		rowHeight={list.layout.rowHeight}
 		columns={list.layout.columns}

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { KeyboardCardNavigator } from "../KeyboardCardNavigator";
 import { MarkdownView } from "obsidian";
+import { nextAnimationFrame } from "shared/ui/scheduling/frame";
 import {
 	collectVisibleKeyboardNavigationRows,
 	createKeyboardNavigationSurfaceRegistry,
@@ -278,6 +279,27 @@ describe("KeyboardCardNavigator", () => {
 			expect(registry.findBestVisibleSurface()).toBe(workspaceSurface);
 		});
 
+		it("selects an active surface with logical results but no mounted cards", () => {
+			const editorSurface = createSurface("editor");
+			const grid = document.createElement("div");
+			grid.dataset.cclNavigationResults = "";
+			editorSurface.append(grid);
+			const sidebarSurface = createSurface("sidebar", [
+				createCard("sidebar-card", { top: 10, left: 20 }),
+			]);
+			const activeLeaf = document.createElement("div");
+			activeLeaf.className = "workspace-leaf mod-active";
+			activeLeaf.append(editorSurface);
+			document.body.append(activeLeaf, sidebarSurface);
+			const registry = createKeyboardNavigationSurfaceRegistry();
+			registry.register(editorSurface);
+			registry.register(sidebarSurface);
+
+			expect(registry.findBestVisibleSurface()).toBe(editorSurface);
+			delete grid.dataset.cclNavigationResults;
+			expect(registry.findBestVisibleSurface()).toBe(sidebarSurface);
+		});
+
 		it("removes a surface when its registration cleanup runs", () => {
 			const surface = createSurface("editor", [
 				createCard("editor-card", { top: 10, left: 20 }),
@@ -482,6 +504,45 @@ describe("KeyboardCardNavigator", () => {
 	});
 
 	describe("hint-based activation", () => {
+		it.each([
+			[1, ["f"]],
+			[2, ["f", "j"]],
+			[3, ["f", "j", "k"]],
+			[4, ["d", "f", "j", "k"]],
+			[5, ["d", "f", "j", "k", "l"]],
+			[6, ["s", "d", "f", "j", "k", "l"]],
+			[7, ["s", "d", "f", "j", "k", "l", ";"]],
+			[8, ["a", "s", "d", "f", "j", "k", "l", ";"]],
+		])("assigns center-first hints to a row of %i cards", (count, hints) => {
+			const cards = Array.from({ length: count }, (_, index) =>
+				createCard(`card-${index}`, { top: 10, left: index * 60 }),
+			);
+			const root = createSurface("editor", cards);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+
+			navigator.activate(root);
+
+			expect(cards.map((card) => card.dataset.cclKbHint)).toEqual(hints);
+			navigator.deactivate();
+		});
+
+		it("activates the card matching its displayed hint", () => {
+			const firstCard = createCard("first", { top: 10, left: 20 });
+			const secondCard = createCard("second", { top: 10, left: 180 });
+			const onClick = vi.fn();
+			secondCard.addEventListener("click", onClick);
+			const root = createSurface("editor", [firstCard, secondCard]);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+
+			dispatchKey("j");
+
+			expect(onClick).toHaveBeenCalledOnce();
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
+		});
+
 		it("activates a card by its hint key", () => {
 			const targetListener = vi.fn();
 			const rowOneA = createCard("row-1-a", { top: 10, left: 20 });
@@ -563,6 +624,59 @@ describe("KeyboardCardNavigator", () => {
 			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
 		});
 
+		it("assigns hints to cards rendered after load more completes asynchronously in a shadow root", async () => {
+			const root = createSurface("editor");
+			const shadowRoot = root.attachShadow({ mode: "open" });
+			const firstCard = createCard("row-1-a", { top: 10, left: 20 });
+			const loadMoreButton = createLoadMoreButton({ top: 90, left: 20 });
+			shadowRoot.append(firstCard, loadMoreButton);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			const nextCard = createCard("row-2-a", { top: 90, left: 20 });
+			loadMoreButton.addEventListener("click", () => {
+				setTimeout(() => {
+					loadMoreButton.remove();
+					shadowRoot.append(nextCard);
+				}, 50);
+			});
+
+			navigator.activate(root);
+			dispatchKey("ArrowDown");
+			dispatchKey(loadMoreButton.dataset.cclKbHint!);
+
+			await vi.waitFor(() => {
+				expect(nextCard.dataset.cclKbHint).toBe("f");
+			});
+			expect(nextCard.dataset.cclKbRowSelected).toBe("1");
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			navigator.deactivate();
+		});
+
+		it("selects newly loaded cards even when a load more button remains", async () => {
+			const firstCard = createCard("row-1-a", { top: 10, left: 20 });
+			const loadMoreButton = createLoadMoreButton({ top: 90, left: 20 });
+			const root = createSurface("editor", [firstCard, loadMoreButton]);
+			document.body.append(root);
+			const nextCard = createCard("row-2-a", { top: 90, left: 20 });
+			loadMoreButton.addEventListener("click", () => {
+				setTimeout(() => {
+					setVisibleRect(loadMoreButton, { top: 170, left: 20 });
+					root.insertBefore(nextCard, loadMoreButton);
+				}, 50);
+			});
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+			dispatchKey("ArrowDown");
+
+			dispatchKey(loadMoreButton.dataset.cclKbHint!);
+
+			await vi.waitFor(() => {
+				expect(nextCard.dataset.cclKbHint).toBe("f");
+			});
+			expect(loadMoreButton.dataset.cclKbHint).toBeUndefined();
+			navigator.deactivate();
+		});
+
 		it("dispatches composed synthetic click from shadow-rendered card", () => {
 			const root = createSurface("editor");
 			const shadowRoot = root.attachShadow({ mode: "open" });
@@ -588,6 +702,160 @@ describe("KeyboardCardNavigator", () => {
 	});
 
 	describe("scroll behavior", () => {
+		it("scrolls to virtual results and selects a card mounted after scrolling", async () => {
+			const scrollContainer = document.createElement("div");
+			scrollContainer.style.overflowY = "auto";
+			setVisibleRect(scrollContainer, { top: 0, left: 0, height: 120 });
+			const root = createSurface("editor");
+			const grid = document.createElement("div");
+			grid.dataset.cclNavigationResults = "";
+			setVisibleRect(grid, { top: 600, left: 20, height: 200 });
+			root.append(grid);
+			scrollContainer.append(root);
+			document.body.append(scrollContainer);
+			const registry = createKeyboardNavigationSurfaceRegistry();
+			registry.register(root);
+			const navigator = new KeyboardCardNavigator(registry, vi.fn());
+			scrollContainer.addEventListener("scroll", () => {
+				if (scrollContainer.scrollTop === 600 && !grid.firstChild) {
+					grid.append(createCard("first-result", { top: 0, left: 20 }));
+				}
+			});
+
+			navigator.toggle();
+
+			expect(scrollContainer.scrollTop).toBe(600);
+			await vi.waitFor(() => {
+				expect(getSelectedCard(root)?.dataset.cclInteractionHandle).toBe(
+					"first-result",
+				);
+			});
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			navigator.deactivate();
+		});
+
+		it("waits for virtual rows published after the scroll measurement", async () => {
+			const scrollContainer = document.createElement("div");
+			scrollContainer.style.overflowY = "auto";
+			setVisibleRect(scrollContainer, { top: 0, left: 0, height: 120 });
+			const root = createSurface("editor");
+			const grid = document.createElement("div");
+			grid.dataset.cclNavigationResults = "";
+			setVisibleRect(grid, { top: 600, left: 20, height: 200 });
+			root.append(grid);
+			scrollContainer.append(root);
+			document.body.append(scrollContainer);
+			const registry = createKeyboardNavigationSurfaceRegistry();
+			registry.register(root);
+			const navigator = new KeyboardCardNavigator(registry, vi.fn());
+
+			navigator.toggle();
+			await new Promise((resolve) => setTimeout(resolve, 180));
+			scrollContainer.scrollTop = 605;
+			scrollContainer.dispatchEvent(new Event("scroll"));
+			grid.append(createCard("delayed-result", { top: 0, left: 20 }));
+
+			await vi.waitFor(() => {
+				expect(getSelectedCard(root)?.dataset.cclInteractionHandle).toBe(
+					"delayed-result",
+				);
+			});
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			navigator.deactivate();
+		});
+
+		it("keeps navigation active through a native scroll correction after activation", async () => {
+			const scrollContainer = document.createElement("div");
+			scrollContainer.style.overflowY = "auto";
+			setVisibleRect(scrollContainer, { top: 0, left: 0, height: 100 });
+			const root = createSurface("editor", [
+				createCard("result", { top: 126, left: 20 }),
+			]);
+			scrollContainer.append(root);
+			document.body.append(scrollContainer);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+
+			navigator.activate(root);
+			expect(scrollContainer.scrollTop).toBe(100);
+			scrollContainer.scrollTop = 95;
+			scrollContainer.dispatchEvent(new Event("scroll"));
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+
+			await new Promise((resolve) => setTimeout(resolve, 350));
+			scrollContainer.scrollTop = 50;
+			scrollContainer.dispatchEvent(new Event("scroll"));
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
+		});
+
+		it("does not select a late card after the mode is deactivated", async () => {
+			const root = createSurface("editor");
+			const grid = document.createElement("div");
+			grid.dataset.cclNavigationResults = "";
+			root.append(grid);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+			navigator.deactivate();
+			const card = createCard("late-result", { top: 10, left: 20 });
+			grid.append(card);
+
+			await nextAnimationFrame();
+			await nextAnimationFrame();
+			expect(card.dataset.cclKbHint).toBeUndefined();
+		});
+
+		it("keeps the scroll position and hints when ArrowUp repeats at the first row", async () => {
+			const scrollContainer = document.createElement("div");
+			scrollContainer.style.overflowY = "auto";
+			setVisibleRect(scrollContainer, { top: 0, left: 0, height: 100 });
+			scrollContainer.scrollTop = 200;
+
+			const card = createCard("first-row", { top: 26, left: 20 });
+			Object.defineProperty(card, "getBoundingClientRect", {
+				configurable: true,
+				value: () => {
+					const top = 26 + 200 - scrollContainer.scrollTop;
+					return {
+						top,
+						bottom: top + 48,
+						left: 20,
+						right: 140,
+						width: 120,
+						height: 48,
+					};
+				},
+			});
+			const root = createSurface("editor", [card]);
+			scrollContainer.append(root);
+			document.body.append(scrollContainer);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+
+			const changedAttributes: MutationRecord[] = [];
+			const mutations = new MutationObserver((records) => {
+				changedAttributes.push(...records);
+			});
+			mutations.observe(card, {
+				attributes: true,
+				attributeFilter: ["data-ccl-kb-row-selected", "data-ccl-kb-hint"],
+			});
+			for (let index = 0; index < 5; index++) {
+				dispatchKey("ArrowUp");
+				await nextAnimationFrame();
+				await nextAnimationFrame();
+				await nextAnimationFrame();
+			}
+
+			expect(scrollContainer.scrollTop).toBe(200);
+			expect(card.dataset.cclKbRowSelected).toBe("1");
+			expect(card.dataset.cclKbHint).toBe("f");
+			expect(changedAttributes).toHaveLength(0);
+			expect(mutations.takeRecords()).toHaveLength(0);
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			mutations.disconnect();
+			navigator.deactivate();
+		});
+
 		it("keeps the selected row centered in the nearest scroll container", () => {
 			const scrollContainer = document.createElement("div");
 			scrollContainer.style.overflowY = "auto";
@@ -613,6 +881,61 @@ describe("KeyboardCardNavigator", () => {
 			navigator.moveRow(1);
 
 			expect(scrollContainer.scrollTop).toBe(100);
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			// Browsers can deliver the native scroll event after the synthetic one.
+			scrollContainer.dispatchEvent(new Event("scroll"));
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+		});
+
+		it("exits immediately on a wheel gesture over the card surface", () => {
+			const root = createSurface("editor", [
+				createCard("row-1-a", { top: 10, left: 20 }),
+			]);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+
+			root.dispatchEvent(new WheelEvent("wheel", { bubbles: true, deltaY: 40 }));
+
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
+			expect(hasAnyHints(root)).toBe(false);
+		});
+
+		it("exits on scrolling the owner window", () => {
+			const root = createSurface("editor", [
+				createCard("row-1-a", { top: 10, left: 20 }),
+			]);
+			document.body.append(root);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+
+			const scrollY = vi.spyOn(window, "scrollY", "get").mockReturnValue(40);
+			window.dispatchEvent(new Event("scroll"));
+			scrollY.mockRestore();
+
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
+		});
+
+		it("exits on external scrolling of an ancestor, but not an unrelated pane", () => {
+			const scrollContainer = document.createElement("div");
+			scrollContainer.style.overflowY = "auto";
+			setVisibleRect(scrollContainer, { top: 0, left: 0, height: 100 });
+			const root = createSurface("editor", [
+				createCard("row-1-a", { top: 26, left: 20 }),
+			]);
+			scrollContainer.append(root);
+			const otherPane = document.createElement("div");
+			document.body.append(scrollContainer, otherPane);
+			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
+			navigator.activate(root);
+
+			otherPane.dispatchEvent(new Event("scroll"));
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(true);
+			scrollContainer.scrollTop = 40;
+			scrollContainer.dispatchEvent(new Event("scroll"));
+
+			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
+			expect(getSelectedCard(root)).toBeNull();
 		});
 	});
 

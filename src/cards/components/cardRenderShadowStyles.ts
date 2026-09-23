@@ -385,30 +385,28 @@ export const CARD_RENDER_SHADOW_CSS = String.raw`
 
 .cosense-card-links__box[data-ccl-kb-row-selected="1"] {
 	position: relative;
-	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+	border-color: var(--color-base-40);
 }
 
 .cosense-card-links__box[data-ccl-kb-row-selected="1"]::before {
 	content: "";
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, color-mix(in srgb, var(--interactive-accent) 10%, transparent), transparent 55%);
 	pointer-events: none;
 }
 
 .cosense-card-links__box[data-ccl-kb-hint]::after {
 	content: attr(data-ccl-kb-hint);
 	position: absolute;
-	top: 8px;
+	bottom: 8px;
 	right: 8px;
 	min-width: 1.6em;
 	padding: 2px 6px;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--interactive-accent) 92%, black 8%);
 	color: var(--text-on-accent);
-	font-size: 0.75em;
-	font-weight: 700;
+	font-size: 1em;
+	font-weight: normal;
 	line-height: 1.4;
 	text-align: center;
 	text-transform: lowercase;

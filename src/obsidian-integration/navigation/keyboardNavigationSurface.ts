@@ -5,6 +5,13 @@ import { querySelectorAllIncludingShadow } from "shared/ui/dom/shadowDom";
 export const KEYBOARD_ROW_TOP_TOLERANCE_PX = 8;
 
 const ROW_ELEMENT_SELECTOR = `${CARD_SELECTOR}, ${LOAD_MORE_SELECTOR}`;
+const NAVIGATION_RESULTS_SELECTOR = "[data-ccl-navigation-results]";
+
+/** Finds a grid with logical results even when none of its virtual cells is mounted. */
+export function findKeyboardNavigationStart(rootEl: HTMLElement): HTMLElement | null {
+	return rootEl.querySelector<HTMLElement>(NAVIGATION_RESULTS_SELECTOR);
+}
+
 const SURFACE_PLACEMENT_PRIORITY: Readonly<Record<string, number>> = {
 	editor: 3,
 	sidebar: 2,
@@ -14,7 +21,7 @@ const SURFACE_PLACEMENT_PRIORITY: Readonly<Record<string, number>> = {
 export interface KeyboardNavigationSurfaceRegistry {
 	/** Registers a mounted card surface and returns its idempotent cleanup function. */
 	register(rootEl: HTMLElement): () => void;
-	/** Returns the best mounted surface that currently contains navigable rows. */
+	/** Returns the best visible surface with mounted rows or logical grid results. */
 	findBestVisibleSurface(): HTMLElement | null;
 	/** Removes every registration owned by this registry. */
 	clear(): void;
@@ -63,7 +70,8 @@ export function createKeyboardNavigationSurfaceRegistry(): KeyboardNavigationSur
 			return (
 				rootEl.isConnected &&
 				isElementVisible(rootEl) &&
-				collectVisibleKeyboardNavigationRows(rootEl).length > 0
+				(collectVisibleKeyboardNavigationRows(rootEl).length > 0 ||
+					findKeyboardNavigationStart(rootEl) !== null)
 			);
 		});
 
