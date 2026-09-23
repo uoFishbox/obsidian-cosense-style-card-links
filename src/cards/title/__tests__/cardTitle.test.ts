@@ -33,7 +33,7 @@ describe("frontmatterCardTitle", () => {
 		expect(frontmatterValueToCardTitle({ a: 1 })).toBe(JSON.stringify({ a: 1 }));
 	});
 
-	it("resolves a priority frontmatter card title only when the key exists and the value is non-empty", () => {
+	it("uses the first non-empty card title from comma-separated properties", () => {
 		const file = createMockTFile("notes/example.md");
 		const getMetadata = vi.fn(
 			() =>
@@ -41,6 +41,7 @@ describe("frontmatterCardTitle", () => {
 					frontmatter: {
 						title: " Custom Title ",
 						empty: "   ",
+						secondary: " Secondary Title ",
 						count: 0,
 					},
 				}) as never,
@@ -54,6 +55,16 @@ describe("frontmatterCardTitle", () => {
 		).toBeNull();
 		expect(getPriorityFrontmatterCardTitle(file, "empty", getMetadata)).toBeNull();
 		expect(getPriorityFrontmatterCardTitle(file, "", getMetadata)).toBeNull();
+		expect(
+			getPriorityFrontmatterCardTitle(
+				file,
+				" missing, empty, secondary, title ",
+				getMetadata,
+			),
+		).toBe("Secondary Title");
+		expect(
+			getPriorityFrontmatterCardTitle(file, "title, secondary", getMetadata),
+		).toBe("Custom Title");
 	});
 
 	it("falls back to fileToLinktext when no priority frontmatter title is available", () => {

@@ -1,5 +1,6 @@
 import type { CachedMetadata, TFile } from "obsidian";
 import type { FileToLinktext } from "obsidian-integration/hostContracts";
+import { parsePriorityPropertyKeys } from "shared/metadata/parsePriorityPropertyKeys";
 
 export type GetFileMetadata = (file: TFile) => CachedMetadata | null;
 
@@ -33,9 +34,7 @@ export function getPriorityFrontmatterCardTitle(
 	frontmatterKey: string | null | undefined,
 	getMetadata: GetFileMetadata,
 ): string | null {
-	const key = frontmatterKey?.trim();
-
-	if (!file || !key) {
+	if (!file || !frontmatterKey) {
 		return null;
 	}
 
@@ -44,11 +43,13 @@ export function getPriorityFrontmatterCardTitle(
 		return null;
 	}
 
-	if (!Object.prototype.hasOwnProperty.call(frontmatter, key)) {
-		return null;
+	for (const key of parsePriorityPropertyKeys(frontmatterKey)) {
+		if (!Object.prototype.hasOwnProperty.call(frontmatter, key)) continue;
+		const title = frontmatterValueToCardTitle(frontmatter[key]);
+		if (title) return title;
 	}
 
-	return frontmatterValueToCardTitle(frontmatter[key]);
+	return null;
 }
 
 /** Resolves the title used by cards for an existing target file. */

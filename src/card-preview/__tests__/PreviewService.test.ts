@@ -115,6 +115,28 @@ describe("PreviewService.getPreview", () => {
 		});
 	});
 
+	describe("text retrieval from frontmatter", () => {
+		test("uses the first non-empty text property in comma-separated priority order", async () => {
+			const file = createMockTFileAsPlainObject("note.md");
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeyForPreview:
+					" missing, empty, description, summary ",
+			};
+			(metadataCache.getFileCache as Mock).mockReturnValue({
+				frontmatter: {
+					empty: "   ",
+					description: " First preview ",
+					summary: "Second preview",
+				},
+			});
+
+			const result = await previewService.getPreview(file);
+
+			expect(result).toEqual({ type: "text", content: "First preview" });
+		});
+	});
+
 	describe("image retrieval from frontmatter", () => {
 		test("returns image preview when frontmatter has an image URL", async () => {
 			const file = createMockTFileAsPlainObject("note.md");

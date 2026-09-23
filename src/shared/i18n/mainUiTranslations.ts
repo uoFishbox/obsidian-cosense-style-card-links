@@ -36,6 +36,7 @@ export interface MainUiTranslations {
 	readonly noTagSet: string;
 	readonly openInNewTab: string;
 	readonly openNonMarkdownFile: string;
+	readonly openFileToSeeLinks: string;
 	readonly outgoingLinks: string;
 	readonly preparingTagNotes: string;
 	readonly relevance: string;
@@ -98,7 +99,8 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		noTargetPath: "No target path is set for this temporary view.",
 		noTagSet: "No tag is set for this temporary view.",
 		openInNewTab: "Open in new tab",
-		openNonMarkdownFile: "Open a non-Markdown file to see links.",
+		openNonMarkdownFile: "Links from non-Markdown files will appear here.",
+		openFileToSeeLinks: "Links will appear here when you open a file.",
 		outgoingLinks: "Outgoing links",
 		preparingTagNotes: "Preparing tag notes.",
 		relevance: "Related",
@@ -186,8 +188,8 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		noTargetPath: "この一時ビューには作成先のパスが設定されていません。",
 		noTagSet: "この一時ビューにはタグが設定されていません。",
 		openInNewTab: "新しいタブで開く",
-		openNonMarkdownFile:
-			"リンクを表示するにはMarkdown以外のファイルを開いてください。",
+		openNonMarkdownFile: "Markdown以外のファイルのリンクはここに表示されます。",
+		openFileToSeeLinks: "ファイルを開くとここにリンクが表示されます。",
 		outgoingLinks: "アウトゴーイングリンク",
 		preparingTagNotes: "タグ付きノートを準備しています。",
 		relevance: "関連度",

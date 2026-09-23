@@ -113,10 +113,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		invalidSettingValue: "Enter a valid value.",
 		displayMode: "Display mode",
 		displayModeEditorInlineDesc:
-			"Displays 2-hop links below the editor for Markdown files only. Links are not displayed for other file types.",
-		displayModeSidebarDesc: "Displays 2-hop links in the sidebar for all files.",
+			"Displays links below the editor for Markdown files only. Links are not displayed for other file types.",
+		displayModeSidebarDesc: "Displays links in the sidebar for all files.",
 		displayModeHybridDesc:
-			"Displays 2-hop links below the editor for Markdown files and in the sidebar for all other file types.",
+			"Displays links below the editor for Markdown files and in the sidebar for all other file types.",
 		defaultVisibleLinkCount: "Default visible link count",
 		defaultVisibleLinkCountDesc:
 			"The default number of links to display in each section.",
@@ -173,13 +173,13 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"Change the appearance of unresolved links that have only one Backlink.",
 		priorityFrontmatterKeysForImagePreview: "Priority properties for image preview",
 		priorityFrontmatterKeysForImagePreviewDesc:
-			"Comma-separated property names to use as image previews, in priority order. The first property containing a valid image URL or internal image link is used.",
-		priorityFrontmatterKeyForPreview: "Priority property for text preview",
+			"Enter property names separated by commas in priority order. The first valid image URL or internal image link is displayed as the image preview.",
+		priorityFrontmatterKeyForPreview: "Priority properties for text preview",
 		priorityFrontmatterKeyForPreviewDesc:
-			"If specified, the value of this property will be displayed as plain text in the preview instead of the file content.",
-		priorityFrontmatterKeyForTitle: "Priority property for card title",
+			"Enter property names separated by commas in priority order. The first non-empty value is displayed as the text preview instead of the file content.",
+		priorityFrontmatterKeyForTitle: "Priority properties for card title",
 		priorityFrontmatterKeyForTitleDesc:
-			"If specified, the value of this property will be displayed as the card title when it exists.",
+			"Enter property names separated by commas in priority order. The first non-empty value is displayed as the card title instead of the usual title.",
 		interaction: "Interaction",
 		highlightOnOpen: "Highlight on open",
 		highlightOnOpenDesc:
@@ -235,11 +235,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		invalidSettingValue: "有効な値を入力してください。",
 		displayMode: "表示モード",
 		displayModeEditorInlineDesc:
-			"Markdownファイルでのみ、2ホップリンクをエディタの下に表示します。Markdown以外のファイルでは表示しません。",
-		displayModeSidebarDesc:
-			"すべてのファイルで、2ホップリンクをサイドバーに表示します。",
+			"Markdownファイルのリンクをエディタの下に表示します。Markdown以外のファイルでは表示しません。",
+		displayModeSidebarDesc: "すべてのファイルのリンクをサイドバーに表示します。",
 		displayModeHybridDesc:
-			"Markdownファイルでは2ホップリンクをエディタの下に表示し、それ以外のファイルではサイドバーに表示します。",
+			"Markdownファイルのリンクはエディタの下に表示し、それ以外のファイルではサイドバーに表示します。",
 		defaultVisibleLinkCount: "デフォルトの表示リンク数",
 		defaultVisibleLinkCountDesc:
 			"各セクションにデフォルトで表示するリンク数を設定します。",
@@ -295,13 +294,13 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		priorityFrontmatterKeysForImagePreview:
 			"画像プレビューに優先使用するプロパティ",
 		priorityFrontmatterKeysForImagePreviewDesc:
-			"画像プレビューとして使用するプロパティ名を優先順にカンマ区切りで指定します。有効な画像URLまたは内部画像リンクを含む最初のプロパティが使用されます。",
+			"プロパティ名を優先順にカンマ区切りで指定します。有効な画像URLまたは内部画像リンクがある場合、最初に見つかった画像をプレビューに表示します。",
 		priorityFrontmatterKeyForPreview: "テキストプレビューに優先使用するプロパティ",
 		priorityFrontmatterKeyForPreviewDesc:
-			"指定した場合、このプロパティの値がファイルコンテンツの代わりにプレビューにプレーンテキストとして表示されます。",
+			"プロパティ名を優先順にカンマ区切りで指定します。値がある場合、最初に見つかった値をファイルの内容の代わりにテキストプレビューに表示します。",
 		priorityFrontmatterKeyForTitle: "カードタイトルに優先使用するプロパティ",
 		priorityFrontmatterKeyForTitleDesc:
-			"指定すると、そのプロパティが存在するノートでは、その値をカードのタイトルとして優先表示します。",
+			"プロパティ名を優先順にカンマ区切りで指定します。値がある場合、最初に見つかった値を通常のタイトルの代わりにカードタイトルとして表示します。",
 		interaction: "操作",
 		highlightOnOpen: "開く際にハイライト",
 		highlightOnOpenDesc:

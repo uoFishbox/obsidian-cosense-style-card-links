@@ -1,6 +1,7 @@
 import type { TFile } from "obsidian";
 import { defaultYieldToMainThread } from "indexing/timeSlicing";
 import { resolveWorkspaceDocument } from "obsidian-integration/workspace/workspaceDocuments";
+import { parsePriorityPropertyKeys } from "shared/metadata/parsePriorityPropertyKeys";
 import type { PreviewData } from "../types";
 import { generateCanvasPreview } from "../renderers/canvasPreviewRenderer";
 import {
@@ -108,20 +109,26 @@ async function resolveFrontmatterPropertyPreview(
 	signal?: AbortSignal,
 ): Promise<PreviewData | undefined> {
 	if (signal?.aborted) return undefined;
-	const key = context.settings.priorityFrontmatterKeyForPreview?.trim();
-	if (!key) return undefined;
+	const frontmatter = context.metadataCache.getFileCache(file)?.frontmatter;
+	if (!frontmatter) return undefined;
 
-	const value = context.metadataCache.getFileCache(file)?.frontmatter?.[key];
-	if (value === undefined || value === null || value === "") return undefined;
+	for (const key of parsePriorityPropertyKeys(
+		context.settings.priorityFrontmatterKeyForPreview,
+	)) {
+		const value = frontmatter[key];
+		if (value === undefined || value === null || value === "") continue;
 
-	let content: string;
-	if (typeof value === "string") content = value;
-	else if (Array.isArray(value)) content = value.join(", ");
-	else if (typeof value === "object") content = JSON.stringify(value);
-	else content = String(value);
+		let content: string;
+		if (typeof value === "string") content = value;
+		else if (Array.isArray(value)) content = value.join(", ");
+		else if (typeof value === "object") content = JSON.stringify(value);
+		else content = String(value);
 
-	const trimmedContent = content.trim();
-	return trimmedContent ? { type: "text", content: trimmedContent } : undefined;
+		const trimmedContent = content.trim();
+		if (trimmedContent) return { type: "text", content: trimmedContent };
+	}
+
+	return undefined;
 }
 
 async function resolveImagePreview(

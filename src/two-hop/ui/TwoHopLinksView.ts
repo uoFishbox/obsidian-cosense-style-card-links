@@ -50,7 +50,7 @@ export class TwoHopLinksView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Cosense card links";
+		return "Card links";
 	}
 
 	getIcon(): IconName {
@@ -67,6 +67,9 @@ export class TwoHopLinksView extends ItemView {
 
 	public refreshFromSettings(): void {
 		if (!this.currentFile) {
+			if (!this.externalListSurfaceOwner) {
+				this.clearContent();
+			}
 			return;
 		}
 
@@ -164,7 +167,7 @@ export class TwoHopLinksView extends ItemView {
 
 	/**
 	 * Clear the view content and display a placeholder.
-	 * Used to hide the UI in hybrid mode.
+	 * Used when the sidebar has no file to render or hybrid mode hides its UI.
 	 */
 	public clearContent(): void {
 		this.reclaimExternalListSurface();
@@ -176,9 +179,12 @@ export class TwoHopLinksView extends ItemView {
 		);
 		this.contentEl.empty();
 		this.resetSidebarScrollPosition();
+		const translations = getMainUiTranslations(this.plugin.settings.language);
 		this.contentEl.createDiv({
-			text: getMainUiTranslations(this.plugin.settings.language)
-				.openNonMarkdownFile,
+			text:
+				this.plugin.settings.displayMode === "sidebar-view"
+					? translations.openFileToSeeLinks
+					: translations.openNonMarkdownFile,
 			cls: "cosense-card-links__sidebar-placeholder",
 			attr: {
 				style: "padding: 20px; text-align: center; color: var(--text-muted);",

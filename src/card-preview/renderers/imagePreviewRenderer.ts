@@ -1,6 +1,7 @@
 import type { CachedMetadata, TFile } from "obsidian";
 import type { PreviewData } from "../types";
 import type { IMetadataCache, IVault } from "obsidian-integration/hostContracts";
+import { parsePriorityPropertyKeys } from "shared/metadata/parsePriorityPropertyKeys";
 import { resolveFile } from "../pipeline/previewContent";
 import { isFileUrlImage, toObsidianResourceUrl } from "./externalImageSource";
 
@@ -20,7 +21,7 @@ export async function getFrontmatterImage(
 	const frontmatter = getMetadata(file, metadataCache)?.frontmatter;
 	if (!frontmatter) return undefined;
 
-	for (const key of parseFrontmatterKeys(frontmatterKeys)) {
+	for (const key of parsePriorityPropertyKeys(frontmatterKeys)) {
 		const values = getImagePropertyValues(frontmatter[key]);
 		for (const value of values) {
 			const preview = resolveImagePropertyValue(value, metadataCache, vault);
@@ -29,13 +30,6 @@ export async function getFrontmatterImage(
 	}
 
 	return undefined;
-}
-
-function parseFrontmatterKeys(value: string): string[] {
-	return value
-		.split(",")
-		.map((key) => key.trim())
-		.filter((key) => key.length > 0);
 }
 
 function getImagePropertyValues(value: unknown): string[] {
