@@ -34,6 +34,7 @@ export interface MainUiTranslations {
 	readonly noNotesFoundWithTag: string;
 	readonly noTargetPath: string;
 	readonly noTagSet: string;
+	readonly openCardLinksView: string;
 	readonly openInNewTab: string;
 	readonly openNonMarkdownFile: string;
 	readonly openFileToSeeLinks: string;
@@ -107,6 +108,7 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		noNotesFoundWithTag: "No notes found with this tag.",
 		noTargetPath: "No target path is set for this temporary view.",
 		noTagSet: "No tag is set for this temporary view.",
+		openCardLinksView: "Open Card links view",
 		openInNewTab: "Open in new tab",
 		openNonMarkdownFile: "Links from non-Markdown files will appear here.",
 		openFileToSeeLinks: "Links will appear here when you open a file.",
@@ -208,6 +210,7 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		noNotesFoundWithTag: "このタグを持つノートが見つかりません。",
 		noTargetPath: "この一時ビューには作成先のパスが設定されていません。",
 		noTagSet: "この一時ビューにはタグが設定されていません。",
+		openCardLinksView: "カードリンクビューを開く",
 		openInNewTab: "新しいタブで開く",
 		openNonMarkdownFile: "Markdown以外のファイルのリンクはここに表示されます。",
 		openFileToSeeLinks: "ファイルを開くとここにリンクが表示されます。",

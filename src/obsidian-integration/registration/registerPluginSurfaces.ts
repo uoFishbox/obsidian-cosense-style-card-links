@@ -15,6 +15,7 @@ import {
 	VIEW_TYPE_ALL_NOTES,
 	VIEW_TYPE_PRE_CREATE,
 	VIEW_TYPE_TAG_NOTES,
+	isTwoHopLinksViewApi,
 } from "obsidian-integration/views/viewTypes";
 import {
 	COSENSE_CARD_LINKS_HOVER_SOURCE_DISPLAY,
@@ -77,6 +78,15 @@ function registerViews(plugin: PluginHost, viewServices: ViewServices): void {
 function registerCommands(plugin: PluginHost, deps: RegisterPluginSurfacesDeps): void {
 	const text = getMainUiTranslations("en");
 	plugin.addCommand({
+		id: "open-card-links-view",
+		name: text.openCardLinksView,
+		callback: () => {
+			void openCardLinksView(plugin).catch((error) => {
+				console.error("Failed to open Card links view:", error);
+			});
+		},
+	});
+	plugin.addCommand({
 		id: "toggle-scroll-to-two-hop-links",
 		name: text.scrollToTwoHopLinks,
 		checkCallback: (checking: boolean) => {
@@ -102,6 +112,20 @@ function registerCommands(plugin: PluginHost, deps: RegisterPluginSurfacesDeps):
 			deps.keyboardCardNavigator.toggle();
 		},
 	});
+}
+
+async function openCardLinksView(plugin: PluginHost): Promise<void> {
+	const workspace = plugin.app.workspace;
+	const file = workspace.getActiveFile();
+	const existing = workspace.getLeavesOfType(TWO_HOP_LINKS_VIEW_TYPE)[0];
+	const leaf = existing ?? workspace.getRightLeaf(false) ?? workspace.getLeaf("tab");
+	if (!existing) {
+		await leaf.setViewState({ type: TWO_HOP_LINKS_VIEW_TYPE, active: true });
+	}
+	if (file && isTwoHopLinksViewApi(leaf.view)) {
+		leaf.view.renderForFile(file);
+	}
+	workspace.revealLeaf(leaf);
 }
 
 function registerEditorExtensions(
