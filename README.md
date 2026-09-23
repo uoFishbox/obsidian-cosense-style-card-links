@@ -89,7 +89,7 @@ bun run dev
 
 ## 免責事項
 
-本プラグインは個人が開発した非公式プロジェクトであり、株式会社HelpfeelおよびHelpfeel Cosenseとは一切関係ありません。
+本プラグインは、株式会社HelpfeelおよびHelpfeel Cosenseとは無関係の非公式プロジェクトです。
 
 ## ライセンス
 
