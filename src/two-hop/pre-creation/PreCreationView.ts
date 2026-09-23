@@ -1,5 +1,7 @@
 import {
+	Modal,
 	Notice,
+	Platform,
 	TFile,
 	TFolder,
 	getLinkpath,
@@ -26,8 +28,8 @@ import { AbstractSvelteListView } from "obsidian-integration/views/abstractSvelt
 import { buildEditorLikeFrame } from "obsidian-integration/views/editorLikeFrame";
 import { getCardItemKey, type CardItem } from "cards/CardItem";
 import { materializePreCreationFile } from "./preCreationFileWorkflow";
+import { getPreCreationFilenamePolicy } from "./preCreationFilenamePolicy";
 import { renamePreCreationUnresolvedLinks } from "./preCreationLinkRename";
-import { isPlainEnterAtContentEnd } from "shared/ui/dom/contentEditableCaret";
 import { createLoadingIndicator } from "shared/ui/dom/loadingIndicator";
 import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
 import { VIEW_TYPE_PRE_CREATE } from "obsidian-integration/views/viewTypes";
@@ -86,6 +88,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	private originalLinktext = "";
 	private isRenaming = false;
 	private isIndexPending = false;
+	private unregisterTitleShortcut: (() => void) | undefined = undefined;
 
 	constructor(leaf: WorkspaceLeaf, plugin: PluginHost, viewServices: ViewServices) {
 		super(leaf, plugin, viewServices);
@@ -147,7 +150,30 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		this.refreshLeafHeader();
 	}
 
+	async onOpen(): Promise<void> {
+		await super.onOpen();
+		const scope = this.scope;
+		if (!scope) return;
+		const handler = scope.register([], "F2", () => {
+			const title = this.inlineTitleEl;
+			if (!title?.isConnected) return;
+
+			title.focus();
+			const selection = title.ownerDocument.getSelection();
+			if (selection) {
+				const range = title.ownerDocument.createRange();
+				range.selectNodeContents(title);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+			return false;
+		});
+		this.unregisterTitleShortcut = () => scope.unregister(handler);
+	}
+
 	protected onViewClose(): void {
+		this.unregisterTitleShortcut?.();
+		this.unregisterTitleShortcut = undefined;
 		this.inlineTitleEl = undefined;
 		this.createButtonEl = undefined;
 		this.isIndexPending = false;
@@ -461,13 +487,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 				e.preventDefault();
 				// Title editing now renames unresolved links only. File creation is
 				// intentionally reserved for the explicit Create button.
-				if (
-					!this.plugin.settings.experimentalCosenseTitleEditing ||
-					(this.inlineTitleEl &&
-						isPlainEnterAtContentEnd(e, this.inlineTitleEl))
-				) {
-					this.inlineTitleEl?.blur();
-				}
+				this.inlineTitleEl?.blur();
 			} else if (e.key === "Escape") {
 				this.titleCancelled = true;
 				this.linktext = this.originalLinktext;
@@ -623,6 +643,15 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 					result.failed,
 				);
 			}
+			const text = getMainUiTranslations(this.plugin.settings.language);
+			new Notice(
+				result.failed.length > 0
+					? text.renameUnresolvedLinksPartialFailure(
+							result.linksUpdated,
+							result.failed.length,
+						)
+					: text.renameUnresolvedLinksSuccess(result.linksUpdated),
+			);
 			// The renamed dangling target is now canonical for this pre-creation
 			// view. A later explicit Create should create it directly, rather than
 			// recreating the old target and relying on a file rename side effect.
@@ -635,6 +664,10 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 				"[Cosense card links] Failed to rename unresolved links:",
 				error,
 			);
+			new Notice(
+				getMainUiTranslations(this.plugin.settings.language)
+					.renameUnresolvedLinksFailure,
+			);
 		} finally {
 			this.isRenaming = false;
 			if (this.leaf.view === this) this.render();
@@ -645,6 +678,15 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		if (!this.expectedPath || this.isCreating) {
 			return;
 		}
+		const filenamePolicy = getPreCreationFilenamePolicy(Platform);
+		if (
+			filenamePolicy.hasInvalidCharacter(this.expectedPath) ||
+			filenamePolicy.hasInvalidCharacter(this.linktext)
+		) {
+			this.showInvalidFilenameModal(filenamePolicy.forbiddenCharacters);
+			return;
+		}
+		if (this.isRenaming) return;
 
 		this.isCreating = true;
 		if (this.createButtonEl) {
@@ -652,7 +694,12 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		}
 
 		try {
-			const creationPath = this.creationPath || this.expectedPath;
+			// An invalid original target cannot be used as an intermediate file.
+			const creationPath =
+				this.creationPath &&
+				!filenamePolicy.hasInvalidCharacter(this.creationPath)
+					? this.creationPath
+					: this.expectedPath;
 			await this.ensureParentFolder(creationPath);
 			if (creationPath !== this.expectedPath) {
 				await this.ensureParentFolder(this.expectedPath);
@@ -682,6 +729,32 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 				this.render();
 			}
 		}
+	}
+
+	private showInvalidFilenameModal(forbiddenCharacters: string): void {
+		const text = getMainUiTranslations(this.plugin.settings.language);
+		const modal = new Modal(this.app);
+		modal.shouldRestoreSelection = false;
+		modal.setTitle(text.invalidFilenameTitle);
+		const messageEl = modal.contentEl.createEl("p");
+		messageEl.append(
+			messageEl.ownerDocument.createTextNode(text.invalidFilenameMessage.before),
+		);
+		messageEl.createEl("code", { text: forbiddenCharacters });
+		messageEl.append(
+			messageEl.ownerDocument.createTextNode(text.invalidFilenameMessage.after),
+		);
+		modal.contentEl
+			.createDiv({ cls: "modal-button-container" })
+			.createEl("button", {
+				cls: "mod-cta",
+				text: text.renameFile,
+			})
+			.addEventListener("click", () => {
+				modal.close();
+				this.inlineTitleEl?.focus();
+			});
+		modal.open();
 	}
 
 	private async ensureParentFolder(path: string): Promise<void> {

@@ -61,7 +61,16 @@ export interface MainUiTranslations {
 	readonly exportClipboardFailure: string;
 	readonly exportDownloadFailure: string;
 	readonly createFileFailure: string;
+	readonly invalidFilenameTitle: string;
+	readonly invalidFilenameMessage: Readonly<{ before: string; after: string }>;
+	readonly renameFile: string;
 	readonly createNoteFailure: string;
+	readonly renameUnresolvedLinksSuccess: (count: number) => string;
+	readonly renameUnresolvedLinksPartialFailure: (
+		count: number,
+		failedFiles: number,
+	) => string;
+	readonly renameUnresolvedLinksFailure: string;
 	readonly noVisibleCardSurface: string;
 	readonly noVisibleCards: string;
 	readonly scrollToTwoHopLinks: string;
@@ -126,7 +135,19 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 			"Failed to export 2-hop links. Check console for details.",
 		exportDownloadFailure: "Failed to download file. Check console for details.",
 		createFileFailure: "Failed to create file.",
+		invalidFilenameTitle: "Invalid file name",
+		invalidFilenameMessage: {
+			before: "The file name contains characters that cannot be used in Obsidian (",
+			after: ").",
+		},
+		renameFile: "Rename title",
 		createNoteFailure: "Failed to create note.",
+		renameUnresolvedLinksSuccess: (count) =>
+			`Renamed ${count} unresolved link${count === 1 ? "" : "s"}.`,
+		renameUnresolvedLinksPartialFailure: (count, failedFiles) =>
+			`Renamed ${count} unresolved link${count === 1 ? "" : "s"}; failed in ${failedFiles} file${failedFiles === 1 ? "" : "s"}. Check console for details.`,
+		renameUnresolvedLinksFailure:
+			"Could not rename all unresolved links. Check console for details.",
 		noVisibleCardSurface: "No visible card surface found.",
 		noVisibleCards: "No visible cards to navigate.",
 		scrollToTwoHopLinks: "Scroll to Two Hop Links and focus search",
@@ -216,7 +237,19 @@ const TRANSLATIONS: Readonly<Record<MainUiLanguage, MainUiTranslations>> = {
 		exportDownloadFailure:
 			"ファイルをダウンロードできませんでした。詳細はコンソールを確認してください。",
 		createFileFailure: "ファイルを作成できませんでした。",
+		invalidFilenameTitle: "使用できないファイル名",
+		invalidFilenameMessage: {
+			before: "Obsidianのファイル名に使用できない文字（",
+			after: "）が含まれています。",
+		},
+		renameFile: "タイトルを変更",
 		createNoteFailure: "ノートを作成できませんでした。",
+		renameUnresolvedLinksSuccess: (count) =>
+			`${count}件の未解決リンクの名前を変更しました。`,
+		renameUnresolvedLinksPartialFailure: (count, failedFiles) =>
+			`${count}件の未解決リンクの名前を変更しました（${failedFiles}ファイルで失敗）。詳細はコンソールを確認してください。`,
+		renameUnresolvedLinksFailure:
+			"未解決リンクの名前を変更できませんでした。詳細はコンソールを確認してください。",
 		noVisibleCardSurface: "表示中のカード領域が見つかりません。",
 		noVisibleCards: "操作できるカードが表示されていません。",
 		scrollToTwoHopLinks: "2ホップリンクへスクロールして検索欄にフォーカス",
