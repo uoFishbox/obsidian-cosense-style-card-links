@@ -92,7 +92,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
-	class="cosense-card-links__box {className} {extensionClass}"
+	class="ccl-box {className} {extensionClass}"
 	class:is-attachment={isAttachmentFile}
 	role={interactive ? "button" : undefined}
 	tabindex={interactive ? 0 : undefined}
@@ -102,10 +102,10 @@
 	data-ccl-interaction-handle={interactive ? interactionHandle : undefined}
 	draggable={interactive && draggable && !Platform.isMobile ? true : undefined}
 >
-	<div class="cosense-card-links__box-title-wrapper">
-		<div class="cosense-card-links__box-title">
+	<div class="ccl-box-title-wrapper">
+		<div class="ccl-box-title">
 			{#if fileIconName}
-				<span class="cosense-card-links__file-icon">
+				<span class="ccl-file-icon">
 					<Icon name={fileIconName} width={16} height={16} />
 				</span>
 			{/if}
@@ -116,14 +116,14 @@
 			{/if}
 		</div>
 		{#if normalizedExtension}
-			<span class="cosense-card-links__box-extension">
+			<span class="ccl-box-extension">
 				{normalizedExtension}
 			</span>
 		{/if}
 	</div>
 	{@render children?.()}
 	{#if showBookmarkIcon}
-		<div class="cosense-card-links__box-bookmark-bg">
+		<div class="ccl-box-bookmark-bg">
 			<Icon
 				name="Bookmark"
 				width={22}
@@ -136,11 +136,11 @@
 </div>
 
 <style>
-	.cosense-card-links__box--existing {
+	.ccl-box--existing {
 		border-style: solid;
 	}
 
-	.cosense-card-links__box--missing .cosense-card-links__box-title {
+	.ccl-box--missing .ccl-box-title {
 		color: var(--color-base-50);
 	}
 </style>

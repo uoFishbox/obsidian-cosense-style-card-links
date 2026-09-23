@@ -149,11 +149,11 @@ export function getItemRawText(item: CardItem): string {
 export function getItemClassName(item: CardItem): string | null {
 	switch (item.type) {
 		case "newLink":
-			return "cosense-card-links__box--missing";
+			return "ccl-box--missing";
 		case "branch":
 			return item.data.hop1.isUnresolved
-				? "cosense-card-links__box--missing"
-				: "cosense-card-links__box--existing";
+				? "ccl-box--missing"
+				: "ccl-box--existing";
 		case "backlink":
 		case "taggedNote":
 		case "file":

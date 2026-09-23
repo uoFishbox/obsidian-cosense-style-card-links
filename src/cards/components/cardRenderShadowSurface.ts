@@ -15,7 +15,7 @@ function resolveSectionContextClassName(host: HTMLElement): string {
 		classNames.add(className);
 	}
 
-	const sectionHost = host.closest<HTMLElement>(".cosense-card-links__section");
+	const sectionHost = host.closest<HTMLElement>(".ccl-section");
 	if (sectionHost) {
 		for (const className of Array.from(sectionHost.classList)) {
 			classNames.add(className);

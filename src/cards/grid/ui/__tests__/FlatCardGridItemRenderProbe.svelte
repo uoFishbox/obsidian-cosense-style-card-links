@@ -38,11 +38,7 @@
 	});
 </script>
 
-<div
-	class="test-cell cosense-card-links__box"
-	data-testid="probe-item-cell"
-	data-index={index}
->
+<div class="test-cell ccl-box" data-testid="probe-item-cell" data-index={index}>
 	{item}
 </div>
 

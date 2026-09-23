@@ -26,9 +26,7 @@ describe("preview text processing async wrappers", () => {
 	test("uses synchronous implementation below threshold", async () => {
 		const result = await getContentSnippetAsync("Hello [[World]]");
 
-		expect(result).toBe(
-			'Hello <span class="cosense-card-links__wikilink">World</span>',
-		);
+		expect(result).toBe('Hello <span class="ccl-wikilink">World</span>');
 		expect(state.runPreviewTextWorker).not.toHaveBeenCalled();
 	});
 
@@ -78,7 +76,7 @@ describe("preview text processing async wrappers", () => {
 		};
 
 		await expect(getContentSnippetAsync(content, settings)).resolves.toContain(
-			'Hello <span class="cosense-card-links__wikilink">World</span>',
+			'Hello <span class="ccl-wikilink">World</span>',
 		);
 	});
 
@@ -89,9 +87,7 @@ describe("preview text processing async wrappers", () => {
 			"target",
 		);
 
-		expect(result).toBe(
-			'Hello <span class="cosense-card-links__wikilink">World</span> target',
-		);
+		expect(result).toBe('Hello <span class="ccl-wikilink">World</span> target');
 		expect(state.runPreviewTextWorker).not.toHaveBeenCalled();
 	});
 
@@ -149,7 +145,7 @@ describe("preview text processing async wrappers", () => {
 
 		await expect(
 			getContentSnippetAsync(content, settings, "target"),
-		).resolves.toContain('<span class="cosense-card-links__wikilink">');
+		).resolves.toContain('<span class="ccl-wikilink">');
 	});
 
 	test("skips the worker when the embed scan range has no syntax candidate", async () => {

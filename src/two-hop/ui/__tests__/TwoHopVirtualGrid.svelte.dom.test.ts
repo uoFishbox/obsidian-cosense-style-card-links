@@ -196,17 +196,12 @@ function getRows(root: HTMLElement): HTMLElement[] {
 function findCardByTitle(root: HTMLElement, title: string): HTMLElement | null {
 	return (
 		Array.from(
-			root.shadowRoot?.querySelectorAll<HTMLElement>(
-				".cosense-card-links__box",
-			) ?? [],
+			root.shadowRoot?.querySelectorAll<HTMLElement>(".ccl-box") ?? [],
 		).find(
 			(element) =>
-				element
-					.querySelector(".cosense-card-links__header-title")
-					?.textContent?.trim() === title ||
-				element
-					.querySelector(".cosense-card-links__box-title")
-					?.textContent?.trim() === title,
+				element.querySelector(".ccl-header-title")?.textContent?.trim() ===
+					title ||
+				element.querySelector(".ccl-box-title")?.textContent?.trim() === title,
 		) ?? null
 	);
 }
@@ -650,7 +645,7 @@ describe("TwoHopVirtualGrid component", () => {
 
 		const button = await vi.waitFor(() => {
 			const candidate = root.shadowRoot?.querySelector<HTMLButtonElement>(
-				".cosense-card-links__load-more-button",
+				".ccl-load-more-button",
 			);
 			expect(candidate).not.toBeNull();
 			return candidate!;
@@ -667,9 +662,7 @@ describe("TwoHopVirtualGrid component", () => {
 		});
 		for (let index = 0; index < 4; index += 1) await flushFrames();
 		await vi.waitFor(() => {
-			expect(
-				root.shadowRoot?.querySelector(".cosense-card-links__load-more-button"),
-			).toBeNull();
+			expect(root.shadowRoot?.querySelector(".ccl-load-more-button")).toBeNull();
 			const newCard = root.shadowRoot?.querySelector<HTMLElement>(
 				'[aria-label="item:2"][data-ccl-interaction-handle]',
 			);
@@ -689,7 +682,7 @@ describe("TwoHopVirtualGrid component", () => {
 		const resolveFirstItemShell = (): Element | null =>
 			getRows(root)[0]
 				?.querySelector('[data-testid="twohop-virtual-item-cell"]')
-				?.querySelector(".cosense-card-links__box") ?? null;
+				?.querySelector(".ccl-box") ?? null;
 		await vi.waitFor(() =>
 			expect(resolveFirstItemShell()?.textContent).toContain("item:0"),
 		);

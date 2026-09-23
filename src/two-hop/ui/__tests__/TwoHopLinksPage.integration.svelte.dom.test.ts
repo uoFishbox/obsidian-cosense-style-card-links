@@ -315,7 +315,7 @@ function queryCard(label: string): HTMLElement | null {
 function querySectionHeader(label: string): HTMLElement | null {
 	return (
 		queryAllByTextDeep(label).find((element) =>
-			element.matches(".cosense-card-links__header-title"),
+			element.matches(".ccl-header-title"),
 		) ?? null
 	);
 }
@@ -397,11 +397,9 @@ describe("TwoHopLinksPage behavior", () => {
 
 		await showEntireVirtualSurface();
 
-		const resultsContainer = document.querySelector(
-			".cosense-card-links__search-result-container",
-		);
+		const resultsContainer = document.querySelector(".ccl-search-result-container");
 		expect(
-			resultsContainer?.querySelectorAll(":scope > .cosense-card-links__section"),
+			resultsContainer?.querySelectorAll(":scope > .ccl-section"),
 		).toHaveLength(1);
 		expect(queryCard("outgoing-parent")).toBeInTheDocument();
 		expect(queryCard("backlink-note")).toBeInTheDocument();
@@ -665,7 +663,7 @@ describe("TwoHopLinksPage behavior", () => {
 		expect(rootProps.linkContext.getPreview).not.toHaveBeenCalled();
 		expect(surface.shadowRoot?.querySelector("img")).toBeNull();
 
-		const root = container.querySelector<HTMLElement>(".cosense-card-links__root");
+		const root = container.querySelector<HTMLElement>(".ccl-root");
 		expect(root).not.toBeNull();
 		triggerIntersection(root!);
 		await flushAsyncUi();

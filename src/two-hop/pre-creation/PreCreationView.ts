@@ -454,7 +454,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 
 		const frame = buildEditorLikeFrame(container, {
 			title: titleText,
-			extraWrapperClasses: ["cosense-card-links-pre-create"],
+			extraWrapperClasses: ["ccl-pre-create"],
 		});
 		const scrollerEl = frame.scrollerEl;
 		this.setScrollerElement(scrollerEl);
@@ -530,7 +530,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 		}
 
 		const actionsEl = infoEl.createDiv({
-			cls: "cosense-card-links-pre-create__actions",
+			cls: "ccl-pre-create-actions",
 		});
 
 		this.createButtonEl = actionsEl.createEl("button", {
@@ -567,7 +567,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 	private mountIndexPendingState(parentEl: HTMLElement): void {
 		const text = getMainUiTranslations(this.plugin.settings.language);
 		const pendingEl = parentEl.createDiv({
-			cls: "cosense-card-links__temp-view cosense-card-links-pre-create__index-pending",
+			cls: "ccl-temp-view ccl-pre-create-index-pending",
 		});
 		createLoadingIndicator(pendingEl, text.waitingForInitialIndex);
 	}

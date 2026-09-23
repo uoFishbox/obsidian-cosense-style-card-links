@@ -199,14 +199,14 @@ describe("view item presentation", () => {
 		const unresolved = createIndexedLink(sourceFile, { isUnresolved: true });
 
 		expect(getItemClassName({ type: "newLink", data: unresolved })).toBe(
-			"cosense-card-links__box--missing",
+			"ccl-box--missing",
 		);
 		expect(
 			getItemClassName({ type: "branch", data: { hop1: unresolved, hop2: [] } }),
-		).toBe("cosense-card-links__box--missing");
+		).toBe("ccl-box--missing");
 		expect(
 			getItemClassName({ type: "branch", data: { hop1: resolved, hop2: [] } }),
-		).toBe("cosense-card-links__box--existing");
+		).toBe("ccl-box--existing");
 		expect(getItemClassName({ type: "backlink", data: resolved })).toBeNull();
 	});
 });

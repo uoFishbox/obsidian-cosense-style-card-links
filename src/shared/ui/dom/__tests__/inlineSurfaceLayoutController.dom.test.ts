@@ -107,7 +107,7 @@ function createSourceSurface(): {
 	const container = document.createElement("div");
 	scroller.className = "cm-scroller ccl-inline-card-host";
 	sizer.className = "cm-sizer";
-	container.className = "cosense-card-links__container";
+	container.className = "ccl-container";
 	scroller.append(sizer, container);
 	document.body.append(scroller);
 	return { container, sizer };

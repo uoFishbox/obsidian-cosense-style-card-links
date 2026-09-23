@@ -103,12 +103,11 @@ export function renderFlatCardGridBehavior(
 		hasLoadMoreButton: () => queryLoadMoreButton() !== null,
 
 		hasInfiniteScrollTrigger: () =>
-			container.querySelector(".cosense-card-links__infinite-scroll-sentinel") !==
-			null,
+			container.querySelector(".ccl-infinite-scroll-sentinel") !== null,
 
 		triggerInfiniteScroll() {
 			const sentinel = container.querySelector<HTMLElement>(
-				".cosense-card-links__infinite-scroll-sentinel",
+				".ccl-infinite-scroll-sentinel",
 			);
 			if (!sentinel) {
 				throw new Error("Infinite-scroll trigger was not rendered");

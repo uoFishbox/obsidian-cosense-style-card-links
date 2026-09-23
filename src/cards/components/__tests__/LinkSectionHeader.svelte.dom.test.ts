@@ -10,7 +10,7 @@ describe("LinkSectionHeader", () => {
 			props: { sectionVariant: "backlinks" },
 		});
 		const header = view.container.querySelector<HTMLElement>(
-			".cosense-card-links__connected-links-header",
+			".ccl-connected-links-header",
 		);
 
 		expect(header).not.toHaveAttribute("tabindex");
@@ -23,16 +23,16 @@ describe("LinkSectionHeader", () => {
 			props: { sectionVariant: "new-links" },
 		});
 		const header = view.container.querySelector<HTMLElement>(
-			".cosense-card-links__connected-links-header",
+			".ccl-connected-links-header",
 		);
 
 		expect(header).toHaveAttribute("data-ccl-section-variant", "new-links");
 
 		await view.rerender({ sectionVariant: "backlinks" });
 
-		expect(
-			view.container.querySelector(".cosense-card-links__connected-links-header"),
-		).toBe(header);
+		expect(view.container.querySelector(".ccl-connected-links-header")).toBe(
+			header,
+		);
 		expect(header).toHaveAttribute("data-ccl-section-variant", "backlinks");
 	});
 });

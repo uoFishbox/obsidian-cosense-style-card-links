@@ -5,9 +5,8 @@ import {
 import { isElementVisible } from "shared/ui/dom/domUtils";
 import { isEventLike } from "shared/ui/dom/realmSafeDom";
 
-export const CARD_SELECTOR = ".cosense-card-links__box[data-ccl-interaction-handle]";
-export const LOAD_MORE_SELECTOR =
-	"button.cosense-card-links__load-more-button.cosense-card-links__box";
+export const CARD_SELECTOR = ".ccl-box[data-ccl-interaction-handle]";
+export const LOAD_MORE_SELECTOR = "button.ccl-load-more-button.ccl-box";
 export const RESULT_FOCUS_SELECTOR = `${CARD_SELECTOR}, ${LOAD_MORE_SELECTOR}`;
 export const SEARCH_INPUT_SELECTOR = ".twohop-search-input";
 

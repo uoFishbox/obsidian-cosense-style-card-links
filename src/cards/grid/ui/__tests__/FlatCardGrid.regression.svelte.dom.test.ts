@@ -31,7 +31,7 @@ describe("FlatCardGrid regression", () => {
 			const shadowRoot = driver.getShadowRoot();
 			expect(shadowRoot).not.toBeNull();
 			const rowCount = shadowRoot?.querySelectorAll(
-				".cosense-card-links__virtual-grid-row",
+				".ccl-virtual-grid-row",
 			).length;
 			expect(rowCount).toBeGreaterThan(0);
 			expect(rowCount).toBeLessThan(6);
@@ -159,9 +159,7 @@ describe("FlatCardGrid regression", () => {
 			layoutAnchorScope: "search:beta",
 		});
 		elements.scrollRoot.scrollTop = 200;
-		expect(
-			rendered.container.querySelector(".cosense-card-links__virtual-grid"),
-		).toBeNull();
+		expect(rendered.container.querySelector(".ccl-virtual-grid")).toBeNull();
 
 		await rendered.rerender({
 			items: createItems(itemCount),

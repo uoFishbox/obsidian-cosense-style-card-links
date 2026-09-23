@@ -14,7 +14,7 @@ export const INTERACTION_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> =
 		controlType: "textarea",
 		translationKey: "experimentalShadowDomCss",
 		descriptionKey: "experimentalShadowDomCssDesc",
-		placeholder: ".cosense-card-links__box {\n\t/* Custom styles */\n}",
+		placeholder: ".ccl-box {\n\t/* Custom styles */\n}",
 		rows: 10,
 		parse: (value) => value,
 	},

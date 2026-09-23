@@ -65,7 +65,7 @@
 	scrollbar-gutter: stable;
 }
 
-.cosense-card-links-pre-create > .cm-editor > .cm-scroller > .cm-sizer {
+.ccl-pre-create > .cm-editor > .cm-scroller > .cm-sizer {
 	min-height: 0;
 }
 
@@ -74,7 +74,7 @@
 }
 
 /* Main Container */
-.cosense-card-links__container {
+.ccl-container {
 	position: relative;
 	width: 100%;
 	margin: var(--ccl-container-margin-top) auto 0 auto;
@@ -85,7 +85,7 @@
 	box-sizing: border-box;
 }
 
-.cm-scroller.ccl-inline-card-host > .cosense-card-links__container {
+.cm-scroller.ccl-inline-card-host > .ccl-container {
 	position: absolute;
 	inset-inline: 0;
 	top: var(--ccl-inline-surface-top, 0px);
@@ -95,7 +95,7 @@
 	contain: layout paint style;
 }
 
-.cosense-card-links__root {
+.ccl-root {
 	width: 100%;
 	margin: 0 auto;
 	max-width: calc(
@@ -103,7 +103,7 @@
 	);
 }
 
-.cosense-card-links__loading-container {
+.ccl-loading-container {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -117,14 +117,14 @@
 	text-align: center;
 }
 
-.cosense-card-links__loading-loader {
+.ccl-loading-loader {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
 }
 
-.cosense-card-links__loading-dot {
+.ccl-loading-dot {
 	width: 4px;
 	height: 4px;
 	border-radius: 50%;
@@ -132,15 +132,15 @@
 	animation: ccl-loading-bounce 0.65s infinite alternate;
 }
 
-.cosense-card-links__loading-dot:nth-child(2) {
+.ccl-loading-dot:nth-child(2) {
 	animation-delay: 0.15s;
 }
 
-.cosense-card-links__loading-dot:nth-child(3) {
+.ccl-loading-dot:nth-child(3) {
 	animation-delay: 0.3s;
 }
 
-.cosense-card-links__loading-message {
+.ccl-loading-message {
 	margin: 0;
 	font-size: 0.85em;
 	color: var(--text-muted);
@@ -158,13 +158,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.cosense-card-links__loading-dot {
+	.ccl-loading-dot {
 		animation: none;
 	}
 }
 
 /* Grid Layout */
-.cosense-card-links__section {
+.ccl-section {
 	contain: layout style;
 	width: 100%;
 	margin: 0 0 var(--ccl-section-margin-bottom) 0;
@@ -175,21 +175,21 @@
 /* Keep workspace card surfaces aligned with themes that constrain the editor width.
    The inner card-grid max-width remains independent so card sizing and column limits
    keep their existing behavior. */
-.cosense-card-links__container,
-.cosense-card-links__temp-view[data-ccl-card-surface="workspace"] {
+.ccl-container,
+.ccl-temp-view[data-ccl-card-surface="workspace"] {
 	max-width: var(--max-width, 100%);
 	margin-inline: auto;
 }
 
-.cosense-card-links__container,
-.cosense-card-links__temp-view .cosense-card-links__view-results {
+.ccl-container,
+.ccl-temp-view .ccl-view-results {
 	padding-bottom: calc(
 		var(--navbar-bottom-offset) + var(--navbar-bottom-offset) -
 			var(--keyboard-height)
 	);
 }
 
-.cosense-card-links-pre-create__info p {
+.ccl-pre-create-info p {
 	max-width: var(--max-width);
 	width: var(--line-width);
 	margin-inline: var(--content-margin) !important;
@@ -212,79 +212,78 @@
 	overflow: auto;
 }
 
-.workspace-leaf-content[data-type="cosense-card-links-all-notes-view"]
-	.cosense-card-links-empty-view {
+.workspace-leaf-content[data-type="cosense-card-links-all-notes-view"] .ccl-empty-view {
 	padding: var(--file-margins);
 }
 
-/* markdown-source-view wrapper (also used by .cosense-card-links-pre-create) */
-.cosense-card-links-pre-create {
+/* markdown-source-view wrapper (also used by .ccl-pre-create) */
+.ccl-pre-create {
 	height: 100%;
 }
 
 /* inline-title placeholder display */
-.cosense-card-links-pre-create .inline-title:empty::before {
+.ccl-pre-create .inline-title:empty::before {
 	content: attr(placeholder);
 	color: var(--text-faint);
 	pointer-events: none;
 }
 
 /* Remove the outline on focus (same as native Obsidian behavior) */
-.cosense-card-links-pre-create .inline-title:focus {
+.ccl-pre-create .inline-title:focus {
 	outline: none;
 }
 
 /* Reduce title opacity */
-.cosense-card-links-pre-create .inline-title {
+.ccl-pre-create .inline-title {
 	opacity: 0.6;
 }
 
-.cosense-card-links-tag-notes .inline-title {
+.ccl-tag-notes .inline-title {
 	opacity: 1;
 	display: flex;
 	align-items: center;
 	gap: 0.35em;
 }
 
-.cosense-card-links-tag-notes__title-icon {
+.ccl-tag-notes-title-icon {
 	display: inline-flex;
 	flex: 0 0 auto;
 }
 
-.cosense-card-links-tag-notes__title-text {
+.ccl-tag-notes-title-text {
 	min-width: 0;
 }
 
 /* Description + button area (equivalent to metadata-container) */
-.cosense-card-links-pre-create__info {
+.ccl-pre-create-info {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
 
-.cosense-card-links-pre-create__info p {
+.ccl-pre-create-info p {
 	margin: 0;
 	color: var(--text-muted);
 }
 
 /* fake cm-content allows selection and copying only (not editing) */
-.cosense-card-links-pre-create .cm-content {
+.ccl-pre-create .cm-content {
 	cursor: default;
 	user-select: text;
 }
 
-.cosense-card-links__root.ccl-kb-nav-active {
+.ccl-root.ccl-kb-nav-active {
 	outline: none;
 }
 
 /* ---------------------------------------------------------------
    pre-create backlinks section
-   Mimic the normal editor's .cosense-card-links__container +
-   .cosense-card-links__root
+   Mimic the normal editor's .ccl-container +
+   .ccl-root
    --------------------------------------------------------------- */
 
 /* Equivalent to container: top margin, width, and padding */
-.cosense-card-links__temp-view {
+.ccl-temp-view {
 	width: 100%;
 	margin: var(--ccl-container-margin-top) auto 0 auto;
 	padding: var(--ccl-container-padding);
@@ -293,12 +292,10 @@
 	box-sizing: border-box;
 }
 
-.cosense-card-links__temp-view > .twohop-header,
-.cosense-card-links__temp-view > .cosense-card-links__view-results,
-.cosense-card-links__temp-view
-	> .cosense-card-links__view-results
-	> .cosense-card-links__section,
-.cosense-card-links__temp-view > .cosense-card-links__section {
+.ccl-temp-view > .twohop-header,
+.ccl-temp-view > .ccl-view-results,
+.ccl-temp-view > .ccl-view-results > .ccl-section,
+.ccl-temp-view > .ccl-section {
 	width: 100%;
 	max-width: calc(
 		(var(--ccl-box-size) + var(--ccl-box-gap)) * var(--ccl-box-cols-max)
@@ -308,11 +305,11 @@
 	box-sizing: border-box;
 }
 
-.cosense-card-links__temp-view .twohop-header {
+.ccl-temp-view .twohop-header {
 	border-top: none;
 }
 
-.cosense-card-links-pre-create__path {
+.ccl-pre-create-path {
 	display: block;
 	padding: 8px 10px;
 	border: 1px solid var(--background-modifier-border);
@@ -321,7 +318,7 @@
 	word-break: break-word;
 }
 
-.cosense-card-links-pre-create__actions {
+.ccl-pre-create-actions {
 	max-width: var(--max-width);
 	width: var(--line-width);
 	margin-inline: var(--content-margin) !important;
@@ -415,7 +412,7 @@ body.is-phone
 	will-change: auto !important;
 }
 
-.cosense-card-links__box-preview.is-stale {
+.ccl-box-preview.is-stale {
 	visibility: hidden;
 }
 

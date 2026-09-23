@@ -6,18 +6,13 @@
 	let { message }: Props = $props();
 </script>
 
-<div
-	class="cosense-card-links__loading-container"
-	role="status"
-	aria-live="polite"
-	aria-busy="true"
->
-	<div class="cosense-card-links__loading-loader" aria-hidden="true">
-		<span class="cosense-card-links__loading-dot"></span>
-		<span class="cosense-card-links__loading-dot"></span>
-		<span class="cosense-card-links__loading-dot"></span>
+<div class="ccl-loading-container" role="status" aria-live="polite" aria-busy="true">
+	<div class="ccl-loading-loader" aria-hidden="true">
+		<span class="ccl-loading-dot"></span>
+		<span class="ccl-loading-dot"></span>
+		<span class="ccl-loading-dot"></span>
 	</div>
 	{#if message}
-		<p class="cosense-card-links__loading-message">{message}</p>
+		<p class="ccl-loading-message">{message}</p>
 	{/if}
 </div>

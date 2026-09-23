@@ -40,7 +40,7 @@ describe("ViewItemCard", () => {
 			},
 		});
 
-		expect(document.querySelector(".cosense-card-links__box")).toBeNull();
+		expect(document.querySelector(".ccl-box")).toBeNull();
 	});
 
 	it("uses a precomputed card model without resolving display metadata", () => {
@@ -70,7 +70,7 @@ describe("ViewItemCard", () => {
 			},
 		});
 
-		const card = document.querySelector<HTMLElement>(".cosense-card-links__box")!;
+		const card = document.querySelector<HTMLElement>(".ccl-box")!;
 		expect(card).toHaveTextContent("Compiled title");
 		expect(card).toHaveClass("compiled-card");
 		expect(card).toHaveAttribute("aria-hidden", "true");

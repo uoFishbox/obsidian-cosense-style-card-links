@@ -36,9 +36,7 @@ export function getFlatCardGridElements(container: HTMLElement): FlatCardGridEle
 	const scrollRoot = container.querySelector<HTMLElement>(
 		"[data-testid='scroll-root']",
 	);
-	const gridRoot = container.querySelector<HTMLElement>(
-		".cosense-card-links__virtual-grid",
-	);
+	const gridRoot = container.querySelector<HTMLElement>(".ccl-virtual-grid");
 
 	if (!scrollRoot || !gridRoot) {
 		throw new Error("Required FlatCardGrid test elements were not rendered");

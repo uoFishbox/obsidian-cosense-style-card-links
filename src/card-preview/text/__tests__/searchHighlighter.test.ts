@@ -41,13 +41,12 @@ describe("highlightTextForSearch", () => {
 
 describe("highlightSearchMatchesInHtml", () => {
 	test("highlights text while preserving existing HTML tags", () => {
-		const html =
-			'<span class="cosense-card-links__wikilink">Search target</span> plain search';
+		const html = '<span class="ccl-wikilink">Search target</span> plain search';
 		const result = highlightSearchMatchesInHtml(html, "search");
 
-		expect(result).toContain('class="cosense-card-links__wikilink"');
+		expect(result).toContain('class="ccl-wikilink"');
 		expect(result).toContain(
-			'<span class="cosense-card-links__wikilink"><span class="ccl-search-highlight">Search</span> target</span>',
+			'<span class="ccl-wikilink"><span class="ccl-search-highlight">Search</span> target</span>',
 		);
 		expect(result).toContain(
 			'plain <span class="ccl-search-highlight">search</span>',
@@ -83,9 +82,9 @@ describe("highlightSearchMatchesInHtml", () => {
 	});
 
 	test("highlights adjacent text across a rendered WikiLink", () => {
-		const html = 'text<span class="cosense-card-links__wikilink">TEXT</span> after';
+		const html = 'text<span class="ccl-wikilink">TEXT</span> after';
 		expect(highlightSearchMatchesInHtml(html, "textTEXT")).toBe(
-			'<span class="ccl-search-highlight">text</span><span class="cosense-card-links__wikilink"><span class="ccl-search-highlight">TEXT</span></span> after',
+			'<span class="ccl-search-highlight">text</span><span class="ccl-wikilink"><span class="ccl-search-highlight">TEXT</span></span> after',
 		);
 	});
 

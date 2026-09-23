@@ -4,7 +4,7 @@ import { getFocusableResultTarget } from "../resultTargets";
 
 function createCard(id: string): HTMLButtonElement {
 	const card = document.createElement("button");
-	card.className = "cosense-card-links__box";
+	card.className = "ccl-box";
 	card.dataset.cclInteractionHandle = id;
 	card.scrollIntoView = vi.fn();
 	return card;

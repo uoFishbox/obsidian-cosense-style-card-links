@@ -207,9 +207,7 @@ describe("PreCreationView file name validation", () => {
 		await setState();
 		const title = document.querySelector<HTMLDivElement>(".inline-title")!;
 		document
-			.querySelector<HTMLButtonElement>(
-				".cosense-card-links-pre-create__actions button",
-			)
+			.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
 			?.click();
 		await waitFor(() => expect(create).toHaveBeenCalledWith("Original.md", ""));
 		expect(title.contentEditable).toBe("false");
@@ -229,9 +227,7 @@ describe("PreCreationView file name validation", () => {
 				createViewForFileCreation(`Bad${character}Name`);
 			await setState();
 			document
-				.querySelector<HTMLButtonElement>(
-					".cosense-card-links-pre-create__actions button",
-				)
+				.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
 				?.click();
 			expect(document.querySelector(".modal h2")?.textContent).toBe(
 				"Invalid file name",
@@ -263,9 +259,7 @@ describe("PreCreationView file name validation", () => {
 		const valid = createViewForFileCreation("Has?Question");
 		await valid.setState();
 		document
-			.querySelector<HTMLButtonElement>(
-				".cosense-card-links-pre-create__actions button",
-			)
+			.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
 			?.click();
 		await waitFor(() =>
 			expect(valid.create).toHaveBeenCalledWith("Has?Question.md", ""),
@@ -275,9 +269,7 @@ describe("PreCreationView file name validation", () => {
 		const invalid = createViewForFileCreation("Bad#Name");
 		await invalid.setState();
 		document
-			.querySelectorAll<HTMLButtonElement>(
-				".cosense-card-links-pre-create__actions button",
-			)
+			.querySelectorAll<HTMLButtonElement>(".ccl-pre-create-actions button")
 			.item(1)
 			?.click();
 		expect(document.querySelector(".modal p code")?.textContent).toBe(
@@ -292,9 +284,7 @@ describe("PreCreationView file name validation", () => {
 			createViewForFileCreation("folder/Valid");
 		await setState();
 		document
-			.querySelector<HTMLButtonElement>(
-				".cosense-card-links-pre-create__actions button",
-			)
+			.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
 			?.click();
 		await waitFor(() => expect(create).toHaveBeenCalledWith("folder/Valid.md", ""));
 		expect(createFolder).toHaveBeenCalledWith("folder");
@@ -308,9 +298,7 @@ describe("PreCreationView file name validation", () => {
 		);
 		await setState();
 		document
-			.querySelector<HTMLButtonElement>(
-				".cosense-card-links-pre-create__actions button",
-			)
+			.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
 			?.click();
 		await waitFor(() => expect(create).toHaveBeenCalledWith("Valid.md", ""));
 		expect(renameFile).not.toHaveBeenCalled();

@@ -45,31 +45,24 @@ describe("createLoadingIndicator", () => {
 		const host = applyDomHelpers(document.createElement("div"));
 		const indicator = createLoadingIndicator(host, "Loading...");
 
-		expect(indicator.className).toBe("cosense-card-links__loading-container");
+		expect(indicator.className).toBe("ccl-loading-container");
 		expect(indicator.getAttribute("role")).toBe("status");
 		expect(indicator.getAttribute("aria-live")).toBe("polite");
 		expect(indicator.getAttribute("aria-busy")).toBe("true");
 
-		const loader = indicator.querySelector(".cosense-card-links__loading-loader");
+		const loader = indicator.querySelector(".ccl-loading-loader");
 		expect(loader?.getAttribute("aria-hidden")).toBe("true");
-		expect(
-			indicator.querySelectorAll(".cosense-card-links__loading-dot"),
-		).toHaveLength(3);
-		expect(
-			indicator.querySelector(".cosense-card-links__loading-message")
-				?.textContent,
-		).toBe("Loading...");
+		expect(indicator.querySelectorAll(".ccl-loading-dot")).toHaveLength(3);
+		expect(indicator.querySelector(".ccl-loading-message")?.textContent).toBe(
+			"Loading...",
+		);
 	});
 
 	it("omits the message element when no message is provided", () => {
 		const host = applyDomHelpers(document.createElement("div"));
 		const indicator = createLoadingIndicator(host);
 
-		expect(
-			indicator.querySelector(".cosense-card-links__loading-message"),
-		).toBeNull();
-		expect(
-			indicator.querySelectorAll(".cosense-card-links__loading-dot"),
-		).toHaveLength(3);
+		expect(indicator.querySelector(".ccl-loading-message")).toBeNull();
+		expect(indicator.querySelectorAll(".ccl-loading-dot")).toHaveLength(3);
 	});
 });

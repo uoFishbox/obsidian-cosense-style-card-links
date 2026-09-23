@@ -32,9 +32,7 @@ function tokeniseProtectedSegments(content: string): {
 	const withCodeBlocks = replaceFencedCodeBlocks(content, (block) => {
 		const code = content.slice(block.contentStart, block.contentEnd);
 		const token = buildProtectedSegmentToken(nextTokenIndex++);
-		const html = `<span class="cosense-card-links__code-block">${escapeHtml(
-			code.trim(),
-		)}</span>`;
+		const html = `<span class="ccl-code-block">${escapeHtml(code.trim())}</span>`;
 		segments.push({ token, html });
 		return token;
 	});
@@ -46,9 +44,7 @@ function tokeniseProtectedSegments(content: string): {
 			const token = buildProtectedSegmentToken(nextTokenIndex++);
 			segments.push({
 				token,
-				html: `<span class="cosense-card-links__inline-code">${escapeHtml(
-					code,
-				)}</span>`,
+				html: `<span class="ccl-inline-code">${escapeHtml(code)}</span>`,
 			});
 			return token;
 		},

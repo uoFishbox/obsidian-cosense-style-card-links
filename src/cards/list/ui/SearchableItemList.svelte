@@ -457,14 +457,14 @@
 {/snippet}
 
 <div
-	class="cosense-card-links__view-results cosense-card-links__search-result-container"
+	class="ccl-view-results ccl-search-result-container"
 	class:ccl-search-pending={isSearchLoading}
 	aria-busy={isSearchLoading}
 	bind:this={resultsContainerEl}
 	style:min-height={resultsMinHeight}
 >
 	<LinkList
-		className="cosense-card-links__section twohop-links-back-links"
+		className="ccl-section twohop-links-back-links"
 		items={filteredItems}
 		itemsRevision={gridItemsRevision}
 		getItemId={getItemKey}
@@ -503,14 +503,14 @@
 		{/snippet}
 	</LinkList>
 	{#if filteredItems.length && isSearchLoading}
-		<div class="cosense-card-links__search-status" aria-live="polite">
+		<div class="ccl-search-status" aria-live="polite">
 			{text.searching}
 		</div>
 	{/if}
 </div>
 
 <style>
-	.cosense-card-links__search-result-container {
+	.ccl-search-result-container {
 		overflow-anchor: none;
 	}
 
@@ -520,7 +520,7 @@
 		color: var(--text-muted);
 	}
 
-	.cosense-card-links__search-status {
+	.ccl-search-status {
 		padding: 6px 12px;
 		font-size: var(--font-ui-smaller);
 		color: var(--text-muted);

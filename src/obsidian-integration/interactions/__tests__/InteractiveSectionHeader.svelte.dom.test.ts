@@ -59,9 +59,7 @@ describe("InteractiveSectionHeader", () => {
 			},
 		});
 
-		const header = view.container.querySelector<HTMLElement>(
-			".cosense-card-links__box",
-		);
+		const header = view.container.querySelector<HTMLElement>(".ccl-box");
 		const interactionHandle = getInteractionHandleFromElement(header);
 		expect(interactionHandle).not.toBeNull();
 		expect(registry.resolve(interactionHandle!)).toStrictEqual(initialDescriptor);
@@ -104,9 +102,7 @@ describe("InteractiveSectionHeader", () => {
 			},
 		});
 
-		const header = view.container.querySelector<HTMLElement>(
-			".cosense-card-links__box",
-		);
+		const header = view.container.querySelector<HTMLElement>(".ccl-box");
 		const interactionHandle = getInteractionHandleFromElement(header);
 		expect(interactionHandle).not.toBeNull();
 		expect(registry.resolve(interactionHandle!)).toStrictEqual(initialDescriptor);

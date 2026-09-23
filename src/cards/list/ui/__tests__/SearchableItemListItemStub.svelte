@@ -25,7 +25,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
-	class="cosense-card-links__box"
+	class="ccl-box"
 	data-testid="searchable-item"
 	data-label={label}
 	data-ccl-interaction-handle={label}

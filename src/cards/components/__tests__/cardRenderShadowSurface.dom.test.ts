@@ -10,14 +10,14 @@ import {
 	createShadowSurfaceFixture,
 } from "./cardRenderShadowSurfaceTestHelpers";
 
-const BASE_CSS_MARKER = ".cosense-card-links__virtual-grid-content";
+const BASE_CSS_MARKER = ".ccl-virtual-grid-content";
 
 describe("cardRenderShadowSurface", () => {
 	it("reuses one shadow root and surface element per host", () => {
 		const sectionHost = document.createElement("div");
-		sectionHost.className = "cosense-card-links__section twohop-links-new-links";
+		sectionHost.className = "ccl-section twohop-links-new-links";
 		const host = document.createElement("div");
-		host.className = "cosense-card-links__virtual-grid";
+		host.className = "ccl-virtual-grid";
 		sectionHost.append(host);
 		document.body.append(sectionHost);
 
@@ -31,10 +31,8 @@ describe("cardRenderShadowSurface", () => {
 		expect(host.shadowRoot).toBe(first?.shadowRoot);
 		// The surface inherits the host's class tokens so the shipped stylesheet
 		// keeps matching it.
-		expect(first?.surfaceEl.className).toContain(
-			"cosense-card-links__virtual-grid",
-		);
-		expect(first?.surfaceEl.className).toContain("cosense-card-links__section");
+		expect(first?.surfaceEl.className).toContain("ccl-virtual-grid");
+		expect(first?.surfaceEl.className).toContain("ccl-section");
 		expect(first?.surfaceEl.className).toContain("twohop-links-new-links");
 		expect(collectShadowStyleText(first?.shadowRoot as ShadowRoot)).toContain(
 			BASE_CSS_MARKER,

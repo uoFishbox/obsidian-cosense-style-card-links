@@ -16,7 +16,7 @@ function createSequentialSurface(physicalOrder: readonly number[]) {
 	for (const logicalIndex of physicalOrder) {
 		const cell = document.createElement("div");
 		const card = document.createElement("div");
-		card.className = "cosense-card-links__box";
+		card.className = "ccl-box";
 		card.dataset.cclInteractionHandle = `card-${logicalIndex}`;
 		card.tabIndex = 0;
 		cell.append(card);
@@ -157,8 +157,7 @@ describe("sequential virtual focus", () => {
 		const { root, content, registry, cards } = createSequentialSurface([0, 1]);
 		const headerCell = document.createElement("div");
 		const header = document.createElement("div");
-		header.className =
-			"cosense-card-links__box cosense-card-links__connected-links-header";
+		header.className = "ccl-box ccl-connected-links-header";
 		header.tabIndex = 0;
 		headerCell.append(header);
 		content.prepend(headerCell);

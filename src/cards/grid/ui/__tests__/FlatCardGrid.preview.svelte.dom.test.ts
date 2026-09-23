@@ -69,11 +69,9 @@ function createModel(file: TFile): CardRenderModel {
 
 function findCardByTitle(root: ShadowRoot, title: string): HTMLElement | null {
 	return (
-		Array.from(root.querySelectorAll<HTMLElement>(".cosense-card-links__box")).find(
+		Array.from(root.querySelectorAll<HTMLElement>(".ccl-box")).find(
 			(element) =>
-				element
-					.querySelector(".cosense-card-links__box-title")
-					?.textContent?.trim() === title,
+				element.querySelector(".ccl-box-title")?.textContent?.trim() === title,
 		) ?? null
 	);
 }
@@ -122,9 +120,7 @@ async function renderSinglePreview(
 	const scrollRoot = rendered.container.querySelector<HTMLElement>(
 		'[data-testid="scroll-root"]',
 	);
-	const gridRoot = rendered.container.querySelector<HTMLElement>(
-		".cosense-card-links__virtual-grid",
-	);
+	const gridRoot = rendered.container.querySelector<HTMLElement>(".ccl-virtual-grid");
 	if (!scrollRoot || !gridRoot) {
 		throw new TypeError("Virtual grid test surface was not rendered");
 	}
@@ -174,7 +170,7 @@ describe("FlatCardGrid preview surface", () => {
 			fileToLinktext: () => "flat",
 			getMetadata: () => null,
 		} as unknown as LinkContext;
-		const customCss = ".cosense-card-links__box { color: rebeccapurple; }";
+		const customCss = ".ccl-box { color: rebeccapurple; }";
 		const applicationStore = {
 			settings: { ...DEFAULT_SETTINGS, experimentalShadowDomCss: customCss },
 			previewState: { getRenderVersion: () => "0:0" },
@@ -204,9 +200,7 @@ describe("FlatCardGrid preview surface", () => {
 		const scrollRoot = container.querySelector<HTMLElement>(
 			'[data-testid="scroll-root"]',
 		);
-		const gridRoot = container.querySelector<HTMLElement>(
-			".cosense-card-links__virtual-grid",
-		);
+		const gridRoot = container.querySelector<HTMLElement>(".ccl-virtual-grid");
 		if (!scrollRoot || !gridRoot) {
 			throw new TypeError("Virtual grid test surface was not rendered");
 		}
@@ -229,9 +223,8 @@ describe("FlatCardGrid preview surface", () => {
 			await flushFrames();
 			await Promise.resolve();
 		}
-		const host = gridRoot.shadowRoot?.querySelector<HTMLElement>(
-			".cosense-card-links__box-preview",
-		);
+		const host =
+			gridRoot.shadowRoot?.querySelector<HTMLElement>(".ccl-box-preview");
 		expect(host).not.toBeNull();
 		await waitFor(() => expect(getPreview).toHaveBeenCalled());
 		expect(getPreview).toHaveBeenCalledWith(file, expect.anything(), {
@@ -246,9 +239,7 @@ describe("FlatCardGrid preview surface", () => {
 			await Promise.resolve();
 		}
 
-		expect(host?.classList.contains("cosense-card-links__box-preview--image")).toBe(
-			true,
-		);
+		expect(host?.classList.contains("ccl-box-preview--image")).toBe(true);
 		expect(host?.querySelector("img")).not.toBeNull();
 	});
 
@@ -305,9 +296,8 @@ describe("FlatCardGrid preview surface", () => {
 		const scrollRoot = rendered.container.querySelector<HTMLElement>(
 			'[data-testid="scroll-root"]',
 		);
-		const gridRoot = rendered.container.querySelector<HTMLElement>(
-			".cosense-card-links__virtual-grid",
-		);
+		const gridRoot =
+			rendered.container.querySelector<HTMLElement>(".ccl-virtual-grid");
 		if (!scrollRoot || !gridRoot) {
 			throw new TypeError("Virtual grid test surface was not rendered");
 		}
@@ -499,9 +489,8 @@ describe("FlatCardGrid preview surface", () => {
 		const scrollRoot = rendered.container.querySelector<HTMLElement>(
 			'[data-testid="scroll-root"]',
 		);
-		const gridRoot = rendered.container.querySelector<HTMLElement>(
-			".cosense-card-links__virtual-grid",
-		);
+		const gridRoot =
+			rendered.container.querySelector<HTMLElement>(".ccl-virtual-grid");
 		if (!scrollRoot || !gridRoot) {
 			throw new TypeError("Virtual grid test surface was not rendered");
 		}

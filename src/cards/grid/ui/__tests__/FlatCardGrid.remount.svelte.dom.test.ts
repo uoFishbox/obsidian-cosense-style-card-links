@@ -13,9 +13,7 @@ import FlatCardGridRenderProbeHarness from "./FlatCardGridRenderProbeHarness.sve
 setupFlatCardGridTestEnvironment();
 
 function getFirstSlotProbe(container: HTMLElement): HTMLElement | null {
-	const gridRoot = container.querySelector<HTMLElement>(
-		".cosense-card-links__virtual-grid",
-	);
+	const gridRoot = container.querySelector<HTMLElement>(".ccl-virtual-grid");
 	return (
 		gridRoot?.shadowRoot?.querySelector<HTMLElement>(
 			"[data-ccl-cell-slot='0'] [data-testid='probe-item-cell']",

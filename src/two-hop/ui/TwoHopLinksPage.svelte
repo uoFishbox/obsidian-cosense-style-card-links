@@ -471,19 +471,19 @@
 
 <div
 	bind:this={rootEl}
-	class="cosense-card-links__root"
+	class="ccl-root"
 	data-ccl-card-surface={isSidebar ? "sidebar" : "editor"}
 	tabindex="-1"
 	style={cardLayoutCssText}
 >
 	{#if isSidebar}
-		<div class="cosense-card-links__sidebar-header">
-			<span class="cosense-card-links__sidebar-header-filename" title={file.path}
+		<div class="ccl-sidebar-header">
+			<span class="ccl-sidebar-header-filename" title={file.path}
 				>{file.basename}</span
 			>
 			{#if file.extension !== "md"}
 				<span
-					class="cosense-card-links__sidebar-header-filename-extension nav-file-tag"
+					class="ccl-sidebar-header-filename-extension nav-file-tag"
 					title={file.path}>{file.extension.toUpperCase()}</span
 				>
 			{/if}
@@ -515,7 +515,7 @@
 		/>
 	{/if}
 	<div
-		class="cosense-card-links__results cosense-card-links__search-result-container"
+		class="ccl-results ccl-search-result-container"
 		class:ccl-search-pending={isSearchLoading}
 		aria-busy={isSearchLoading}
 		bind:this={resultsContainerEl}
@@ -536,14 +536,14 @@
 				onMoveFocusAboveGrid={moveFocusToSearchInput}
 			/>
 			{#if isSearchLoading}
-				<div class="cosense-card-links__search-status" aria-live="polite">
+				<div class="ccl-search-status" aria-live="polite">
 					{text.searching}
 				</div>
 			{:else if search.normalized && searchSession.phase === "ready" && twoHopVirtualListSections.length === 0}
 				<div class="modal-empty">{text.noMatchesFound}</div>
 			{/if}
 			{#if !filteredDisplayData.twoHopBranches.length && showTwoHopPlaceholder}
-				<div class="cosense-card-links__phase-placeholder">
+				<div class="ccl-phase-placeholder">
 					<LoadingState message={text.loadingTwoHopLinks} />
 				</div>
 			{/if}
@@ -552,7 +552,7 @@
 </div>
 
 <style>
-	.cosense-card-links__sidebar-header {
+	.ccl-sidebar-header {
 		padding: 10px 12px;
 		font-size: var(--font-ui-small);
 		font-weight: 600;
@@ -562,15 +562,15 @@
 		text-overflow: ellipsis;
 	}
 
-	.cosense-card-links__phase-placeholder {
+	.ccl-phase-placeholder {
 		padding: 12px 0 4px;
 	}
 
-	.cosense-card-links__search-result-container {
+	.ccl-search-result-container {
 		overflow-anchor: none;
 	}
 
-	.cosense-card-links__search-status {
+	.ccl-search-status {
 		padding: 6px 12px;
 		font-size: var(--font-ui-smaller);
 		color: var(--text-muted);

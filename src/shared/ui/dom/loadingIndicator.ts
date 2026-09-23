@@ -12,23 +12,23 @@ export function createLoadingIndicator(
 	message?: string,
 ): HTMLDivElement {
 	const containerEl = parentEl.createDiv({
-		cls: "cosense-card-links__loading-container",
+		cls: "ccl-loading-container",
 	});
 	containerEl.setAttribute("role", "status");
 	containerEl.setAttribute("aria-live", "polite");
 	containerEl.setAttribute("aria-busy", "true");
 
 	const loaderEl = containerEl.createDiv({
-		cls: "cosense-card-links__loading-loader",
+		cls: "ccl-loading-loader",
 	});
 	loaderEl.setAttribute("aria-hidden", "true");
 	for (let dotIndex = 0; dotIndex < DOT_COUNT; dotIndex += 1) {
-		loaderEl.createEl("span", { cls: "cosense-card-links__loading-dot" });
+		loaderEl.createEl("span", { cls: "ccl-loading-dot" });
 	}
 
 	if (message) {
 		containerEl.createEl("p", {
-			cls: "cosense-card-links__loading-message",
+			cls: "ccl-loading-message",
 			text: message,
 		});
 	}

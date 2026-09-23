@@ -85,7 +85,7 @@ function setVisibleRect(
 
 function createCard(id: string, rect: RectInit): HTMLElement {
 	const card = document.createElement("div");
-	card.className = "cosense-card-links__box";
+	card.className = "ccl-box";
 	card.dataset.cclInteractionHandle = id;
 	setVisibleRect(card, rect);
 	return card;
@@ -94,7 +94,7 @@ function createCard(id: string, rect: RectInit): HTMLElement {
 function createLoadMoreButton(rect: RectInit): HTMLButtonElement {
 	const button = document.createElement("button");
 	button.type = "button";
-	button.className = "cosense-card-links__load-more-button cosense-card-links__box";
+	button.className = "ccl-load-more-button ccl-box";
 	button.setAttribute("aria-label", "Load more");
 	setVisibleRect(button, rect);
 	return button;
@@ -105,10 +105,7 @@ function createSurface(
 	cards: HTMLElement[] = [],
 ): HTMLElement {
 	const surface = document.createElement("div");
-	surface.className =
-		placement === "workspace"
-			? "cosense-card-links-empty-view"
-			: "cosense-card-links__root";
+	surface.className = placement === "workspace" ? "ccl-empty-view" : "ccl-root";
 	surface.dataset.cclCardSurface = placement;
 	surface.tabIndex = -1;
 	setVisibleRect(surface, { top: 0, left: 0, width: 600, height: 400 });

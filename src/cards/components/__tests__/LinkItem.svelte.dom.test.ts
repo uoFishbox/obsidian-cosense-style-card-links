@@ -24,7 +24,7 @@ describe("LinkItem", () => {
 			},
 		});
 
-		const title = container.querySelector(".cosense-card-links__box-title");
+		const title = container.querySelector(".ccl-box-title");
 		expect(title).not.toBeNull();
 		expect(title?.querySelector(".ccl-search-highlight")).toBeNull();
 		expect(title).toHaveTextContent("Target Note <Beta>");
@@ -59,13 +59,13 @@ describe("LinkItem", () => {
 			},
 		});
 
-		expect(
-			container.querySelector(".cosense-card-links__box-extension"),
-		).toHaveTextContent("canvas");
+		expect(container.querySelector(".ccl-box-extension")).toHaveTextContent(
+			"canvas",
+		);
 
-		const title = container.querySelector(".cosense-card-links__box-title");
+		const title = container.querySelector(".ccl-box-title");
 		expect(title?.children).toHaveLength(1);
-		expect(title?.children[0]).toHaveClass("cosense-card-links__file-icon");
+		expect(title?.children[0]).toHaveClass("ccl-file-icon");
 	});
 
 	it("makes card body draggable", () => {
@@ -77,7 +77,7 @@ describe("LinkItem", () => {
 			},
 		});
 
-		const card = container.querySelector<HTMLElement>(".cosense-card-links__box");
+		const card = container.querySelector<HTMLElement>(".ccl-box");
 
 		expect(card).toHaveAttribute("draggable", "true");
 		expect(card).toHaveAttribute("data-ccl-tooltip", "draggable-target-card");
@@ -93,9 +93,7 @@ describe("LinkItem", () => {
 			},
 		});
 
-		expect(container.querySelector(".cosense-card-links__box")).not.toHaveAttribute(
-			"draggable",
-		);
+		expect(container.querySelector(".ccl-box")).not.toHaveAttribute("draggable");
 	});
 
 	it("does not make card body draggable on mobile", () => {
@@ -109,9 +107,7 @@ describe("LinkItem", () => {
 		});
 		Platform.isMobile = false;
 
-		expect(container.querySelector(".cosense-card-links__box")).not.toHaveAttribute(
-			"draggable",
-		);
+		expect(container.querySelector(".ccl-box")).not.toHaveAttribute("draggable");
 	});
 
 	it("reuses a non-interactive shell root when interaction is enabled", async () => {
@@ -127,7 +123,7 @@ describe("LinkItem", () => {
 				interactive: false,
 			},
 		});
-		const card = container.querySelector<HTMLElement>(".cosense-card-links__box");
+		const card = container.querySelector<HTMLElement>(".ccl-box");
 
 		expect(card).toHaveAttribute("aria-hidden", "true");
 		expect(card).not.toHaveAttribute("role");
@@ -144,7 +140,7 @@ describe("LinkItem", () => {
 			interactive: true,
 		});
 
-		expect(container.querySelector(".cosense-card-links__box")).toBe(card);
+		expect(container.querySelector(".ccl-box")).toBe(card);
 		expect(card).not.toHaveAttribute("aria-hidden");
 		expect(card).toHaveAttribute("role", "button");
 		expect(card).toHaveAttribute("tabindex", "0");
@@ -162,13 +158,13 @@ describe("LinkItem", () => {
 				title: "Missing PDF",
 				ariaLabel: "missing PDF",
 				interactionHandle: handle("item:new-link:missing-pdf"),
-				className: "cosense-card-links__box--missing",
+				className: "ccl-box--missing",
 				extension: "pdf",
 			},
 		});
-		const card = container.querySelector<HTMLElement>(".cosense-card-links__box");
+		const card = container.querySelector<HTMLElement>(".ccl-box");
 
-		expect(card).toHaveClass("cosense-card-links__box--missing");
+		expect(card).toHaveClass("ccl-box--missing");
 		expect(card).toHaveClass("is-attachment");
 		for (const attribute of [
 			"data-ccl-interaction-kind",

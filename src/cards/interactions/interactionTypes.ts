@@ -34,7 +34,7 @@ export function createInteractionHandle(prefix = "x"): InteractionHandle {
 export const INTERACTION_HANDLE_ATTRIBUTE = "data-ccl-interaction-handle";
 export const LONG_PRESSED_ATTRIBUTE = "data-ccl-long-pressed";
 export const INTERACTION_SELECTOR = `[${INTERACTION_HANDLE_ATTRIBUTE}]`;
-const CARD_INTERACTION_SELECTOR = `.cosense-card-links__box${INTERACTION_SELECTOR}`;
+const CARD_INTERACTION_SELECTOR = `.ccl-box${INTERACTION_SELECTOR}`;
 const SYNTHETIC_HOVER_EVENT_FLAG = "__cclSyntheticHover";
 const LAST_TOUCH_AT_DATASET_KEY = "cclLastTouchAt";
 

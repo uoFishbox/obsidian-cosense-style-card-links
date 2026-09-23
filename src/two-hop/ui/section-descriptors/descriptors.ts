@@ -209,8 +209,8 @@ export function resolveBranchHeader(params: {
 			? params.fileToLinktext(targetFile, params.sourceFile.path, true)
 			: formatLinkText(params.branch.hop1),
 		className: params.branch.hop1.isUnresolved
-			? "cosense-card-links__box--missing"
-			: "cosense-card-links__box--existing",
+			? "ccl-box--missing"
+			: "ccl-box--existing",
 	};
 }
 
@@ -277,7 +277,7 @@ export function createTagSectionDescriptor(
 	input: TagSectionBuildInput,
 ): TwoHopSectionModel {
 	const headerProps: ClickableHeaderExtraProps = {
-		className: "cosense-card-links__box--tag",
+		className: "ccl-box--tag",
 		onClick: () => input.onTagClick(input.source.tag),
 	};
 	const rows = materializeItemPrefix(

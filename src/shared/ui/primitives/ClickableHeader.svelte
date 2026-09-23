@@ -27,7 +27,7 @@
 
 <div
 	{...dataAttributes}
-	class="cosense-card-links__box cosense-card-links__twohop-header {className}"
+	class="ccl-box ccl-twohop-header {className}"
 	role="button"
 	tabindex="0"
 	aria-label={ariaLabel}
@@ -40,8 +40,8 @@
 		}
 	}}
 >
-	<div class="cosense-card-links__title-container">
-		<span class="cosense-card-links__header-title">{title}</span>
+	<div class="ccl-title-container">
+		<span class="ccl-header-title">{title}</span>
 	</div>
 	{@render icon()}
 </div>

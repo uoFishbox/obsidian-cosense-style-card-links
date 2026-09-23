@@ -156,9 +156,7 @@ export function renderFlatCardGridContract(
 		getShadowRoot: () => elements.gridRoot.shadowRoot,
 		getHeader: () => queryAllByTestIdDeep("header-cell")[0] ?? null,
 		getInfiniteScrollSentinel: () =>
-			container.querySelector<HTMLElement>(
-				".cosense-card-links__infinite-scroll-sentinel",
-			),
+			container.querySelector<HTMLElement>(".ccl-infinite-scroll-sentinel"),
 
 		setTopSpacerHeight(height) {
 			const spacer = container.querySelector<HTMLElement>(

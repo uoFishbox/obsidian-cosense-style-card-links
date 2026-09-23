@@ -50,8 +50,7 @@ export function resolveFile(path: string, metadataCache: IMetadataCache): TFile 
 	return metadataCache.getFirstLinkpathDest(path, "");
 }
 
-const PROTECTED_HTML_CLASS_PATTERN =
-	"cosense-card-links__code-block|cosense-card-links__inline-code";
+const PROTECTED_HTML_CLASS_PATTERN = "ccl-code-block|ccl-inline-code";
 
 const MATH_EXPRESSION_PATTERN = /(^|[^\\])\$\$[\s\S]+?\$\$|(^|[^\\])\$[^$\n]+?\$/;
 

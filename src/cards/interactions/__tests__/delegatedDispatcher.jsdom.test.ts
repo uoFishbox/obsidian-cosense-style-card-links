@@ -264,10 +264,10 @@ describe("delegated interaction dispatcher", () => {
 		attachDispatcher(root, dispatcher);
 
 		const card = document.createElement("div");
-		card.className = "cosense-card-links__box";
+		card.className = "ccl-box";
 		card.dataset.cclInteractionHandle = interactionHandle;
 		const child = document.createElement("span");
-		child.className = "cosense-card-links__box-title";
+		child.className = "ccl-box-title";
 		card.append(child);
 		root.append(card);
 

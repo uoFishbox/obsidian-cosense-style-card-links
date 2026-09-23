@@ -104,9 +104,7 @@ describe("PreviewSlotController", () => {
 		const secondHost = document.createElement("div");
 		controller.attachHost(secondHost);
 		expect(secondHost.firstChild).toBe(image);
-		expect(
-			secondHost.classList.contains("cosense-card-links__box-preview--image"),
-		).toBe(true);
+		expect(secondHost.classList.contains("ccl-box-preview--image")).toBe(true);
 		expect(controller.needsActivation()).toBe(false);
 
 		controller.activate();

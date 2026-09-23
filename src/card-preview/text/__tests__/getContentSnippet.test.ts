@@ -9,7 +9,7 @@ const defaultSettings = createPreviewRenderSettings(DEFAULT_SETTINGS);
 const SEARCH_PREVIEW_SEEK_BUFFER_CHARS = 15;
 
 describe("fenced code preview budgets", () => {
-	const openTag = '<span class="cosense-card-links__code-block">';
+	const openTag = '<span class="ccl-code-block">';
 	const settings = {
 		...defaultSettings,
 		cardWidthPx: 1000,
@@ -138,7 +138,7 @@ Actual content.`;
 				"```js\nconst x = 42;\n```",
 				defaultSettings,
 			);
-			expect(result).toContain('class="cosense-card-links__code-block"');
+			expect(result).toContain('class="ccl-code-block"');
 			expect(result).toContain("const x = 42;");
 			expect(result).not.toContain("```");
 		});
@@ -148,7 +148,7 @@ Actual content.`;
 				"Use `console.log()` here.",
 				defaultSettings,
 			);
-			expect(result).toContain('class="cosense-card-links__inline-code"');
+			expect(result).toContain('class="ccl-inline-code"');
 			expect(result).toContain("console.log()");
 		});
 
@@ -164,16 +164,14 @@ Actual content.`;
 		test("preserves multiple code blocks", () => {
 			const content = "```python\nprint(1)\n```\n\n```js\nconst x = 1;\n```";
 			const result = getContentSnippet(content, defaultSettings);
-			expect(
-				result.match(/class="cosense-card-links__code-block"/g),
-			).toHaveLength(2);
+			expect(result.match(/class="ccl-code-block"/g)).toHaveLength(2);
 		});
 	});
 
 	describe("wiki link transformation", () => {
 		test("converts [[Note]] to styled span", () => {
 			const result = getContentSnippet("See [[Note Name]].", defaultSettings);
-			expect(result).toContain('class="cosense-card-links__wikilink');
+			expect(result).toContain('class="ccl-wikilink');
 			expect(result).toContain("Note Name");
 		});
 
@@ -211,7 +209,7 @@ Actual content.`;
 			"converts $label Markdown/bare links to external-link span",
 			({ input, expectText, notContain }) => {
 				const result = getContentSnippet(input, defaultSettings);
-				expect(result).toContain('class="cosense-card-links__external-link"');
+				expect(result).toContain('class="ccl-external-link"');
 				expect(result).toContain(expectText);
 				if (notContain) expect(result).not.toContain(notContain);
 			},
@@ -219,11 +217,11 @@ Actual content.`;
 
 		test("treats .md and extensionless links as internal (wikilink)", () => {
 			const md = getContentSnippet("[Note](note.md)", defaultSettings);
-			expect(md).toContain('class="cosense-card-links__wikilink"');
-			expect(md).not.toContain('class="cosense-card-links__external-link"');
+			expect(md).toContain('class="ccl-wikilink"');
+			expect(md).not.toContain('class="ccl-external-link"');
 
 			const noExt = getContentSnippet("[Note](note)", defaultSettings);
-			expect(noExt).toContain('class="cosense-card-links__wikilink"');
+			expect(noExt).toContain('class="ccl-wikilink"');
 		});
 
 		test("does not double-process URLs inside HTML tags or Markdown links", () => {
@@ -233,7 +231,7 @@ Actual content.`;
 			);
 			expect(inHtml).toContain('href="https://x.com"');
 			expect(inHtml).not.toContain(
-				'<span class="cosense-card-links__external-link">https://x.com</span>',
+				'<span class="ccl-external-link">https://x.com</span>',
 			);
 		});
 	});
@@ -474,8 +472,8 @@ Plain text`;
 				"**Bold `code`** and [[Link|Alias]]",
 				defaultSettings,
 			);
-			expect(result).toContain('class="cosense-card-links__inline-code"');
-			expect(result).toContain('class="cosense-card-links__wikilink"');
+			expect(result).toContain('class="ccl-inline-code"');
+			expect(result).toContain('class="ccl-wikilink"');
 			expect(result).toContain("code");
 			expect(result).toContain("Alias");
 		});
@@ -517,11 +515,11 @@ End.`;
 			expect(result).not.toContain("title:");
 			expect(result).not.toContain("# Main");
 			expect(result).toContain("Intro with");
-			expect(result).toContain('class="cosense-card-links__code-block"');
+			expect(result).toContain('class="ccl-code-block"');
 			expect(result).not.toContain("![");
 			expect(result).not.toContain("![[");
-			expect(result).toContain('class="cosense-card-links__wikilink');
-			expect(result).toContain('class="cosense-card-links__external-link"');
+			expect(result).toContain('class="ccl-wikilink');
+			expect(result).toContain('class="ccl-external-link"');
 		});
 	});
 });
@@ -689,7 +687,7 @@ describe("getContentSnippet with search query", () => {
 			prelude +
 			"\n# target_hit\nprint(1)\n```\n";
 		const result = getContentSnippet(content, defaultSettings, "target_hit");
-		expect(result).toContain('class="cosense-card-links__code-block"');
+		expect(result).toContain('class="ccl-code-block"');
 		expect(result).toContain("# target_hit");
 		expect(result).not.toContain("\n```");
 	});
@@ -704,7 +702,7 @@ describe("getContentSnippet with search query", () => {
 			"TAIL context after the code block.\n".repeat(100);
 		const result = getContentSnippet(content, defaultSettings, "target_hit");
 
-		expect(result).toContain('class="cosense-card-links__code-block"');
+		expect(result).toContain('class="ccl-code-block"');
 		expect(result).toContain("# target_hit");
 		expect(result).toContain("TAIL");
 		expect(result).not.toContain("\n```");
@@ -724,7 +722,7 @@ describe("getContentSnippet with search query", () => {
 		const result = getContentSnippet(content, defaultSettings, "python");
 		const highlighted = highlightSearchMatchesInHtml(result, "python");
 
-		expect(result).toContain('class="cosense-card-links__code-block"');
+		expect(result).toContain('class="ccl-code-block"');
 		expect(result).toContain("class MyClass:");
 		expect(result).not.toContain("line_29");
 		expect(highlighted).toContain(
@@ -748,7 +746,7 @@ describe("inline code with HTML-like text", () => {
 		const content = "aa `<tag>` bb";
 		const result = getContentSnippet(content, defaultSettings);
 		expect(result).toContain("tag");
-		expect(result).toContain("cosense-card-links__inline-code");
+		expect(result).toContain("ccl-inline-code");
 	});
 
 	test("does not skip <tag> as an HTML tag when inside backtick block during truncation", () => {

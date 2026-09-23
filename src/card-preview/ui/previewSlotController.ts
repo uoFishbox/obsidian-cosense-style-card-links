@@ -350,7 +350,7 @@ export function createPreviewSlotController(
 
 function resetPreviewHostAppearance(element: HTMLElement): void {
 	for (const type of ["text", "image", "empty", "dom"] as const) {
-		element.classList.remove(`cosense-card-links__box-preview--${type}`);
+		element.classList.remove(`ccl-box-preview--${type}`);
 	}
 }
 
@@ -361,9 +361,6 @@ function applyPreviewHostAppearance(
 ): void {
 	if (previous === next) return;
 	for (const type of ["text", "image", "empty", "dom"] as const) {
-		element.classList.toggle(
-			`cosense-card-links__box-preview--${type}`,
-			next === type,
-		);
+		element.classList.toggle(`ccl-box-preview--${type}`, next === type);
 	}
 }

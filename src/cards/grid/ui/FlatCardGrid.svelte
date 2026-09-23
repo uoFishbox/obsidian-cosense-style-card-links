@@ -16,10 +16,10 @@
 	{@render props.empty?.()}
 {:else}
 	<CardGridSurface
-		className={`cosense-card-links__virtual-grid ${list.className}`.trim()}
-		contentClassName="cosense-card-links__virtual-grid-content"
-		rowClassName="cosense-card-links__virtual-grid-row"
-		cellClassName="cosense-card-links__virtual-grid-cell"
+		className={`ccl-virtual-grid ${list.className}`.trim()}
+		contentClassName="ccl-virtual-grid-content"
+		rowClassName="ccl-virtual-grid-row"
+		cellClassName="ccl-virtual-grid-cell"
 		contentHeight={list.contentHeight}
 		hasNavigableResults={list.itemCount > 0}
 		cellWidth={list.layout.cellWidth}
@@ -62,7 +62,7 @@
 			{#if list.shouldUseInfiniteScroll && list.canLoadMore}
 				<div
 					bind:this={list.infiniteScrollSentinelEl}
-					class="cosense-card-links__infinite-scroll-sentinel"
+					class="ccl-infinite-scroll-sentinel"
 					style:top={`${list.layout.contentHeight}px`}
 					aria-hidden="true"
 				></div>
@@ -72,18 +72,18 @@
 {/if}
 
 <style>
-	:global(.cosense-card-links__virtual-grid) {
+	:global(.ccl-virtual-grid) {
 		position: relative;
 		width: 100%;
 		overflow-anchor: none;
 	}
 
-	:global(.cosense-card-links__virtual-grid-content) {
+	:global(.ccl-virtual-grid-content) {
 		position: relative;
 		width: 100%;
 	}
 
-	:global(.cosense-card-links__virtual-grid-cell) {
+	:global(.ccl-virtual-grid-cell) {
 		box-sizing: border-box;
 		min-width: 0;
 		width: var(--ccl-cell-width);
@@ -91,7 +91,7 @@
 		height: var(--ccl-box-height);
 	}
 
-	:global(.cosense-card-links__virtual-grid-row) {
+	:global(.ccl-virtual-grid-row) {
 		position: relative;
 		width: 100%;
 		height: var(--ccl-box-height);
@@ -100,7 +100,7 @@
 		contain: layout;
 	}
 
-	:global(.cosense-card-links__infinite-scroll-sentinel) {
+	:global(.ccl-infinite-scroll-sentinel) {
 		position: absolute;
 		left: 0;
 		width: 1px;

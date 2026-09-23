@@ -1,7 +1,7 @@
 import { MarkdownView } from "obsidian";
 import { getOptionalOwnerWindow } from "./realmSafeDom";
 
-export const CONTAINER_CLASS = "cosense-card-links__container";
+export const CONTAINER_CLASS = "ccl-container";
 
 export type InlineMarkdownSurface = "source" | "preview";
 

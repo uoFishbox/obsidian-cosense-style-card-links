@@ -69,7 +69,7 @@ describe("buildEditorLikeFrame", () => {
 		expect(frame.scrollerEl.className).toBe("cm-scroller");
 		expect(frame.sizerEl.className).toBe("cm-sizer");
 		expect(frame.titleEl.textContent).toBe("Frame Title");
-		expect(frame.infoEl.className).toBe("cosense-card-links-pre-create__info");
+		expect(frame.infoEl.className).toBe("ccl-pre-create-info");
 		expect(frame.contentEl.className).toBe("cm-content cm-lineWrapping");
 		expect(frame.contentEl.getAttribute("role")).toBe("textbox");
 		expect(frame.contentEl.getAttribute("aria-multiline")).toBe("true");

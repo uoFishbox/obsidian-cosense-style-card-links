@@ -23,7 +23,7 @@
 		totalCount,
 		iconSize = 26,
 		iconClass = "twohop-links-icon",
-		containerClass = "cosense-card-links__connected-links-header",
+		containerClass = "ccl-connected-links-header",
 		icon,
 		sectionVariant,
 		language = "en",
@@ -87,13 +87,13 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class={`cosense-card-links__box ${containerClass}`}
+	class={`ccl-box ${containerClass}`}
 	aria-label={tooltip}
 	oncontextmenu={handleContextMenu}
 	data-ccl-section-variant={sectionVariant}
 >
-	<div class="cosense-card-links__title-container">
-		<span class="cosense-card-links__header-title">{title}</span>
+	<div class="ccl-title-container">
+		<span class="ccl-header-title">{title}</span>
 		{@render icon?.()}
 		{#if !icon}
 			<Icon name="Link" width={iconSize} height={iconSize} class={iconClass} />

@@ -185,7 +185,7 @@ export class TwoHopLinksView extends ItemView {
 				this.plugin.settings.displayMode === "sidebar-view"
 					? translations.openFileToSeeLinks
 					: translations.openNonMarkdownFile,
-			cls: "cosense-card-links__sidebar-placeholder",
+			cls: "ccl-sidebar-placeholder",
 			attr: {
 				style: "padding: 20px; text-align: center; color: var(--text-muted);",
 			},

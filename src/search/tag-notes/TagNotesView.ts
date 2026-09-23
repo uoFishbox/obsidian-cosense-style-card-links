@@ -220,19 +220,16 @@ export class TagNotesView extends AbstractSvelteListView<TaggedNote> {
 
 		const frame = buildEditorLikeFrame(container, {
 			title: titleText,
-			extraWrapperClasses: [
-				"cosense-card-links-pre-create",
-				"cosense-card-links-tag-notes",
-			],
+			extraWrapperClasses: ["ccl-pre-create", "ccl-tag-notes"],
 		});
 		const titleEl = frame.titleEl;
 		titleEl.empty();
 		const titleIconEl = titleEl.createSpan({
-			cls: "cosense-card-links-tag-notes__title-icon",
+			cls: "ccl-tag-notes-title-icon",
 		});
 		setIcon(titleIconEl, "tag");
 		titleEl.createSpan({
-			cls: "cosense-card-links-tag-notes__title-text",
+			cls: "ccl-tag-notes-title-text",
 			text: titleText,
 		});
 		const scrollerEl = frame.scrollerEl;

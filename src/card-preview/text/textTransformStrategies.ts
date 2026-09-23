@@ -217,31 +217,23 @@ function buildCommonRules(
 		{
 			regex: REGEX.wikilinks,
 			replacement: (_: string, title: string, alias: string) =>
-				`<span class="cosense-card-links__wikilink">${escapeHtml(
-					alias || title,
-				)}</span>`,
+				`<span class="ccl-wikilink">${escapeHtml(alias || title)}</span>`,
 			skipIfAbsent: (content: string) => !content.includes("[["),
 		},
 		{
 			regex: REGEX.externalLinks,
 			replacement: (_: string, text: string, url: string) => {
 				if (url.includes(":")) {
-					return `<span class="cosense-card-links__external-link">${escapeHtml(
-						text,
-					)}</span>`;
+					return `<span class="ccl-external-link">${escapeHtml(text)}</span>`;
 				}
-				return `<span class="cosense-card-links__wikilink">${escapeHtml(
-					text,
-				)}</span>`;
+				return `<span class="ccl-wikilink">${escapeHtml(text)}</span>`;
 			},
 			skipIfAbsent: (content: string) => !content.includes("]("),
 		},
 		{
 			regex: REGEX.rawUrls,
 			replacement: (url: string) =>
-				`<span class="cosense-card-links__external-link">${escapeHtml(
-					url,
-				)}</span>`,
+				`<span class="ccl-external-link">${escapeHtml(url)}</span>`,
 			skipIfAbsent: (content: string) => !content.includes("http"),
 		},
 		{

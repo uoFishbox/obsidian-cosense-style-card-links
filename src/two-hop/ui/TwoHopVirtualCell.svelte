@@ -123,13 +123,12 @@
 		</InteractiveSectionHeader>
 	{:else}
 		<div
-			class="cosense-card-links__box cosense-card-links__connected-links-header {headerProps.className ??
-				''}"
+			class="ccl-box ccl-connected-links-header {headerProps.className ?? ''}"
 			aria-label={text.noteCount(section.totalCount)}
 			data-ccl-section-variant={sectionVariant}
 		>
-			<div class="cosense-card-links__title-container">
-				<span class="cosense-card-links__header-title">{section.title}</span>
+			<div class="ccl-title-container">
+				<span class="ccl-header-title">{section.title}</span>
 				<Icon
 					name={resolveHeaderIcon()}
 					width={26}
@@ -163,10 +162,7 @@
 			{#if model && model.item.type === "newLink" && !model.targetFile}
 				<UnresolvedPreviewPlaceholder />
 			{:else if model && model.targetFile && previewHostEnabled}
-				<div
-					use:previewHost={previewKey}
-					class="cosense-card-links__box-preview"
-				></div>
+				<div use:previewHost={previewKey} class="ccl-box-preview"></div>
 			{/if}
 		{/snippet}
 	</LinkItem>

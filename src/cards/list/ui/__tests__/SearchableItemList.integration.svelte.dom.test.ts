@@ -129,9 +129,7 @@ function querySearchableItem(label: string): HTMLElement | null {
 
 async function setGridViewportWidth(width: number): Promise<void> {
 	await tick();
-	const gridRoot = document.querySelector<HTMLElement>(
-		".cosense-card-links__virtual-grid",
-	);
+	const gridRoot = document.querySelector<HTMLElement>(".ccl-virtual-grid");
 	if (!gridRoot) {
 		throw new Error("Unable to find searchable item grid");
 	}
@@ -358,9 +356,7 @@ describe("SearchableItemList integration", () => {
 			await vi.advanceTimersByTimeAsync(0);
 		}
 		expect(idleCallback).toBeDefined();
-		const gridRoot = document.querySelector<HTMLElement>(
-			".cosense-card-links__virtual-grid",
-		);
+		const gridRoot = document.querySelector<HTMLElement>(".ccl-virtual-grid");
 		if (!gridRoot) throw new Error("Unable to find progressive result grid");
 		setElementRect(gridRoot, { top: 0, width: 1600, height: 1000 });
 		triggerResize(gridRoot, 1600, 1000);
@@ -565,11 +561,9 @@ describe("SearchableItemList integration", () => {
 
 		await flushAsyncUi();
 		await waitFor(() => expect(getAllSearchableItems()).toHaveLength(2));
-		const resultsContainer = document.querySelector(
-			".cosense-card-links__search-result-container",
-		);
+		const resultsContainer = document.querySelector(".ccl-search-result-container");
 		expect(
-			resultsContainer?.querySelectorAll(":scope > .cosense-card-links__section"),
+			resultsContainer?.querySelectorAll(":scope > .ccl-section"),
 		).toHaveLength(1);
 		const input = screen.getByRole("searchbox");
 		input.focus();

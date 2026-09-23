@@ -29,7 +29,7 @@
 
 <button
 	type="button"
-	class="cosense-card-links__load-more-button cosense-card-links__box"
+	class="ccl-load-more-button ccl-box"
 	aria-label={text.loadMore}
 	{...testId ? { "data-testid": testId } : {}}
 	onclick={handleClick}

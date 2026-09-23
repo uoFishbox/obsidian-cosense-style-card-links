@@ -125,7 +125,7 @@ describe("TwoHopLinksPage", () => {
 			} as any,
 		});
 
-		let root = container.querySelector(".cosense-card-links__root");
+		let root = container.querySelector(".ccl-root");
 		expect(root).not.toBeNull();
 		expect(root).toHaveAttribute("data-ccl-card-surface", "editor");
 		expect(root).toHaveAttribute("tabindex", "-1");
@@ -141,7 +141,7 @@ describe("TwoHopLinksPage", () => {
 			keyboardNavigationSurfaceRegistry,
 		} as any);
 
-		root = container.querySelector(".cosense-card-links__root");
+		root = container.querySelector(".ccl-root");
 		expect(root).toHaveAttribute("data-ccl-card-surface", "sidebar");
 		expect(unregisterSurface).toHaveBeenCalledTimes(1);
 		expect(keyboardNavigationSurfaceRegistry.register).toHaveBeenLastCalledWith(
@@ -205,9 +205,7 @@ describe("TwoHopLinksPage", () => {
 			} as any,
 		});
 
-		const resultsContainer = container.querySelector(
-			".cosense-card-links__results",
-		);
+		const resultsContainer = container.querySelector(".ccl-results");
 		const loadingStatus = screen.getByRole("status");
 
 		expect(resultsContainer).not.toBeNull();

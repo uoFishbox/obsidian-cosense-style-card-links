@@ -57,7 +57,7 @@ describe("analyzePreviewContent", () => {
 	});
 
 	test("does not treat dollar signs inside code blocks as math", () => {
-		const content = '<span class="cosense-card-links__code-block">$test$</span>';
+		const content = '<span class="ccl-code-block">$test$</span>';
 		const analysis = analyzePreviewContent(content);
 
 		expect(analysis.hasDollar).toBe(true);
@@ -70,8 +70,7 @@ describe("analyzePreviewContent", () => {
 	});
 
 	test("keeps math outside protected segments visible to the analyzer", () => {
-		const content =
-			'outside $x^2$ <span class="cosense-card-links__code-block">$test$</span>';
+		const content = 'outside $x^2$ <span class="ccl-code-block">$test$</span>';
 		const analysis = analyzePreviewContent(content);
 
 		expect(analysis.hasMathExpression).toBe(true);

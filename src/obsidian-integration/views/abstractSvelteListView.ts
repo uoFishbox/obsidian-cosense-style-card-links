@@ -255,7 +255,7 @@ export abstract class AbstractSvelteListView<
 		}
 
 		const sectionEl = parentEl.createDiv({
-			cls: "cosense-card-links__temp-view",
+			cls: "ccl-temp-view",
 		});
 		this.mountedListSectionEl = sectionEl;
 		sectionEl.dataset.cclCardSurface = this.usesSidebarLinkSurface()

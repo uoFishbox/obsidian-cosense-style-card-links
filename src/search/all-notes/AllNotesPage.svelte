@@ -95,31 +95,33 @@
 		}
 	}
 
-	let listConfig = $derived.by((): ListConfig<CardItem> => ({
-		title: text.allNotes,
-		paginationMode: "infinite-scroll",
-		preserveResultsHeightOnSearch: false,
-		searchEnabled: true,
-		allowContentSearch: true,
-		searchPlaceholder: text.searchNoteTitles,
-		contentSearchPlaceholder: text.searchNoteContents,
-		getSearchText: (item: CardItem, ctx) => {
-			if (item.type !== "file") return "";
-			return getFileCardTitleSearchText(
-				item.data,
-				ctx.sourceFile.path,
-				ctx.fileToLinktext,
-				ctx.getMetadata,
-				settings.priorityFrontmatterKeyForTitle,
-			);
-		},
-		getItemKey: getCardItemKey,
-		getSortedItems: (sortOption) => allNotesCatalog.getSortedItems(sortOption),
-		sectionId: "empty-view-all-notes",
-		pinBookmarkedToTop: settings.pinBookmarkedToTopInAllNotes,
-		emptyMessage: text.noNotesFound,
-		onSearchSubmit: createNoteFromSearchTitle,
-	}));
+	let listConfig = $derived.by(
+		(): ListConfig<CardItem> => ({
+			title: text.allNotes,
+			paginationMode: "infinite-scroll",
+			preserveResultsHeightOnSearch: false,
+			searchEnabled: true,
+			allowContentSearch: true,
+			searchPlaceholder: text.searchNoteTitles,
+			contentSearchPlaceholder: text.searchNoteContents,
+			getSearchText: (item: CardItem, ctx) => {
+				if (item.type !== "file") return "";
+				return getFileCardTitleSearchText(
+					item.data,
+					ctx.sourceFile.path,
+					ctx.fileToLinktext,
+					ctx.getMetadata,
+					settings.priorityFrontmatterKeyForTitle,
+				);
+			},
+			getItemKey: getCardItemKey,
+			getSortedItems: (sortOption) => allNotesCatalog.getSortedItems(sortOption),
+			sectionId: "empty-view-all-notes",
+			pinBookmarkedToTop: settings.pinBookmarkedToTopInAllNotes,
+			emptyMessage: text.noNotesFound,
+			onSearchSubmit: createNoteFromSearchTitle,
+		}),
+	);
 
 	$effect(() => {
 		return allNotesCatalog.subscribe((revision) => {
@@ -137,7 +139,7 @@
 
 <div
 	bind:this={rootEl}
-	class="cosense-card-links-empty-view"
+	class="ccl-empty-view"
 	data-ccl-card-surface="workspace"
 	tabindex="-1"
 	style={cardLayoutCssText}
@@ -157,15 +159,15 @@
 </div>
 
 <style>
-	.cosense-card-links-empty-view {
+	.ccl-empty-view {
 		width: 100%;
 		margin: var(--ccl-container-margin-top) auto 0 auto;
 		padding: var(--ccl-container-padding);
 		box-sizing: border-box;
 	}
 
-	.cosense-card-links-empty-view :global(.twohop-header),
-	.cosense-card-links-empty-view :global(.cosense-card-links__view-results) {
+	.ccl-empty-view :global(.twohop-header),
+	.ccl-empty-view :global(.ccl-view-results) {
 		max-width: calc(
 			(var(--ccl-box-size) + var(--ccl-box-gap)) * var(--ccl-box-cols-max)
 		);

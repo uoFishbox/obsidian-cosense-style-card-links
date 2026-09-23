@@ -97,7 +97,7 @@ describe("processPreviewContent DOM rendering", () => {
 
 	test("sanitizes preview HTML before inserting it into the DOM", async () => {
 		const content = [
-			'<span class="cosense-card-links__wikilink">Safe link</span>',
+			'<span class="ccl-wikilink">Safe link</span>',
 			'<img src="x" onerror="globalThis.compromised = true">',
 			"<script>globalThis.compromised = true</script>",
 			'<a href="javascript:alert(1)" onclick="alert(1)">Unsafe link</a>',
@@ -110,9 +110,9 @@ describe("processPreviewContent DOM rendering", () => {
 		expect(containerEl.querySelector("script")).toBeNull();
 		expect(containerEl.querySelector("[onerror], [onclick]")).toBeNull();
 		expect(containerEl.querySelector("[href^='javascript:']")).toBeNull();
-		expect(
-			containerEl.querySelector(".cosense-card-links__wikilink")?.textContent,
-		).toBe("Safe link");
+		expect(containerEl.querySelector(".ccl-wikilink")?.textContent).toBe(
+			"Safe link",
+		);
 	});
 
 	test("sanitizes HTML fragments around rendered math", async () => {

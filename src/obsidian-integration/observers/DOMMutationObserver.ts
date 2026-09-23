@@ -6,12 +6,12 @@ import { isHTMLElementLike } from "shared/ui/dom/realmSafeDom";
 import { collectWorkspaceDocuments } from "obsidian-integration/workspace/workspaceDocuments";
 
 const BASES_DISCOVERY_IGNORE_SELECTOR = [
-	".cosense-card-links__root",
-	".cosense-card-links__container",
-	".cosense-card-links__section",
-	".cosense-card-links__virtual-grid",
-	".cosense-card-links__box",
-	".cosense-card-links__box-preview",
+	".ccl-root",
+	".ccl-container",
+	".ccl-section",
+	".ccl-virtual-grid",
+	".ccl-box",
+	".ccl-box-preview",
 	"[data-ccl-preview-island]",
 	"[data-ccl-shadow-hover-proxy]",
 	"[data-ccl-hover-popover-anchor-proxy]",

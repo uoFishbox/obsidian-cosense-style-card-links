@@ -34,7 +34,7 @@ export function buildEditorLikeFrame(
 	titleEl.textContent = options.title;
 
 	const infoEl = sizerEl.createDiv({
-		cls: "cosense-card-links-pre-create__info",
+		cls: "ccl-pre-create-info",
 	});
 
 	const contentContainerEl = sizerEl.createDiv({

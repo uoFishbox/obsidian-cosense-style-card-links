@@ -15,7 +15,7 @@
 </script>
 
 <CardGridSurface
-	className="cosense-card-links__section twohop-page-virtual-list twohop-virtual-surface"
+	className="ccl-section twohop-page-virtual-list twohop-virtual-surface"
 	contentClassName="view-plan-flow-content twohop-virtual-content"
 	rowClassName="twohop-virtual-row"
 	cellClassName="twohop-virtual-cell"

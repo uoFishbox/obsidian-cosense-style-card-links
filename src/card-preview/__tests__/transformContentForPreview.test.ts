@@ -26,14 +26,12 @@ describe("transformContentForPreview", () => {
 		const result = transformContentForPreview(
 			`*outside*\n${fence}md\n${code}\n${fence}`,
 		);
-		expect(result).toBe(
-			`outside\n<span class="cosense-card-links__code-block">${code}</span>`,
-		);
+		expect(result).toBe(`outside\n<span class="ccl-code-block">${code}</span>`);
 	});
 
 	test("preserves emphasis inside inline code", () => {
 		expect(transformContentForPreview("`**bold** _italic_` *outside*")).toBe(
-			'<span class="cosense-card-links__inline-code">**bold** _italic_</span> outside',
+			'<span class="ccl-inline-code">**bold** _italic_</span> outside',
 		);
 	});
 
@@ -126,8 +124,8 @@ Body`;
 		expect(result).toContain("[[note]]");
 		expect(result).toContain("![alt](image.png)");
 		expect(result).toContain("[Google](https://example.com)");
-		expect(result).not.toContain('class="cosense-card-links__wikilink"');
-		expect(result).not.toContain('class="cosense-card-links__external-link"');
+		expect(result).not.toContain('class="ccl-wikilink"');
+		expect(result).not.toContain('class="ccl-external-link"');
 	});
 
 	test("does not convert link syntax inside code fences", () => {
@@ -135,22 +133,20 @@ Body`;
 		const result = transformContentForPreview(content);
 		expect(result).toContain("[[note]]");
 		expect(result).toContain("[Google](https://example.com)");
-		expect(result).not.toContain('class="cosense-card-links__wikilink"');
-		expect(result).not.toContain('class="cosense-card-links__external-link"');
+		expect(result).not.toContain('class="ccl-wikilink"');
+		expect(result).not.toContain('class="ccl-external-link"');
 	});
 
 	test("does not treat a fence line with info string as a closing fence", () => {
 		const content = "```md\n[[note]]\n```ts";
 		const result = transformContentForPreview(content);
-		expect(result).toBe(
-			'<span class="cosense-card-links__code-block">[[note]]\n```ts</span>',
-		);
+		expect(result).toBe('<span class="ccl-code-block">[[note]]\n```ts</span>');
 	});
 
 	test("converts fenced code blocks to styled text", () => {
 		const content = "```javascript\nconsole.log(1);\n```";
 		const result = transformContentForPreview(content);
-		expect(result).toContain('class="cosense-card-links__code-block"');
+		expect(result).toContain('class="ccl-code-block"');
 		expect(result).toContain("console.log(1);");
 	});
 
@@ -173,8 +169,7 @@ Body`;
 		expect(result).toContain("[[inline-note]]");
 		expect(result).toContain("[[block-note]]");
 		expect(result).toContain("[Google](https://example.com)");
-		const wikilinkCount = (result.match(/cosense-card-links__wikilink/g) || [])
-			.length;
+		const wikilinkCount = (result.match(/ccl-wikilink/g) || []).length;
 		expect(wikilinkCount).toBe(1);
 		expect(result).toContain("outside-note");
 	});

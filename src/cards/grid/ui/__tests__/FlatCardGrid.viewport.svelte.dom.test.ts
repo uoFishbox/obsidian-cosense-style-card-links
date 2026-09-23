@@ -119,9 +119,7 @@ describe("FlatCardGrid virtualization contract", () => {
 
 		expect(fixture.getInfiniteScrollSentinel()).not.toBeNull();
 		expect(
-			fixture
-				.getShadowRoot()
-				?.querySelector(".cosense-card-links__infinite-scroll-sentinel"),
+			fixture.getShadowRoot()?.querySelector(".ccl-infinite-scroll-sentinel"),
 		).toBeNull();
 	});
 

@@ -32,7 +32,7 @@ interface OpenCodeBlockSpan {
 const INLINE_CODE_BLOCK: OpenCodeBlock = { end: "`", multiline: false };
 const FENCED_CODE_BLOCK: OpenCodeBlock = { end: "```", multiline: true };
 const VOID_ELEMENTS = new Set(["br", "hr", "img", "input", "meta", "link"]);
-const CODE_BLOCK_OPEN_TAG = '<span class="cosense-card-links__code-block">';
+const CODE_BLOCK_OPEN_TAG = '<span class="ccl-code-block">';
 
 const DEFAULT_CARD_WIDTH_PX = 140;
 const DEFAULT_CARD_HEIGHT_RATIO = 1.1;

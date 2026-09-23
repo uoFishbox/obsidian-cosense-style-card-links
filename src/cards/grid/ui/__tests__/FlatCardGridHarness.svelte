@@ -72,7 +72,7 @@
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div class="test-cell" data-testid="item-cell" data-index={index}>
 						<div
-							class="cosense-card-links__box"
+							class="ccl-box"
 							data-testid="item-focus-target"
 							data-ccl-interaction-handle={`${item as string}-${index}`}
 							data-index={index}
@@ -105,7 +105,7 @@
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div class="test-cell" data-testid="item-cell" data-index={index}>
 						<div
-							class="cosense-card-links__box"
+							class="ccl-box"
 							data-testid="item-focus-target"
 							data-ccl-interaction-handle={`${item as string}-${index}`}
 							data-index={index}

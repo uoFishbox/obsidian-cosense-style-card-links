@@ -37,10 +37,7 @@
 			{#if renderState.item.type === "newLink" && !renderState.targetFile}
 				<UnresolvedPreviewPlaceholder />
 			{:else if renderState.targetFile && previewKey}
-				<div
-					use:previewHost={previewKey}
-					class="cosense-card-links__box-preview"
-				></div>
+				<div use:previewHost={previewKey} class="ccl-box-preview"></div>
 			{/if}
 		{/snippet}
 	</LinkItem>
