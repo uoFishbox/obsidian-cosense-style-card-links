@@ -32,8 +32,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	previewMaxChars: 500,
 	previewVisualLineSafetyMargin: 0,
 	previewScrollCommitsPerSecond: DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
-	showTwoHopForSelectedCanvasFileNode: true,
-	mobileLongPressAction: "preview",
 	excludeAttachments: false,
 	frontmatterKeyCreatedDate: "",
 	frontmatterKeyModifiedDate: "",

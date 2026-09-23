@@ -1,4 +1,4 @@
-import { defineDropdown, type SettingDefinition } from "./settingDefinition";
+import type { SettingDefinition } from "./settingDefinition";
 
 export const INTERACTION_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 	{
@@ -32,16 +32,6 @@ export const INTERACTION_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> =
 		translationKey: "highlightInPopoverOnHover",
 		descriptionKey: "highlightInPopoverOnHoverDesc",
 	},
-	defineDropdown({
-		section: "interaction",
-		settingKey: "mobileLongPressAction",
-		translationKey: "longPressActionMobile",
-		descriptionKey: "longPressActionMobileDesc",
-		options: [
-			{ value: "preview", label: "showPreview", isTranslationKey: true },
-			{ value: "menu", label: "showMenu", isTranslationKey: true },
-		],
-	}),
 	{
 		section: "unresolvedLinks",
 		settingKey: "enableUnresolvedLinkModal",

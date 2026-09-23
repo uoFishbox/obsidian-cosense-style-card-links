@@ -8,7 +8,6 @@ export type SectionId =
 	| "interaction"
 	| "tags"
 	| "unresolvedLinks"
-	| "canvas"
 	| "newTab"
 	| "advanced";
 
@@ -114,7 +113,6 @@ export const SECTION_ORDER: ReadonlyArray<{
 	{ id: "interaction", titleKey: "interaction" },
 	{ id: "tags", titleKey: "sectionTags" },
 	{ id: "unresolvedLinks", titleKey: "sectionUnresolvedLinks" },
-	{ id: "canvas", titleKey: "sectionCanvas" },
 	{ id: "newTab", titleKey: "sectionNewTab" },
 	{ id: "advanced", titleKey: "advanced" },
 ];

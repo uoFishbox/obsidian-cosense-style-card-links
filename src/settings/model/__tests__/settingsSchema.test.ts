@@ -23,6 +23,23 @@ function persistedData(
 }
 
 describe("settings schema", () => {
+	it("ignores removed Canvas and mobile long-press settings in saved data", () => {
+		const settings = parsePluginSettings(
+			persistedData({
+				showTwoHopForSelectedCanvasFileNode: false,
+				mobileLongPressAction: "preview",
+			} as Partial<ConfigSettings>),
+		);
+		const serialized = serializePluginSettings(settings);
+
+		expect(settings).not.toHaveProperty("showTwoHopForSelectedCanvasFileNode");
+		expect(settings).not.toHaveProperty("mobileLongPressAction");
+		expect(serialized.settings).not.toHaveProperty(
+			"showTwoHopForSelectedCanvasFileNode",
+		);
+		expect(serialized.settings).not.toHaveProperty("mobileLongPressAction");
+	});
+
 	it.each(["relevance", "relevance-reverse"] as const)(
 		"restores the %s sort preference",
 		(sortOption) => {
@@ -59,7 +76,9 @@ describe("settings schema", () => {
 			persistedData({ previewScrollCommitsPerSecond: 170 }),
 		);
 		expect(settings.previewScrollCommitsPerSecond).toBe(170);
-		expect(serializePluginSettings(settings).settings.previewScrollCommitsPerSecond).toBe(170);
+		expect(
+			serializePluginSettings(settings).settings.previewScrollCommitsPerSecond,
+		).toBe(170);
 	});
 
 	it.each([0, 23, 40.8, Number.NaN, "96"])(
@@ -75,9 +94,8 @@ describe("settings schema", () => {
 
 	it("clamps a previously saved scroll speed above the new maximum", () => {
 		expect(
-			parsePluginSettings(
-				persistedData({ previewScrollCommitsPerSecond: 192 }),
-			).previewScrollCommitsPerSecond,
+			parsePluginSettings(persistedData({ previewScrollCommitsPerSecond: 192 }))
+				.previewScrollCommitsPerSecond,
 		).toBe(170);
 	});
 

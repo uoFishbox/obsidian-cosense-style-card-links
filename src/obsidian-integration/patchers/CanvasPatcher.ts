@@ -55,9 +55,8 @@ function patchCanvasView(plugin: PluginHost, view: CanvasView): void {
 
 				const settings = plugin.settings;
 				const shouldHandleCanvasSelection =
-					(settings.displayMode === "sidebar-view" ||
-						settings.displayMode === "hybrid") &&
-					settings.showTwoHopForSelectedCanvasFileNode;
+					settings.displayMode === "sidebar-view" ||
+					settings.displayMode === "hybrid";
 
 				if (!shouldHandleCanvasSelection) {
 					return result;

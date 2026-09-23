@@ -115,9 +115,7 @@ function createItemDescriptor(item: CardItem, file: TFile): ItemInteractionDescr
 		targetFile: file,
 		dragRawText: DRAG_RAW_TEXT,
 		filePathForDrag: file.path,
-		settings: {
-			mobileLongPressAction: "preview",
-		} as any,
+		settings: { highlightInPreviewOnHover: false },
 		searchQuery: SEARCH_QUERY,
 	};
 }
@@ -138,9 +136,7 @@ function createSectionDescriptor(
 		targetFile,
 		dragRawText: DRAG_RAW_TEXT,
 		filePathForDrag: targetFile.path,
-		settings: {
-			mobileLongPressAction: "preview",
-		} as any,
+		settings: { highlightInPreviewOnHover: false },
 	};
 }
 
@@ -591,7 +587,7 @@ describe("delegated interaction dispatcher", () => {
 		expect(element.dataset.cclLongPressed).toBeUndefined();
 	});
 
-	it("delegates mobile touch long-press preview without a mouseover listener", () => {
+	it("opens the menu for a mobile long press inside shadow DOM", () => {
 		vi.useFakeTimers();
 		Platform.isMobile = true;
 		const linkContext = createLinkContext();
@@ -627,7 +623,8 @@ describe("delegated interaction dispatcher", () => {
 		vi.advanceTimersByTime(500);
 
 		expect(element.dataset.cclLongPressed).toBe("1");
-		expect(linkContext.onLinkHover).toHaveBeenCalledTimes(1);
+		expect(linkContext.onShowFileMenu).toHaveBeenCalledTimes(1);
+		expect(linkContext.onLinkHover).not.toHaveBeenCalled();
 		expect(linkContext.onOpenFile).toHaveBeenCalledTimes(0);
 
 		element.dispatchEvent(createTouchEvent("touchend", []));
@@ -652,10 +649,6 @@ describe("delegated interaction dispatcher", () => {
 			{ type: "file", data: file } as CardItem,
 			file,
 		);
-		descriptor.settings = {
-			highlightInPreviewOnHover: false,
-			mobileLongPressAction: "menu",
-		};
 		const interactionHandle = createInteractionHandle();
 		registry.register(interactionHandle, descriptor);
 		const dispatcher = createDelegatedInteractionDispatcher({

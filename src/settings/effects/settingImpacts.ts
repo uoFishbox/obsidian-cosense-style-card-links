@@ -41,8 +41,6 @@ export const SETTING_IMPACTS = {
 	previewMaxChars: STANDARD_IMPACTS,
 	previewVisualLineSafetyMargin: STANDARD_IMPACTS,
 	previewScrollCommitsPerSecond: [],
-	showTwoHopForSelectedCanvasFileNode: STANDARD_IMPACTS,
-	mobileLongPressAction: STANDARD_IMPACTS,
 	excludeAttachments: STANDARD_IMPACTS,
 	frontmatterKeyCreatedDate: STANDARD_IMPACTS,
 	frontmatterKeyModifiedDate: STANDARD_IMPACTS,

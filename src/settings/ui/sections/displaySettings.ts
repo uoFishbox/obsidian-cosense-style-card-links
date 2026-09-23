@@ -146,13 +146,6 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		descriptionKey: "hideAttachmentsDesc",
 	},
 	{
-		section: "canvas",
-		settingKey: "showTwoHopForSelectedCanvasFileNode",
-		controlType: "toggle",
-		translationKey: "followSelectedCanvasFileNode",
-		descriptionKey: "followSelectedCanvasFileNodeDesc",
-	},
-	{
 		section: "unresolvedLinks",
 		settingKey: "enableUnresolvedLinkDecoration",
 		controlType: "toggle",

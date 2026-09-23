@@ -7,7 +7,6 @@ export type TranslationKey =
 	| "resultsAndSorting"
 	| "sectionTags"
 	| "sectionUnresolvedLinks"
-	| "sectionCanvas"
 	| "sectionNewTab"
 	| "advanced"
 	| "invalidSettingValue"
@@ -53,8 +52,6 @@ export type TranslationKey =
 	| "showTagsSectionDesc"
 	| "hideAttachments"
 	| "hideAttachmentsDesc"
-	| "followSelectedCanvasFileNode"
-	| "followSelectedCanvasFileNodeDesc"
 	| "highlightUnresolvedLinks"
 	| "highlightUnresolvedLinksDesc"
 	| "priorityFrontmatterKeysForImagePreview"
@@ -72,8 +69,6 @@ export type TranslationKey =
 	| "highlightOnOpenDesc"
 	| "highlightInPopoverOnHover"
 	| "highlightInPopoverOnHoverDesc"
-	| "longPressActionMobile"
-	| "longPressActionMobileDesc"
 	| "openTagSearchDedicatedView"
 	| "openTagSearchDedicatedViewDesc"
 	| "openUnresolvedNoteView"
@@ -91,8 +86,6 @@ export type TranslationKey =
 	| "hybrid"
 	| "appearance"
 	| "linkCountAscending"
-	| "showPreview"
-	| "showMenu"
 	| "card";
 
 const translations: Record<Language, Record<TranslationKey, string>> = {
@@ -109,7 +102,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		resultsAndSorting: "Results and sorting",
 		sectionTags: "Tags",
 		sectionUnresolvedLinks: "Unresolved links",
-		sectionCanvas: "Canvas",
 		sectionNewTab: "New tabs and all notes",
 		advanced: "Advanced",
 		invalidSettingValue: "Enter a valid value.",
@@ -170,9 +162,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		hideAttachments: "Hide attachments",
 		hideAttachmentsDesc:
 			"Exclude attachment files from results such as Backlinks and related links.",
-		followSelectedCanvasFileNode: "Show 2-hop links for the selected file node",
-		followSelectedCanvasFileNodeDesc:
-			"When a file node is selected on Canvas, show its 2-hop links.",
 		highlightUnresolvedLinks: "Highlight unresolved links with single Backlink",
 		highlightUnresolvedLinksDesc:
 			"Change the appearance of unresolved links that have only one Backlink.",
@@ -192,9 +181,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightInPopoverOnHover: "Highlight in popover on hover",
 		highlightInPopoverOnHoverDesc:
 			"Highlight the link location in the popover displayed when hovering over a card.",
-		longPressActionMobile: "Long press action on cards in mobile",
-		longPressActionMobileDesc:
-			"Action when long pressing a card on a mobile device.",
 		openTagSearchDedicatedView: "Open tag search results in a dedicated view",
 		openTagSearchDedicatedViewDesc: "Open the tag list in a dedicated tag view.",
 		openUnresolvedNoteView: "Check Backlinks when creating unresolved links",
@@ -217,8 +203,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		hybrid: "Hybrid",
 		appearance: "Appearance",
 		linkCountAscending: "Link count (ascending)",
-		showPreview: "Show preview",
-		showMenu: "Show menu",
 		card: "Card",
 	},
 	ja: {
@@ -234,7 +218,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		resultsAndSorting: "結果と並び替え",
 		sectionTags: "タグ",
 		sectionUnresolvedLinks: "未解決リンク",
-		sectionCanvas: "Canvas",
 		sectionNewTab: "新規タブとすべてのノート",
 		advanced: "高度な設定",
 		invalidSettingValue: "有効な値を入力してください。",
@@ -293,9 +276,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		hideAttachments: "添付ファイルを非表示",
 		hideAttachmentsDesc:
 			"バックリンクや関連リンクなどの結果から添付ファイルを除外します。",
-		followSelectedCanvasFileNode: "選択したファイルノードの 2 hop link を表示する",
-		followSelectedCanvasFileNodeDesc:
-			"Canvas上でファイルノードが選択されたとき、その2ホップリンクを表示します。",
 		highlightUnresolvedLinks: "バックリンクが1つのみの未解決リンクをハイライト",
 		highlightUnresolvedLinksDesc:
 			"バックリンクが1つのみの未解決リンクの外観を変更します。",
@@ -316,9 +296,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		highlightInPopoverOnHover: "ホバー時にポップオーバーでハイライト",
 		highlightInPopoverOnHoverDesc:
 			"カードにホバーした際に表示されるポップオーバー内でリンク位置をハイライトします。",
-		longPressActionMobile: "モバイルでのカード長押しアクション",
-		longPressActionMobileDesc:
-			"モバイルデバイスでカードを長押しした際のアクションを設定します。",
 		openTagSearchDedicatedView: "タグの検索結果を専用ビューで開く",
 		openTagSearchDedicatedViewDesc: "タグの一覧をタグ専用ビューで開きます。",
 		openUnresolvedNoteView: "未解決リンク作成時にバックリンクを確認",
@@ -341,8 +318,6 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		hybrid: "ハイブリッド",
 		appearance: "出現順",
 		linkCountAscending: "リンク数（昇順）",
-		showPreview: "プレビューを表示",
-		showMenu: "メニューを表示",
 		card: "カード",
 	},
 };

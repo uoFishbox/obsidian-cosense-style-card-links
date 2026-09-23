@@ -70,7 +70,6 @@ describe("buildShadowHoverLinkSpec", () => {
 			targetFile,
 			settings: {
 				highlightInPreviewOnHover: false,
-				mobileLongPressAction: "preview",
 			},
 			searchQuery: "target",
 		};
@@ -112,7 +111,6 @@ describe("buildShadowHoverLinkSpec", () => {
 			targetFile,
 			settings: {
 				highlightInPreviewOnHover: false,
-				mobileLongPressAction: "preview",
 			},
 			searchQuery: "target",
 		};

@@ -432,37 +432,13 @@ export function createDelegatedInteractionDispatcher({
 				}
 
 				markInteractionLongPressed(targetElement);
-				if (currentDescriptor.settings?.mobileLongPressAction === "menu") {
-					if (currentDescriptor.targetFile && onShowFileMenu) {
-						const menuEvent = createOwnerMouseEvent(
-							targetElement,
-							"contextmenu",
-							touchCoordinates,
-						);
-						onShowFileMenu(menuEvent, currentDescriptor.targetFile);
-					}
-				} else {
-					const hoverEvent = createOwnerMouseEvent(
+				if (currentDescriptor.targetFile && onShowFileMenu) {
+					const menuEvent = createOwnerMouseEvent(
 						targetElement,
-						"mouseover",
-						{
-							bubbles: true,
-							cancelable: true,
-							composed: true,
-							...touchCoordinates,
-						},
+						"contextmenu",
+						touchCoordinates,
 					);
-					if (
-						dispatchHover(
-							targetElement,
-							currentDescriptor,
-							resolvedLinkContext,
-							appContext,
-							hoverEvent,
-						)
-					) {
-						activeHoverInteractionHandle = touchInteractionHandle;
-					}
+					onShowFileMenu(menuEvent, currentDescriptor.targetFile);
 				}
 
 				if (ownerWindow.navigator.vibrate) {

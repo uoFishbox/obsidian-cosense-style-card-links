@@ -17,9 +17,6 @@ export type DisplayMode = (typeof DISPLAY_MODES)[number];
 export const TWO_HOP_HEADER_SORT_ORDERS = ["appearance", "hop2-count-asc"] as const;
 export type TwoHopHeaderSortOrder = (typeof TWO_HOP_HEADER_SORT_ORDERS)[number];
 
-export const MOBILE_LONG_PRESS_ACTIONS = ["preview", "menu"] as const;
-export type MobileLongPressAction = (typeof MOBILE_LONG_PRESS_ACTIONS)[number];
-
 /** Current persisted settings shape version; bump when keys are renamed or reshaped. */
 export const SETTINGS_SCHEMA_VERSION = 3;
 
@@ -69,13 +66,11 @@ export interface CardSettings {
 export interface InteractionSettings {
 	highlightOnOpen: boolean;
 	highlightInPreviewOnHover: boolean;
-	mobileLongPressAction: MobileLongPressAction;
 }
 
 export interface IntegrationSettings {
 	enableTagFeatures: boolean;
 	showTagsSection: boolean;
-	showTwoHopForSelectedCanvasFileNode: boolean;
 	enableGlobalSearchTagModal: boolean;
 	enableUnresolvedLinkModal: boolean;
 	enableEmptyViewAllNotesInNewTab: boolean;

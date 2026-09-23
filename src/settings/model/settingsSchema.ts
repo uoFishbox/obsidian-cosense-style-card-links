@@ -7,7 +7,6 @@ import { DEFAULT_SETTINGS } from "./defaults";
 import {
 	DISPLAY_MODES,
 	LANGUAGES,
-	MOBILE_LONG_PRESS_ACTIONS,
 	SETTINGS_SCHEMA_VERSION,
 	TWO_HOP_HEADER_SORT_ORDERS,
 	type ConfigSettings,
@@ -183,15 +182,6 @@ function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSett
 			DEFAULT_SETTINGS.previewScrollCommitsPerSecond,
 			MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
 			MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
-		),
-		showTwoHopForSelectedCanvasFileNode: booleanSetting(
-			settings.showTwoHopForSelectedCanvasFileNode,
-			DEFAULT_SETTINGS.showTwoHopForSelectedCanvasFileNode,
-		),
-		mobileLongPressAction: enumSetting(
-			settings.mobileLongPressAction,
-			MOBILE_LONG_PRESS_ACTIONS,
-			DEFAULT_SETTINGS.mobileLongPressAction,
 		),
 		excludeAttachments: booleanSetting(
 			settings.excludeAttachments,

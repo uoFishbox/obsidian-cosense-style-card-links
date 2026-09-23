@@ -245,21 +245,17 @@ export class DisplayModeController {
 		const canvas = (view as { canvas?: CanvasViewCanvas })?.canvas;
 		if (!canvas) return;
 
-		if (this.shouldFollowSelectedCanvasFileNode()) {
-			const canvasWithSelectionData = getCanvasSelectionData(canvas);
-			const nodes: CanvasNodeData[] =
-				canvasWithSelectionData?.getSelectionData?.()?.nodes ?? [];
+		const canvasWithSelectionData = getCanvasSelectionData(canvas);
+		const nodes: CanvasNodeData[] =
+			canvasWithSelectionData?.getSelectionData?.()?.nodes ?? [];
 
-			if (nodes.length === 1 && nodes[0].type === this.NODE_TYPES.FILE) {
-				const node = nodes[0];
-				const filePath = getFileNodePath(node);
-
-				if (filePath && this.updateSidebarView) {
-					const file = resolveFileByPath(this.app.vault, filePath);
-					if (file) {
-						this.updateSidebarView(file);
-						return;
-					}
+		if (nodes.length === 1 && nodes[0].type === this.NODE_TYPES.FILE) {
+			const filePath = getFileNodePath(nodes[0]);
+			if (filePath && this.updateSidebarView) {
+				const file = resolveFileByPath(this.app.vault, filePath);
+				if (file) {
+					this.updateSidebarView(file);
+					return;
 				}
 			}
 		}
@@ -272,7 +268,6 @@ export class DisplayModeController {
 		selectedNodes: CanvasNodeData[],
 	): void {
 		if (
-			this.shouldFollowSelectedCanvasFileNode() &&
 			selectedNodes.length === 1 &&
 			selectedNodes[0].type === this.NODE_TYPES.FILE
 		) {
@@ -346,10 +341,6 @@ export class DisplayModeController {
 			canvasWithSelectionData?.getSelectionData?.()?.nodes ?? [];
 
 		return nodes.length === 1 && nodes[0].type === this.NODE_TYPES.FILE;
-	}
-
-	private shouldFollowSelectedCanvasFileNode(): boolean {
-		return this.getSettings().showTwoHopForSelectedCanvasFileNode;
 	}
 
 	private isMarkdownView(view: unknown): boolean {

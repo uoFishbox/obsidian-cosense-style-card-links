@@ -41,10 +41,7 @@ const LAST_TOUCH_AT_DATASET_KEY = "cclLastTouchAt";
 export type InteractionKind = "item" | "sectionHeader";
 
 /** Settings read by delegated card and section-header interactions. */
-export type InteractionSettings = Pick<
-	PluginSettings,
-	"highlightInPreviewOnHover" | "mobileLongPressAction"
->;
+export type InteractionSettings = Pick<PluginSettings, "highlightInPreviewOnHover">;
 
 interface BaseInteractionDescriptor {
 	kind: InteractionKind;

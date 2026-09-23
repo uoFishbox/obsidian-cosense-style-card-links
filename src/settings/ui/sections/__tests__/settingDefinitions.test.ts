@@ -20,7 +20,6 @@ describe("setting definitions", () => {
 			"interaction",
 			"tags",
 			"unresolvedLinks",
-			"canvas",
 			"newTab",
 			"advanced",
 		]);
@@ -82,9 +81,6 @@ describe("setting definitions", () => {
 		);
 		expect(sectionBySetting.get("enableUnresolvedLinkModal")).toBe(
 			"unresolvedLinks",
-		);
-		expect(sectionBySetting.get("showTwoHopForSelectedCanvasFileNode")).toBe(
-			"canvas",
 		);
 		expect(sectionBySetting.get("enableEmptyViewAllNotesInNewTab")).toBe("newTab");
 		expect(sectionBySetting.get("pinBookmarkedToTopInAllNotes")).toBe("newTab");

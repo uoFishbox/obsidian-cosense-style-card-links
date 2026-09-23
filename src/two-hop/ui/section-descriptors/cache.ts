@@ -81,7 +81,6 @@ interface ResolveSnapshot {
 	readonly getSortedTagGroupItems: ResolveTwoHopSectionsParams["getSortedTagGroupItems"];
 	readonly getVisibleCount: ResolveTwoHopSectionsParams["getVisibleCount"];
 	readonly onTagClick: ResolveTwoHopSectionsParams["onTagClick"];
-	readonly mobileLongPressAction: PluginSettings["mobileLongPressAction"];
 	readonly highlightInPreviewOnHover: boolean;
 	readonly language: PluginSettings["language"];
 }
@@ -224,7 +223,6 @@ function appendBranchSections(
 	append: AppendSection,
 ): void {
 	const interactionSettings: InteractionSettings = Object.freeze({
-		mobileLongPressAction: params.currentSettings.mobileLongPressAction,
 		highlightInPreviewOnHover: params.currentSettings.highlightInPreviewOnHover,
 	});
 
@@ -251,7 +249,6 @@ function appendBranchSections(
 				params.currentSort,
 				params.sortContextVersion,
 				params.getSortedTwoHopItems,
-				interactionSettings.mobileLongPressAction,
 				interactionSettings.highlightInPreviewOnHover,
 			],
 			branch.hop2.length,
@@ -337,7 +334,6 @@ function createResolveSnapshot(params: ResolveTwoHopSectionsParams): ResolveSnap
 		getSortedTagGroupItems: params.getSortedTagGroupItems,
 		getVisibleCount: params.getVisibleCount,
 		onTagClick: params.onTagClick,
-		mobileLongPressAction: params.currentSettings.mobileLongPressAction,
 		highlightInPreviewOnHover: params.currentSettings.highlightInPreviewOnHover,
 		language: params.currentSettings.language,
 	};
