@@ -138,6 +138,13 @@ describe("PreviewService.getPreview", () => {
 	});
 
 	describe("image retrieval from frontmatter", () => {
+		beforeEach(() => {
+			settings = {
+				...DEFAULT_SETTINGS,
+				priorityFrontmatterKeysForImagePreview: "image",
+			};
+		});
+
 		test("returns image preview when frontmatter has an image URL", async () => {
 			const file = createMockTFileAsPlainObject("note.md");
 			const imageUrl = "https://example.com/image.jpg";
