@@ -70,6 +70,8 @@ export interface TwoHopVirtualGridController {
 	readonly layout: TwoHopGridLayout;
 	readonly contentHeight: number;
 	readonly mountedRows: readonly MountedTwoHopRow[];
+	/** Focus target published after expanding a focused load-more cell. */
+	readonly focusRequest: VirtualNavigationTarget | null;
 	readonly scrollContainerEl: HTMLElement | null;
 	readonly previewSurface: VirtualPreviewSurface;
 	readonly interactionDescriptorResolverProvider: InteractionDescriptorResolverProvider;
@@ -95,7 +97,7 @@ export interface TwoHopVirtualGridController {
 		currentPosition: { rowIndex: number; columnIndex: number },
 	): boolean;
 	flushVirtualScrollMeasurement(snapshot: ProgrammaticScrollSnapshot): void;
-	loadMore(sectionId: string): void;
+	loadMore(sectionId: string, wasFocused: boolean): void;
 }
 
 /** Connects two-hop geometry and hydration to the shared bounded virtual-list runtime. */
@@ -114,6 +116,8 @@ export function useTwoHopVirtualGrid(
 	let rootEl = $state<HTMLDivElement | null>(null);
 	let widthWasZero = false;
 	let interactionBindingRevision = $state(0);
+	let pendingFocus: { sectionId: string; itemIndex: number } | null = null;
+	let focusRequest = $state<VirtualNavigationTarget | null>(null);
 
 	const resolveConfiguredLayout = createResolvedCardLayoutSettingsMemo();
 	const configuredLayout = $derived(
@@ -254,6 +258,20 @@ export function useTwoHopVirtualGrid(
 			layout,
 		});
 		rowModel = nextRowModel;
+		if (pendingFocus) {
+			const { sectionId, itemIndex } = pendingFocus;
+			pendingFocus = null;
+			const section = nextSections.find((entry) => entry.id === sectionId);
+			const item = section?.items[itemIndex];
+			if (item) {
+				const key = `item:${sectionId}:${item.key}`;
+				const position = nextRowModel.resolveCellPosition(key);
+				const rowTop = position && nextRowModel.getRow(position.rowIndex)?.top;
+				if (rowTop !== null && rowTop !== undefined) {
+					focusRequest = { key, rowTop };
+				}
+			}
+		}
 		anchorRestoration.restoreAfterCommit();
 
 		if (nextRowModel.rowCount === 0) {
@@ -381,6 +399,9 @@ export function useTwoHopVirtualGrid(
 		get mountedRows() {
 			return cardSurfaceRuntime.getMountedRows();
 		},
+		get focusRequest() {
+			return focusRequest;
+		},
 		get scrollContainerEl() {
 			return measurement.scrollContainerEl;
 		},
@@ -405,7 +426,12 @@ export function useTwoHopVirtualGrid(
 		resolveSequentialNavigationTarget,
 		shouldMoveFocusAboveGrid,
 		flushVirtualScrollMeasurement,
-		loadMore(sectionId: string): void {
+		loadMore(sectionId: string, wasFocused: boolean): void {
+			if (wasFocused) {
+				const section = props.sections.find((entry) => entry.id === sectionId);
+				if (section)
+					pendingFocus = { sectionId, itemIndex: section.items.length };
+			}
 			props.loadMoreSection?.(sectionId);
 		},
 	};

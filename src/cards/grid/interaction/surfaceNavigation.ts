@@ -111,6 +111,11 @@ interface CardSurfaceNavigationOptions {
 }
 
 export interface CardSurfaceNavigationHandlers {
+	focusMountedNavigationTarget(target: VirtualNavigationTarget): boolean;
+	focusNavigationTarget(
+		target: VirtualNavigationTarget,
+		isCurrent?: () => boolean,
+	): Promise<boolean>;
 	handleKeyDown(event: KeyboardEvent): Promise<void>;
 	handlePointerDown(): void;
 	handleFocusIn(event: FocusEvent): void;
@@ -120,6 +125,7 @@ export const createCardSurfaceNavigation = (
 	options: CardSurfaceNavigationOptions,
 ): CardSurfaceNavigationHandlers => {
 	let isPointerFocusEntry = false;
+	let isProgrammaticFocusMove = false;
 
 	const getFocusableCellTarget = (
 		cellElement: HTMLElement | null,
@@ -149,7 +155,12 @@ export const createCardSurfaceNavigation = (
 			return false;
 		}
 
-		target.focus({ preventScroll: true });
+		isProgrammaticFocusMove = true;
+		try {
+			target.focus({ preventScroll: true });
+		} finally {
+			isProgrammaticFocusMove = false;
+		}
 		target.scrollIntoView({ block: "nearest", inline: "nearest" });
 		return true;
 	};
@@ -157,7 +168,9 @@ export const createCardSurfaceNavigation = (
 	const moveFocusToNavigationTarget = async (
 		target: VirtualNavigationTarget,
 		resolveTarget: (cellElement: HTMLElement | null) => HTMLElement | null,
+		isCurrent: () => boolean = () => true,
 	): Promise<boolean> => {
+		if (!isCurrent()) return false;
 		const getMountedCellElement = (key: string): HTMLElement | null =>
 			findMountedCellElementByKey(
 				options.getContentEl(),
@@ -186,7 +199,9 @@ export const createCardSurfaceNavigation = (
 		options.flushVirtualScrollMeasurement?.(scrollSnapshot);
 		await options.flushMountedState();
 
-		return focusCellTarget(getMountedCellElement(target.key), resolveTarget);
+		return isCurrent()
+			? focusCellTarget(getMountedCellElement(target.key), resolveTarget)
+			: false;
 	};
 
 	const moveFocusWithinResolvedNavigation = async (
@@ -368,7 +383,7 @@ export const createCardSurfaceNavigation = (
 	};
 
 	const handleFocusIn = (event: FocusEvent): void => {
-		if (isPointerFocusEntry) return;
+		if (isPointerFocusEntry || isProgrammaticFocusMove) return;
 		if (!options.resolveSequentialNavigationTarget) return;
 		const origin = event.composedPath()[0];
 		if (!isHTMLElementLike(origin)) return;
@@ -405,5 +420,20 @@ export const createCardSurfaceNavigation = (
 		edge.element.focus({ preventScroll: true });
 	};
 
-	return { handleKeyDown, handlePointerDown, handleFocusIn };
+	return {
+		focusMountedNavigationTarget: (target) =>
+			focusCellTarget(
+				findMountedCellElementByKey(
+					options.getContentEl(),
+					target.key,
+					options.cellBindingRegistry,
+				),
+				getFocusableCellTarget,
+			),
+		focusNavigationTarget: (target, isCurrent) =>
+			moveFocusToNavigationTarget(target, getFocusableCellTarget, isCurrent),
+		handleKeyDown,
+		handlePointerDown,
+		handleFocusIn,
+	};
 };

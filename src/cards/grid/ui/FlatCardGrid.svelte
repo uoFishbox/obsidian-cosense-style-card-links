@@ -26,6 +26,7 @@
 		rowHeight={list.layout.rowHeight}
 		columns={list.layout.columns}
 		mountedRows={list.mountedRows}
+		focusRequest={list.focusRequest}
 		bind:rootEl={list.sectionRootEl}
 		bind:contentEl={list.contentEl}
 		bind:interactionShadowRoot={list.interactionShadowRoot}

@@ -611,8 +611,8 @@ describe("TwoHopVirtualGrid component", () => {
 		},
 	);
 
-	it("renders load-more as a virtual cell and accepts the expanded publication", async () => {
-		const resolver = createCardModelResolver();
+	it("focuses the first new card when a focused load-more cell is expanded", async () => {
+		const resolver = createInteractiveCardModelResolver();
 		const loadMoreSection = vi.fn();
 		const applicationStore = {
 			settings: {
@@ -655,18 +655,27 @@ describe("TwoHopVirtualGrid component", () => {
 			expect(candidate).not.toBeNull();
 			return candidate!;
 		});
-		await fireEvent.click(button);
+		button.focus();
+		expect(root.shadowRoot?.activeElement).toBe(button);
+		await fireEvent.keyDown(button, { key: "Enter" });
+		await fireEvent.click(button, { detail: 0 });
 		expect(loadMoreSection).toHaveBeenCalledWith("section");
 
 		await rendered.rerender({
 			...baseProps,
 			sections: [createSection(3)],
 		});
-		await vi.waitFor(() =>
+		for (let index = 0; index < 4; index += 1) await flushFrames();
+		await vi.waitFor(() => {
 			expect(
 				root.shadowRoot?.querySelector(".cosense-card-links__load-more-button"),
-			).toBeNull(),
-		);
+			).toBeNull();
+			const newCard = root.shadowRoot?.querySelector<HTMLElement>(
+				'[aria-label="item:2"][data-ccl-interaction-handle]',
+			);
+			expect(newCard).not.toBeNull();
+			expect(root.shadowRoot?.activeElement).toBe(newCard);
+		});
 	});
 
 	it("clears the stale card model when a physical slot rebinds to another item", async () => {

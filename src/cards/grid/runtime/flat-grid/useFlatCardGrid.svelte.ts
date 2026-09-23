@@ -151,6 +151,20 @@ export function useFlatCardGrid<T>(
 			layout: nextLayout,
 		});
 	const rowModel = $derived(resolveFlatGridRowModel(layout));
+	let pendingFocusIndex: number | null = null;
+	let focusRequest = $state<VirtualNavigationTarget | null>(null);
+	$effect(() => {
+		const count = visibleCount;
+		if (pendingFocusIndex === null || count <= pendingFocusIndex) return;
+		const index = pendingFocusIndex;
+		pendingFocusIndex = null;
+		const key = logicalCellSource.resolveLogicalCellKeyAtItemIndex(index);
+		const rowIndex = Math.floor(
+			(index + (logicalCellSource.hasHeader ? 1 : 0)) / layout.columns,
+		);
+		const rowTop = rowModel.getRow(rowIndex)?.top;
+		if (key && rowTop !== undefined) focusRequest = { key, rowTop };
+	});
 	const cardSurfaceRuntime = createFlatGridCardSurfaceRuntime({
 		previewSurface,
 		getRowCount: () => rowModel.rowCount,
@@ -334,11 +348,9 @@ export function useFlatCardGrid<T>(
 		cardSurfaceRuntime.dispose();
 	});
 
-	const loadNextPage = () => {
-		if (!canLoadMore) {
-			return;
-		}
-
+	const loadNextPage = (wasFocused = false) => {
+		if (!canLoadMore) return;
+		if (wasFocused) pendingFocusIndex = visibleCount;
 		paginationState.loadMore(flatPaginationSectionId, itemCount);
 	};
 
@@ -436,6 +448,9 @@ export function useFlatCardGrid<T>(
 		},
 		get mountedRows() {
 			return mountedRows;
+		},
+		get focusRequest() {
+			return focusRequest;
 		},
 		get slotBindingRevision() {
 			return virtualList.getMountedBuild()?.slotBindingRevision;

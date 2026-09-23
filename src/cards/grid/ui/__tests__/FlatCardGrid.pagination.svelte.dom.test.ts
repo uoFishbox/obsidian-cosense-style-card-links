@@ -1,4 +1,6 @@
-import { waitFor } from "@testing-library/svelte";
+import { fireEvent, waitFor } from "@testing-library/svelte";
+import { ARIA_LABELS } from "cards/ariaLabels";
+import { queryAllByRoleDeep } from "testing/helpers/shadowDomQueries";
 import { describe, expect, it } from "vitest";
 import { renderFlatCardGridBehavior } from "./flatCardGridBehaviorDriver";
 import {
@@ -31,6 +33,35 @@ describe("FlatCardGrid pagination", () => {
 		});
 
 		expect(driver.hasLoadMoreButton()).toBe(true);
+	});
+
+	it("moves focus to the first newly loaded card when activating a focused load more button", async () => {
+		const driver = renderFlatCardGridBehavior({
+			items: createItems(10),
+			initialVisibleCount: 2,
+			loadMoreIncrement: 2,
+		});
+		await driver.setViewport({ rootHeight: 500, width: 330 });
+
+		const button = queryAllByRoleDeep("button", {
+			name: ARIA_LABELS.LOAD_MORE,
+		})[0] as HTMLButtonElement;
+		button.focus();
+		await fireEvent.keyDown(button, { key: "Enter" });
+		await fireEvent.click(button, { detail: 0 });
+
+		await waitFor(() => driver.expectFocusedItem("Item 2"));
+
+		const nextButton = await waitFor(() => {
+			const candidate = queryAllByRoleDeep("button", {
+				name: ARIA_LABELS.LOAD_MORE,
+			})[0] as HTMLButtonElement | undefined;
+			expect(candidate).toBeDefined();
+			return candidate!;
+		});
+		nextButton.focus();
+		await fireEvent.click(nextButton, { detail: 0 });
+		await waitFor(() => driver.expectFocusedItem("Item 4"));
 	});
 
 	it("loads one additional page when the infinite-scroll sentinel intersects", async () => {

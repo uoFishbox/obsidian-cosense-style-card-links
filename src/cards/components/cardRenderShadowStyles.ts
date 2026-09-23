@@ -433,6 +433,10 @@ export const CARD_RENDER_SHADOW_CSS = String.raw`
 	box-shadow: none;
 }
 
+.cosense-card-links__load-more-button.cosense-card-links__box:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--background-modifier-border-focus);
+}
+
 .cosense-card-links__load-more-button > .cosense-card-links__box-title-wrapper {
 	display: contents;
 }

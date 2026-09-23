@@ -28,6 +28,7 @@
 	columns={grid.layout.columns}
 	gap={grid.layout.gap}
 	mountedRows={grid.mountedRows}
+	focusRequest={grid.focusRequest}
 	bind:rootEl={grid.rootEl}
 	scrollContainerEl={grid.scrollContainerEl}
 	resolveNavigationTarget={grid.resolveNavigationTarget}

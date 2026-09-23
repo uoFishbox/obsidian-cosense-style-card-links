@@ -110,21 +110,26 @@ export function createCardSurfaceInteractions({
 		await tick();
 	};
 
-	const { handleKeyDown, handlePointerDown, handleFocusIn } =
-		createCardSurfaceNavigation({
-			getRootEl,
-			getContentEl,
-			getScrollContainerEl: getObserverRoot,
-			getRowHeight,
-			delegatedInteractions,
-			cellBindingRegistry,
-			resolveNavigationTarget,
-			resolveSequentialNavigationTarget,
-			onMoveFocusAboveGrid,
-			shouldMoveFocusAboveGrid,
-			flushVirtualScrollMeasurement,
-			flushMountedState,
-		});
+	const {
+		focusMountedNavigationTarget,
+		focusNavigationTarget,
+		handleKeyDown,
+		handlePointerDown,
+		handleFocusIn,
+	} = createCardSurfaceNavigation({
+		getRootEl,
+		getContentEl,
+		getScrollContainerEl: getObserverRoot,
+		getRowHeight,
+		delegatedInteractions,
+		cellBindingRegistry,
+		resolveNavigationTarget,
+		resolveSequentialNavigationTarget,
+		onMoveFocusAboveGrid,
+		shouldMoveFocusAboveGrid,
+		flushVirtualScrollMeasurement,
+		flushMountedState,
+	});
 
 	$effect(() => {
 		const rootEl = getRootEl();
@@ -188,6 +193,8 @@ export function createCardSurfaceInteractions({
 
 	return {
 		delegatedInteractions,
+		focusMountedNavigationTarget,
+		focusNavigationTarget,
 		handleKeyDown,
 		handlePointerDown,
 		handleFocusIn,

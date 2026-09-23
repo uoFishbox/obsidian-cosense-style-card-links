@@ -1,6 +1,7 @@
 <script lang="ts" generics="TMountedCell extends MountedVirtualCell">
 	import PooledCardGridRows from "./PooledCardGridRows.svelte";
 	import type { Snippet } from "svelte";
+	import { untrack } from "svelte";
 	import type {
 		NavigationDirection,
 		SequentialNavigationDirection,
@@ -54,6 +55,7 @@
 			currentPosition: { rowIndex: number; columnIndex: number },
 		) => boolean;
 		flushVirtualScrollMeasurement?: (snapshot: ProgrammaticScrollSnapshot) => void;
+		focusRequest?: VirtualNavigationTarget | null;
 	}
 
 	let {
@@ -82,6 +84,7 @@
 		onMoveFocusAboveGrid,
 		shouldMoveFocusAboveGrid,
 		flushVirtualScrollMeasurement,
+		focusRequest = null,
 	}: CardGridSurfaceProps<TMountedCell> = $props();
 
 	const surfaceInteractions = createCardSurfaceInteractions({
@@ -103,12 +106,42 @@
 	});
 	const {
 		delegatedInteractions,
+		focusMountedNavigationTarget,
+		focusNavigationTarget,
 		handleKeyDown,
 		handlePointerDown,
 		handleFocusIn,
 		cellBindingRegistry,
 		touchEventHandlers,
 	} = surfaceInteractions;
+
+	$effect(() => {
+		const request = focusRequest;
+		const content = contentEl;
+		if (!request || !content) return;
+		// A newly published cell can still be a non-focusable skeleton until its
+		// card model hydrates. Keep the request until it becomes focusable.
+		let cancelled = false;
+		const stop = (): void => {
+			cancelled = true;
+			observer.disconnect();
+			clearTimeout(timeout);
+			content.ownerDocument.removeEventListener("focusin", stop, true);
+		};
+		const observer = new MutationObserver(() => {
+			if (!cancelled && focusMountedNavigationTarget(request)) stop();
+		});
+		observer.observe(content, { childList: true, subtree: true, attributes: true });
+		content.ownerDocument.addEventListener("focusin", stop, true);
+		const timeout = setTimeout(stop, 10_000);
+		untrack(() => {
+			void focusNavigationTarget(request, () => !cancelled).then((focused) => {
+				if (cancelled) return;
+				if (focused || focusMountedNavigationTarget(request)) stop();
+			});
+		});
+		return stop;
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions a11y_mouse_events_have_key_events -->

@@ -26,7 +26,7 @@
 			logicalKey: string,
 			consumer: (model: CardRenderModel | undefined) => void,
 		) => () => void;
-		onLoadMore: (sectionId: string) => void;
+		onLoadMore: (sectionId: string, wasFocused: boolean) => void;
 		language?: Language;
 	}
 
@@ -141,7 +141,7 @@
 	{/if}
 {:else if cell.kind === "load-more"}
 	<CardGridLoadMoreButton
-		onClick={() => onLoadMore(cell.section.id)}
+		onClick={(wasFocused) => onLoadMore(cell.section.id, wasFocused)}
 		{language}
 	/>
 {:else}
