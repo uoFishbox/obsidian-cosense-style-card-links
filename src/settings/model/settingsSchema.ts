@@ -120,6 +120,13 @@ function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSett
 			settings.defaultVisibleLinkCount,
 			DEFAULT_SETTINGS.defaultVisibleLinkCount,
 		),
+		defaultVisiblePrimaryLinkCount: positiveIntegerSetting(
+			settings.defaultVisiblePrimaryLinkCount,
+			positiveIntegerSetting(
+				settings.defaultVisibleLinkCount,
+				DEFAULT_SETTINGS.defaultVisibleLinkCount,
+			),
+		),
 		loadMoreLinkIncrement: positiveIntegerSetting(
 			settings.loadMoreLinkIncrement,
 			DEFAULT_SETTINGS.loadMoreLinkIncrement,

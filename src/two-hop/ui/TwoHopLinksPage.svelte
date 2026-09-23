@@ -42,7 +42,10 @@
 		createCardRenderModel,
 		type CardRenderModel,
 	} from "cards/rendering/cardRenderModel";
-	import type { TwoHopItemModel } from "two-hop/ui/twoHopSectionModel";
+	import type {
+		TwoHopItemModel,
+		TwoHopSectionModel,
+	} from "two-hop/ui/twoHopSectionModel";
 	import type { KeyboardNavigationSurfaceRegistry } from "obsidian-integration/navigation/keyboardNavigationSurface";
 	import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
 
@@ -292,13 +295,21 @@
 	const sectionPublicationMemo = createTwoHopSectionPublicationMemo();
 	let getSectionVisibleCount = $derived.by(() => {
 		const expandedLimits = applicationUiState.sectionExpandedLimits ?? {};
-		const requestedDefaultLimit = Math.floor(
-			currentSettings.defaultVisibleLinkCount,
-		);
-		const defaultLimit = Number.isFinite(requestedDefaultLimit)
-			? Math.max(0, requestedDefaultLimit)
-			: 0;
-		return (sectionId: string, totalCount: number): number => {
+		const defaultLimitForOtherSections = currentSettings.defaultVisibleLinkCount;
+		const primaryLinkDefaultLimit = currentSettings.defaultVisiblePrimaryLinkCount;
+		return (
+			sectionId: string,
+			totalCount: number,
+			kind: TwoHopSectionModel["kind"],
+		): number => {
+			const requestedDefaultLimit = Math.floor(
+				kind === "primary-section"
+					? primaryLinkDefaultLimit
+					: defaultLimitForOtherSections,
+			);
+			const defaultLimit = Number.isFinite(requestedDefaultLimit)
+				? Math.max(0, requestedDefaultLimit)
+				: 0;
 			const paginationId = buildScopedSectionId(sectionId, paginationScope);
 			const requestedExpandedLimit = Math.floor(
 				expandedLimits[paginationId] ?? 0,
@@ -332,7 +343,11 @@
 		);
 		if (!section) return;
 
-		const visibleCount = getSectionVisibleCount(sectionId, section.totalCount);
+		const visibleCount = getSectionVisibleCount(
+			sectionId,
+			section.totalCount,
+			section.kind,
+		);
 		if (visibleCount >= section.totalCount) return;
 
 		const increment = normalizeIncrement(applicationUiState.loadMoreIncrement);
@@ -344,7 +359,7 @@
 		applicationUiState.setSectionExpandedLimit(
 			paginationId,
 			Math.max(
-				applicationUiState.getSectionExpandedLimit(paginationId) ?? 0,
+				applicationUiState.sectionExpandedLimits[paginationId] ?? 0,
 				nextCount,
 			),
 		);

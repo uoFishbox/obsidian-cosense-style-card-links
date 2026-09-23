@@ -47,7 +47,11 @@ export interface ResolveTwoHopSectionsParams {
 	 * Resolves the materialized prefix length for one section. Replace this
 	 * function when pagination inputs change so exact-hit memoization stays valid.
 	 */
-	readonly getVisibleCount: (sectionId: string, totalCount: number) => number;
+	readonly getVisibleCount: (
+		sectionId: string,
+		totalCount: number,
+		kind: TwoHopSectionModel["kind"],
+	) => number;
 	readonly onTagClick: (tag: string) => void;
 }
 
@@ -139,6 +143,7 @@ export function createTwoHopSectionPublicationMemo(): TwoHopSectionPublicationMe
 			const activeIds = new Set<string>();
 			const seenIds = SHOULD_VALIDATE_SECTION_IDS ? new Set<string>() : null;
 			const append = (
+				kind: TwoHopSectionModel["kind"],
 				id: string,
 				dependencies: readonly unknown[],
 				totalCount: number,
@@ -148,7 +153,7 @@ export function createTwoHopSectionPublicationMemo(): TwoHopSectionPublicationMe
 				seenIds?.add(id);
 				activeIds.add(id);
 				const visibleCount = normalizeVisibleCount(
-					params.getVisibleCount(id, totalCount),
+					params.getVisibleCount(id, totalCount, kind),
 					totalCount,
 				);
 				sections.push(
@@ -175,6 +180,7 @@ export function createTwoHopSectionPublicationMemo(): TwoHopSectionPublicationMe
 }
 
 type AppendSection = (
+	kind: TwoHopSectionModel["kind"],
 	id: string,
 	dependencies: readonly unknown[],
 	totalCount: number,
@@ -204,6 +210,7 @@ function appendPrimarySections(
 
 	for (const input of inputs) {
 		append(
+			"primary-section",
 			input.kind,
 			[input.items, params.currentSettings.language],
 			input.items.length,
@@ -239,6 +246,7 @@ function appendBranchSections(
 			fileToLinktext: params.fileToLinktext,
 		});
 		append(
+			"two-hop-branch",
 			id,
 			[
 				branch,
@@ -278,6 +286,7 @@ function appendTagSections(
 			(sortedItems ??= params.getSortedTagGroupItems(source.notes));
 		const id = `tags-${source.tag}`;
 		append(
+			"tag-section",
 			id,
 			[
 				source,
@@ -307,6 +316,7 @@ function appendNewLinksSection(
 	const items = params.displayData.newLinks;
 	if (items.length === 0) return;
 	append(
+		"new-links-section",
 		NEW_LINKS_SECTION_ID,
 		[items, params.currentSettings.language],
 		items.length,

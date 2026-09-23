@@ -263,4 +263,25 @@ describe("createTwoHopSectionPublicationMemo", () => {
 		expect(first.map((section) => section.id)).toEqual(["newlinks"]);
 		expect(second).toBe(first);
 	});
+
+	it("uses the shared section limit for new links", () => {
+		const cache = createTwoHopSectionPublicationMemo();
+		const { params } = createHarness();
+		const getVisibleCount = vi.fn(() => 2);
+		const sections = cache.resolve({
+			...params,
+			displayData: {
+				...createDisplayData(),
+				newLinks: [createLink("a.md"), createLink("b.md"), createLink("c.md")],
+			},
+			getVisibleCount,
+		});
+
+		expect(getVisibleCount).toHaveBeenCalledWith(
+			"newlinks",
+			3,
+			"new-links-section",
+		);
+		expect(sections[0]?.items).toHaveLength(2);
+	});
 });

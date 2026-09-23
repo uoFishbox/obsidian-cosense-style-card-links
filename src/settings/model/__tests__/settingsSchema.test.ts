@@ -75,6 +75,30 @@ describe("settings schema", () => {
 		).toBe(170);
 	});
 
+	it("uses the former shared count for regular links in existing saved settings", () => {
+		const settings = parsePluginSettings(
+			persistedData({ defaultVisibleLinkCount: 7 }),
+		);
+
+		expect(settings.defaultVisibleLinkCount).toBe(7);
+		expect(settings.defaultVisiblePrimaryLinkCount).toBe(7);
+		expect(
+			serializePluginSettings(settings).settings.defaultVisiblePrimaryLinkCount,
+		).toBe(7);
+	});
+
+	it("loads independent visible counts for regular and other links", () => {
+		const settings = parsePluginSettings(
+			persistedData({
+				defaultVisibleLinkCount: 3,
+				defaultVisiblePrimaryLinkCount: 9,
+			}),
+		);
+
+		expect(settings.defaultVisibleLinkCount).toBe(3);
+		expect(settings.defaultVisiblePrimaryLinkCount).toBe(9);
+	});
+
 	it.each([0, 23, 40.8, Number.NaN, "96"])(
 		"rejects invalid preview scroll speed %s",
 		(value) => {

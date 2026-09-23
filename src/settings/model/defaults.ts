@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	enableTagFeatures: true,
 	showTagsSection: true,
 	defaultVisibleLinkCount: 22,
+	defaultVisiblePrimaryLinkCount: 58,
 	loadMoreLinkIncrement: 48,
 	cardWidthPx: DEFAULT_CARD_WIDTH_PX,
 	cardHeightRatio: DEFAULT_CARD_HEIGHT_RATIO,

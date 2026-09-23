@@ -709,6 +709,70 @@ describe("TwoHopLinksPage behavior", () => {
 		expect(queryCard("tagged-10")).toBeInTheDocument();
 	});
 
+	it("uses the new count only for regular links, not 2-hop or tag links", async () => {
+		const file = createMockTFile("notes/target.md");
+		const parents = Array.from({ length: 3 }, (_, index) =>
+			createMockTFile(`notes/parent-${index}.md`),
+		);
+		const children = Array.from({ length: 4 }, (_, index) =>
+			createMockTFile(`notes/child-${index}.md`),
+		);
+		const taggedNotes = Array.from({ length: 3 }, (_, index) =>
+			createTaggedNote(createMockTFile(`notes/tagged-${index}.md`), "alpha"),
+		);
+		const branch = createBranch(file, parents[0], children);
+		const displayData = {
+			...createDisplayData(),
+			outgoing: parents.map((parent) => createBranch(file, parent, [])),
+			twoHopBranches: [branch],
+			tagGroups: [{ tag: "alpha", notes: taggedNotes } satisfies TagGroup],
+		};
+		const settings = {
+			...DEFAULT_SETTINGS,
+			defaultVisibleLinkCount: 2,
+			defaultVisiblePrimaryLinkCount: 1,
+		};
+
+		const rootProps = createRootProps(displayData, settings, file);
+		render(TwoHopLinksPage, { props: rootProps });
+		await showEntireVirtualSurface();
+
+		expect(queryCard("parent-0")).toBeInTheDocument();
+		expect(queryCard("parent-1")).toBeNull();
+		expect(queryCard("child-0")).toBeInTheDocument();
+		expect(queryCard("child-1")).toBeInTheDocument();
+		expect(queryCard("child-2")).toBeNull();
+		expect(queryCard("tagged-1")).toBeInTheDocument();
+		expect(queryCard("tagged-2")).toBeNull();
+
+		rootProps.applicationStore.uiState.setSettings({
+			...settings,
+			defaultVisiblePrimaryLinkCount: 2,
+		});
+		await flushAsyncUi();
+		expect(queryCard("parent-1")).toBeInTheDocument();
+		expect(queryCard("parent-2")).toBeNull();
+		expect(queryCard("child-2")).toBeNull();
+
+		rootProps.applicationStore.uiState.setSettings({
+			...settings,
+			defaultVisibleLinkCount: 3,
+			defaultVisiblePrimaryLinkCount: 2,
+		});
+		await flushAsyncUi();
+		expect(queryCard("child-2")).toBeInTheDocument();
+		expect(queryCard("tagged-2")).toBeInTheDocument();
+		expect(queryCard("parent-2")).toBeNull();
+
+		const loadMoreButtons = queryAllByRoleDeep("button", {
+			name: ARIA_LABELS.LOAD_MORE,
+		});
+		expect(loadMoreButtons).toHaveLength(2);
+		await fireEvent.click(loadMoreButtons[1]);
+		await flushAsyncUi();
+		expect(queryCard("child-3")).toBeInTheDocument();
+	});
+
 	it("propagates item count changes for the same sectionId (memo regression)", async () => {
 		const file = createMockTFile("notes/target.md");
 		const parentFile = createMockTFile("notes/outgoing-parent.md");

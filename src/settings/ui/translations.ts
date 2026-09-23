@@ -16,6 +16,8 @@ export type TranslationKey =
 	| "displayModeHybridDesc"
 	| "defaultVisibleLinkCount"
 	| "defaultVisibleLinkCountDesc"
+	| "defaultVisiblePrimaryLinkCount"
+	| "defaultVisiblePrimaryLinkCountDesc"
 	| "loadMoreLinkIncrement"
 	| "loadMoreLinkIncrementDesc"
 	| "cardWidth"
@@ -113,7 +115,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"Displays links below the editor for Markdown files and in the sidebar for all other file types.",
 		defaultVisibleLinkCount: "Default visible link count",
 		defaultVisibleLinkCountDesc:
-			"The default number of links to display in each section.",
+			"The default number of links to display in 2-hop, tag, and new-link sections.",
+		defaultVisiblePrimaryLinkCount: "1-hop link display count",
+		defaultVisiblePrimaryLinkCountDesc:
+			"Set the default number of links displayed in the outgoing links and backlinks sections.",
 		loadMoreLinkIncrement: "Increment when loading more links",
 		loadMoreLinkIncrementDesc:
 			"The number of additional links to load when clicking 'Load more'.",
@@ -227,7 +232,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"Markdownファイルのリンクはエディタの下に表示し、それ以外のファイルではサイドバーに表示します。",
 		defaultVisibleLinkCount: "デフォルトの表示リンク数",
 		defaultVisibleLinkCountDesc:
-			"各セクションにデフォルトで表示するリンク数を設定します。",
+			"2 hop link・タグ・新規リンクの各セクションにデフォルトで表示するリンク数を設定します。",
+		defaultVisiblePrimaryLinkCount: "1 hop リンクの表示数",
+		defaultVisiblePrimaryLinkCountDesc:
+			"アウトゴーイングリンク/バックリンクのセクションにデフォルトで表示するリンク数を設定します。",
 		loadMoreLinkIncrement: "追加で読み込むリンク数",
 		loadMoreLinkIncrementDesc:
 			"「もっと読み込む」をクリックした際に追加で読み込むリンク数を設定します。",

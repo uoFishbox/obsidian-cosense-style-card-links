@@ -25,6 +25,7 @@ export const SETTING_IMPACTS = {
 	enableTagFeatures: [...STANDARD_IMPACTS, "refresh-card-views", "rebuild-tag-index"],
 	showTagsSection: STANDARD_IMPACTS,
 	defaultVisibleLinkCount: STANDARD_IMPACTS,
+	defaultVisiblePrimaryLinkCount: STANDARD_IMPACTS,
 	loadMoreLinkIncrement: STANDARD_IMPACTS,
 	cardWidthPx: [...STANDARD_IMPACTS, "refresh-card-views"],
 	cardHeightRatio: [...STANDARD_IMPACTS, "refresh-card-views"],

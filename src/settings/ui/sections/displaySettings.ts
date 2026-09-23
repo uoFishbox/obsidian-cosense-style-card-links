@@ -54,6 +54,15 @@ export const DISPLAY_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 	}),
 	{
 		section: "results",
+		settingKey: "defaultVisiblePrimaryLinkCount",
+		controlType: "text",
+		translationKey: "defaultVisiblePrimaryLinkCount",
+		descriptionKey: "defaultVisiblePrimaryLinkCountDesc",
+		parse: (value) => parsePositiveInteger(value),
+		format: (value) => String(value ?? ""),
+	},
+	{
+		section: "results",
 		settingKey: "defaultVisibleLinkCount",
 		controlType: "text",
 		translationKey: "defaultVisibleLinkCount",

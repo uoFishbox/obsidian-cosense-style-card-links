@@ -39,6 +39,7 @@ export interface ResultSettings {
 	useMergedLinksSection: boolean;
 	dedupeCards: boolean;
 	defaultVisibleLinkCount: number;
+	defaultVisiblePrimaryLinkCount: number;
 	loadMoreLinkIncrement: number;
 	twoHopHeaderSortOrder: TwoHopHeaderSortOrder;
 	quickSortField1: QuickSortField;
