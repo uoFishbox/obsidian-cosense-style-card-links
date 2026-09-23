@@ -27,6 +27,8 @@ export type TranslationKey =
 	| "cardGapDesc"
 	| "cardMaxColumns"
 	| "cardMaxColumnsDesc"
+	| "previewScrollSpeed"
+	| "previewScrollSpeedDesc"
 	| "sectionMarginBottom"
 	| "sectionMarginBottomDesc"
 	| "mergeBacklinkOutgoing"
@@ -134,6 +136,9 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		cardMaxColumns: "Maximum card columns",
 		cardMaxColumnsDesc:
 			"Set the upper limit for the number of columns in the responsive grid layout.",
+		previewScrollSpeed: "Preview speed while scrolling (text/s)",
+		previewScrollSpeedDesc:
+			"Set the maximum number of text preview updates per second while scrolling. Adjust it based on your device's performance.",
 		sectionMarginBottom: "Section bottom margin (px)",
 		sectionMarginBottomDesc: "Set the bottom spacing between sections.",
 		mergeBacklinkOutgoing: "Merge Backlink and Outgoing link sections",
@@ -255,6 +260,9 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"レスポンシブグリッドでカード間の間隔を設定します。0にすると間隔をなくします。",
 		cardMaxColumns: "カードの最大列数",
 		cardMaxColumnsDesc: "レスポンシブグリッドで使用する列数の上限を設定します。",
+		previewScrollSpeed: "スクロール中のプレビュー表示速度（テキスト/秒）",
+		previewScrollSpeedDesc:
+			"スクロール中のテキストプレビュー更新数の上限を設定します。使用デバイスの性能に応じて調整してください。",
 		sectionMarginBottom: "セクション下余白（px）",
 		sectionMarginBottomDesc: "セクション間の下余白を設定します。",
 		mergeBacklinkOutgoing: "バックリンクとアウトゴーイングリンクのセクションを統合",

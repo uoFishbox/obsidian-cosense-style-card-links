@@ -1,3 +1,4 @@
+import { DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND } from "card-preview/scheduling/previewSchedulingConfig";
 import {
 	DEFAULT_CARD_GAP_PX,
 	DEFAULT_CARD_HEIGHT_RATIO,
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	previewMaxLines: 15,
 	previewMaxChars: 500,
 	previewVisualLineSafetyMargin: 0,
+	previewScrollCommitsPerSecond: DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
 	showTwoHopForSelectedCanvasFileNode: true,
 	mobileLongPressAction: "preview",
 	excludeAttachments: false,

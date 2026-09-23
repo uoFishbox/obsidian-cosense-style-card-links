@@ -140,6 +140,20 @@ export class CosenseCardLinksSettingTab extends PluginSettingTab {
 					});
 				});
 				return;
+			case "slider":
+				setting.addSlider((slider) =>
+					slider
+						.setLimits(definition.min, definition.max, definition.step)
+						.setValue(Number(currentValue))
+						.setDynamicTooltip()
+						.setInstant(false)
+						.onChange((value) => {
+							void this.pluginInstance
+								.updateSetting(definition.settingKey, value)
+								.catch(reportSettingUpdateError);
+						}),
+				);
+				return;
 			case "text":
 				setting.addText((text) =>
 					text

@@ -1,4 +1,9 @@
 import {
+	MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
+	MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
+	PREVIEW_DOM_COMMITS_STEP,
+} from "card-preview/scheduling/previewSchedulingConfig";
+import {
 	parseNonNegativeInteger,
 	parsePositiveInteger,
 	parsePositiveNumber,
@@ -46,6 +51,16 @@ export const PREVIEW_SETTING_DEFINITIONS: ReadonlyArray<SettingDefinition> = [
 		placeholder: "6",
 		parse: (value) => parsePositiveInteger(value),
 		format: (value) => String(value ?? ""),
+	},
+	{
+		section: "cards",
+		settingKey: "previewScrollCommitsPerSecond",
+		controlType: "slider",
+		translationKey: "previewScrollSpeed",
+		descriptionKey: "previewScrollSpeedDesc",
+		min: MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
+		max: MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
+		step: PREVIEW_DOM_COMMITS_STEP,
 	},
 	{
 		section: "cards",

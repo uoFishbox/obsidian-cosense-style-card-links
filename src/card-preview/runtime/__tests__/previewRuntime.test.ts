@@ -168,7 +168,6 @@ describe("PreviewRuntime", () => {
 
 	it("owns separate DOM commit budget scopes for images and other previews", async () => {
 		const getDomCommitsPerSecond = vi.fn(() => 40);
-		const getImageDomCommitsPerSecond = vi.fn(() => 12);
 		const scheduledTasks: Array<() => void> = [];
 		const frameCoordinator: VirtualFrameCoordinator = {
 			schedule: vi.fn((_lane, _key, task) => {
@@ -184,7 +183,6 @@ describe("PreviewRuntime", () => {
 			app: {} as App,
 			getPreview: vi.fn() as unknown as CardPreviewLoader,
 			getDomCommitsPerSecond,
-			getImageDomCommitsPerSecond,
 		});
 		const surface = runtime.createSurface({
 			frameCoordinator,
@@ -216,8 +214,7 @@ describe("PreviewRuntime", () => {
 			{ type: "committed" },
 			{ type: "committed" },
 		]);
-		expect(getDomCommitsPerSecond).toHaveBeenCalledOnce();
-		expect(getImageDomCommitsPerSecond).toHaveBeenCalledOnce();
+		expect(getDomCommitsPerSecond).toHaveBeenCalledTimes(2);
 		surface.dispose();
 		expect(disposeDomCommits).toHaveBeenCalledOnce();
 		expect(disposeImageCommits).toHaveBeenCalledOnce();

@@ -56,10 +56,6 @@ import type { PluginHost } from "obsidian-integration/pluginHost";
 import type { ViewServices } from "obsidian-integration/views/viewServices";
 import type { PluginSettings } from "settings/model";
 import { getLazyLoadManager } from "obsidian-integration/observers/IntersectionObserverRegistry";
-import {
-	DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
-	DEFAULT_PREVIEW_IMAGE_DOM_COMMITS_PER_SECOND,
-} from "card-preview/scheduling/previewSchedulingConfig";
 import { setYieldSchedulingWindowResolver } from "indexing/timeSlicing";
 import { createAllNotesCatalog } from "search/all-notes/allNotesCatalog";
 
@@ -121,8 +117,8 @@ export function createPluginRuntime(options: PluginRuntimeOptions): PluginRuntim
 		app: options.app,
 		getPreview: previewService.getPreview,
 		getRawContent: previewService.getRawContent,
-		getDomCommitsPerSecond: () => DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
-		getImageDomCommitsPerSecond: () => DEFAULT_PREVIEW_IMAGE_DOM_COMMITS_PER_SECOND,
+		getDomCommitsPerSecond: () =>
+			options.getSettings().previewScrollCommitsPerSecond,
 	});
 	options.plugin.register(() => previewService.dispose());
 

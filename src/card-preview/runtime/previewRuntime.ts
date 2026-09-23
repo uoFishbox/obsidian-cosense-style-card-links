@@ -17,6 +17,10 @@ import {
 import { createCardPreviewSharedCache } from "card-preview/ui/cardPreviewSharedCache";
 import { createPreviewRenderQueue } from "card-preview/renderers/previewRenderQueue";
 import type { RawContentLoader } from "card-preview/pipeline/rawContentReader";
+import {
+	DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
+	resolvePreviewImageDomCommitsPerSecond,
+} from "card-preview/scheduling/previewSchedulingConfig";
 import { DISABLED_PREVIEW_SURFACE } from "./disabledPreviewSurface";
 
 export { DISABLED_PREVIEW_SURFACE } from "./disabledPreviewSurface";
@@ -26,8 +30,8 @@ export interface PreviewRuntimeOptions {
 	readonly app: App;
 	readonly getPreview: CardPreviewLoader;
 	readonly getRawContent?: RawContentLoader;
+	/** Text commit rate while scrolling; the image rate is derived from it. */
 	readonly getDomCommitsPerSecond?: () => number;
-	readonly getImageDomCommitsPerSecond?: () => number;
 }
 
 /** Per-surface values which are expected to vary with the current view. */
@@ -77,7 +81,11 @@ export function createPreviewRuntime(options: PreviewRuntimeOptions): PreviewRun
 		});
 		const imageDomCommitScope = domCommitScheduler.createScope({
 			frameCoordinator: surfaceOptions.frameCoordinator,
-			getCommitsPerSecond: options.getImageDomCommitsPerSecond,
+			getCommitsPerSecond: () =>
+				resolvePreviewImageDomCommitsPerSecond(
+					options.getDomCommitsPerSecond?.() ??
+						DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND,
+				),
 		});
 		const surface = createVirtualPreviewSurface({
 			frameCoordinator: surfaceOptions.frameCoordinator,

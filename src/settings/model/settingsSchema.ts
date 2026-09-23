@@ -1,4 +1,8 @@
 import { QUICK_SORT_FIELDS, SORT_OPTIONS } from "cards/sorting/types";
+import {
+	MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
+	MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
+} from "card-preview/scheduling/previewSchedulingConfig";
 import { DEFAULT_SETTINGS } from "./defaults";
 import {
 	DISPLAY_MODES,
@@ -174,6 +178,12 @@ function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSett
 			settings.previewVisualLineSafetyMargin,
 			DEFAULT_SETTINGS.previewVisualLineSafetyMargin,
 		),
+		previewScrollCommitsPerSecond: boundedIntegerSetting(
+			settings.previewScrollCommitsPerSecond,
+			DEFAULT_SETTINGS.previewScrollCommitsPerSecond,
+			MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
+			MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
+		),
 		showTwoHopForSelectedCanvasFileNode: booleanSetting(
 			settings.showTwoHopForSelectedCanvasFileNode,
 			DEFAULT_SETTINGS.showTwoHopForSelectedCanvasFileNode,
@@ -343,6 +353,18 @@ function positiveIntegerSetting(value: unknown, fallback: number): number {
 
 function nonNegativeIntegerSetting(value: unknown, fallback: number): number {
 	return isFiniteNumber(value) && value >= 0 ? Math.floor(value) : fallback;
+}
+
+function boundedIntegerSetting(
+	value: unknown,
+	fallback: number,
+	min: number,
+	max: number,
+): number {
+	if (!isFiniteNumber(value) || !Number.isInteger(value) || value < min) {
+		return fallback;
+	}
+	return Math.min(value, max);
 }
 
 function positiveNumberSetting(value: unknown, fallback: number): number {

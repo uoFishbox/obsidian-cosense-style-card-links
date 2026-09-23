@@ -19,6 +19,7 @@ type KeysOfType<Value> = {
 type BooleanSettingKey = KeysOfType<boolean>;
 type StringSettingKey = KeysOfType<string>;
 type TextSettingKey = KeysOfType<string | number>;
+type NumberSettingKey = KeysOfType<number>;
 
 type SettingOption<Value extends string = string> = {
 	value: Value;
@@ -39,7 +40,7 @@ export type SelectOption<Value extends string = string> =
 interface BaseSettingDefinition<K extends keyof PluginSettings> {
 	section: SectionId;
 	settingKey: K;
-	controlType: "toggle" | "dropdown" | "text" | "textarea";
+	controlType: "toggle" | "dropdown" | "text" | "textarea" | "slider";
 	translationKey: TranslationKey;
 	descriptionKey: TranslationKey | ((settings: PluginSettings) => TranslationKey);
 	desktopOnly?: boolean;
@@ -81,11 +82,21 @@ interface TextareaSettingDefinition<
 	rows?: number;
 }
 
+interface SliderSettingDefinition<
+	K extends NumberSettingKey,
+> extends BaseSettingDefinition<K> {
+	controlType: "slider";
+	min: number;
+	max: number;
+	step: number;
+}
+
 export type SettingDefinition =
 	| ToggleSettingDefinition<BooleanSettingKey>
 	| DropdownSettingDefinition<StringSettingKey>
 	| TextSettingDefinition<TextSettingKey>
-	| TextareaSettingDefinition<StringSettingKey>;
+	| TextareaSettingDefinition<StringSettingKey>
+	| SliderSettingDefinition<NumberSettingKey>;
 
 export function defineDropdown<K extends StringSettingKey>(
 	definition: Omit<DropdownSettingDefinition<K>, "controlType">,

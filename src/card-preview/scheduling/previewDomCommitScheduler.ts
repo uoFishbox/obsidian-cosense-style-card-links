@@ -9,7 +9,7 @@ const MAX_QUEUE_ENTRIES_PER_DRAIN = 256;
 const MAX_TOKEN_REFILL_ELAPSED_MS = 250;
 const TOKEN_CREDIT_EPSILON = 1e-9;
 const EXPECTED_PREVIEW_FRAME_INTERVAL_MS = 1000 / 60;
-const SCROLLING_REEVALUATION_DELAY_MS = EXPECTED_PREVIEW_FRAME_INTERVAL_MS * 2;
+const SCROLLING_REEVALUATION_DELAY_MS = EXPECTED_PREVIEW_FRAME_INTERVAL_MS * 1.5;
 
 type PreviewDomCommitPolicyMode = "idle" | "scrolling";
 type PreviewDomCommitLane = "idle" | "post-paint";
@@ -373,9 +373,15 @@ function schedulePendingScope(
 		scopeState,
 		ratePerSecond,
 	);
+	// At higher configured rates, waiting 25 ms plus the next frame would
+	// cap 60 Hz surfaces below the selected limit even when tokens are available.
+	const scrollingDelayMs =
+		ratePerSecond > DEFAULT_PREVIEW_DOM_COMMITS_PER_SECOND
+			? 0
+			: SCROLLING_REEVALUATION_DELAY_MS;
 	const delayMs =
 		policy.mode === "scrolling"
-			? Math.max(SCROLLING_REEVALUATION_DELAY_MS, tokenAvailabilityDelayMs)
+			? Math.max(scrollingDelayMs, tokenAvailabilityDelayMs)
 			: tokenAvailabilityDelayMs;
 	scheduleScope(state, scopeState, delayMs, policy.mode === "scrolling");
 }

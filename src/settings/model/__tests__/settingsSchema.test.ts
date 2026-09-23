@@ -51,6 +51,36 @@ describe("settings schema", () => {
 		expect(settings.priorityFrontmatterKeysForImagePreview).toBe("image");
 	});
 
+	it("loads and saves the preview scroll speed with a default for existing data", () => {
+		expect(parsePluginSettings(persistedData()).previewScrollCommitsPerSecond).toBe(
+			DEFAULT_SETTINGS.previewScrollCommitsPerSecond,
+		);
+		const settings = parsePluginSettings(
+			persistedData({ previewScrollCommitsPerSecond: 170 }),
+		);
+		expect(settings.previewScrollCommitsPerSecond).toBe(170);
+		expect(serializePluginSettings(settings).settings.previewScrollCommitsPerSecond).toBe(170);
+	});
+
+	it.each([0, 23, 40.8, Number.NaN, "96"])(
+		"rejects invalid preview scroll speed %s",
+		(value) => {
+			expect(
+				parsePluginSettings(
+					persistedData({ previewScrollCommitsPerSecond: value as number }),
+				).previewScrollCommitsPerSecond,
+			).toBe(DEFAULT_SETTINGS.previewScrollCommitsPerSecond);
+		},
+	);
+
+	it("clamps a previously saved scroll speed above the new maximum", () => {
+		expect(
+			parsePluginSettings(
+				persistedData({ previewScrollCommitsPerSecond: 192 }),
+			).previewScrollCommitsPerSecond,
+		).toBe(170);
+	});
+
 	it("preserves valid experimental values", () => {
 		const css = ".card { color: rebeccapurple; }";
 		const settings = parsePluginSettings(

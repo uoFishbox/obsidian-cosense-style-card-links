@@ -40,6 +40,7 @@ export const SETTING_IMPACTS = {
 	previewMaxLines: STANDARD_IMPACTS,
 	previewMaxChars: STANDARD_IMPACTS,
 	previewVisualLineSafetyMargin: STANDARD_IMPACTS,
+	previewScrollCommitsPerSecond: [],
 	showTwoHopForSelectedCanvasFileNode: STANDARD_IMPACTS,
 	mobileLongPressAction: STANDARD_IMPACTS,
 	excludeAttachments: STANDARD_IMPACTS,

@@ -256,8 +256,8 @@ describe("preview DOM commit scheduler", () => {
 		);
 
 		await vi.advanceTimersByTimeAsync(1_000);
-		expect(committed.length).toBeGreaterThanOrEqual(76);
-		expect(committed.length).toBeLessThanOrEqual(79);
+		expect(committed.length).toBeGreaterThanOrEqual(92);
+		expect(committed.length).toBeLessThanOrEqual(95);
 		const scrollingCommitCount = committed.length;
 		const scrollingFrameCount = vi.mocked(requestAnimationFrame).mock.calls.length;
 
@@ -366,7 +366,7 @@ describe("preview DOM commit scheduler", () => {
 		scheduledTask.current?.();
 		expect(frameCoordinator.schedule).toHaveBeenCalledTimes(1);
 
-		vi.advanceTimersByTime(32);
+		vi.advanceTimersByTime(24);
 		expect(frameCoordinator.schedule).toHaveBeenCalledTimes(1);
 
 		vi.advanceTimersByTime(2);
@@ -495,11 +495,11 @@ describe("preview DOM commit scheduler", () => {
 			scrolling: true,
 		});
 
-		expect(Math.abs(commitsAt60Hz - commitsAt120Hz)).toBeLessThanOrEqual(2);
-		expect(commitsAt60Hz).toBeGreaterThanOrEqual(392);
-		expect(commitsAt60Hz).toBeLessThanOrEqual(401);
-		expect(commitsAt120Hz).toBeGreaterThanOrEqual(392);
-		expect(commitsAt120Hz).toBeLessThanOrEqual(401);
+		expect(Math.abs(commitsAt60Hz - commitsAt120Hz)).toBeLessThanOrEqual(3);
+		expect(commitsAt60Hz).toBeGreaterThanOrEqual(472);
+		expect(commitsAt60Hz).toBeLessThanOrEqual(481);
+		expect(commitsAt120Hz).toBeGreaterThanOrEqual(472);
+		expect(commitsAt120Hz).toBeLessThanOrEqual(481);
 	});
 
 	it("honors the configured commits-per-second limit", async () => {
@@ -512,6 +512,26 @@ describe("preview DOM commit scheduler", () => {
 
 		expect(committed).toBeGreaterThanOrEqual(192);
 		expect(committed).toBeLessThanOrEqual(196);
+	});
+
+	it("honors the maximum slider rate on 60 Hz and 120 Hz surfaces", async () => {
+		const commitsAt60Hz = await countCommits({
+			intervalMs: 1000 / 60,
+			durationMs: 2_000,
+			scrolling: true,
+			commitsPerSecond: 170,
+		});
+		const commitsAt120Hz = await countCommits({
+			intervalMs: 1000 / 120,
+			durationMs: 2_000,
+			scrolling: true,
+			commitsPerSecond: 170,
+		});
+
+		expect(commitsAt60Hz).toBeGreaterThanOrEqual(330);
+		expect(commitsAt60Hz).toBeLessThanOrEqual(342);
+		expect(commitsAt120Hz).toBeGreaterThanOrEqual(330);
+		expect(commitsAt120Hz).toBeLessThanOrEqual(342);
 	});
 
 	it("preserves a very low configured commit rate", async () => {

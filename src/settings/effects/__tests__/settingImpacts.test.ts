@@ -19,6 +19,10 @@ describe("setting impacts", () => {
 		]);
 	});
 
+	it("updates the scroll preview rate without refreshing card views", () => {
+		expect([...collectSettingImpacts(["previewScrollCommitsPerSecond"])]).toEqual([]);
+	});
+
 	it("keeps view-local preferences free from global refresh work", () => {
 		expect([...collectSettingImpacts(["lastUsedSortOption"])]).toEqual([]);
 		expect([...collectSettingImpacts(["enableContentSearch"])]).toEqual([

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS } from "settings/model";
+import {
+	MAX_PREVIEW_DOM_COMMITS_PER_SECOND,
+	MIN_PREVIEW_DOM_COMMITS_PER_SECOND,
+	PREVIEW_DOM_COMMITS_STEP,
+} from "card-preview/scheduling/previewSchedulingConfig";
 import { PREVIEW_SETTING_DEFINITIONS } from "../previewSettings";
 
 describe("PREVIEW_SETTING_DEFINITIONS", () => {
@@ -11,6 +16,21 @@ describe("PREVIEW_SETTING_DEFINITIONS", () => {
 		expect(settingKeys).not.toContain("previewMaxLines");
 		expect(settingKeys).not.toContain("previewMaxChars");
 		expect(settingKeys).not.toContain("previewVisualLineSafetyMargin");
+	});
+
+	it("exposes a single slider for text and image scroll preview speeds", () => {
+		const definition = PREVIEW_SETTING_DEFINITIONS.find(
+			(candidate) => candidate.settingKey === "previewScrollCommitsPerSecond",
+		);
+
+		expect(definition?.controlType).toBe("slider");
+		if (!definition || definition.controlType !== "slider") return;
+		expect(definition.min).toBe(MIN_PREVIEW_DOM_COMMITS_PER_SECOND);
+		expect(definition.max).toBe(MAX_PREVIEW_DOM_COMMITS_PER_SECOND);
+		expect(definition.step).toBe(PREVIEW_DOM_COMMITS_STEP);
+		expect(definition.max).toBe(170);
+		expect((definition.max - definition.min) % definition.step).toBe(0);
+		expect(DEFAULT_SETTINGS.previewScrollCommitsPerSecond).toBe(96);
 	});
 
 	it("defines a comma-separated image property setting", () => {
