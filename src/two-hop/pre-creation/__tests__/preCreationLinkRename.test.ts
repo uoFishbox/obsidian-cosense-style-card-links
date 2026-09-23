@@ -79,6 +79,76 @@ describe("renamePreCreationUnresolvedLinks", () => {
 		expect(app.vault.process).toHaveBeenCalledTimes(1);
 	});
 
+	it("preserves Markdown link labels, embeds, subpaths and titles", async () => {
+		const content = '[Guide](Old.md#Intro "Read me") and ![Diagram](Old.md)';
+		const first = '[Guide](Old.md#Intro "Read me")';
+		const second = "![Diagram](Old.md)";
+		const secondStart = content.indexOf(second);
+		const { app, file, getContent } = makeApp(content, [
+			{
+				link: "Old.md#Intro",
+				original: first,
+				position: { start: { offset: 0 }, end: { offset: first.length } },
+			},
+			{
+				link: "Old.md",
+				original: second,
+				position: {
+					start: { offset: secondStart },
+					end: { offset: secondStart + second.length },
+				},
+			},
+		]);
+		const result = await renamePreCreationUnresolvedLinks(
+			app,
+			makeIndexingService(file),
+			makeIndexUpdateBatch(),
+			"Old",
+			"New",
+		);
+
+		expect(getContent()).toBe(
+			'[Guide](New.md#Intro "Read me") and ![Diagram](New.md)',
+		);
+		expect(result).toMatchObject({ linksUpdated: 2, failed: [] });
+	});
+
+	it("does not corrupt unsupported link formats", async () => {
+		const content = "[[Old]] and unusual Old";
+		const first = "[[Old]]";
+		const second = "unusual Old";
+		const { app, file, getContent } = makeApp(content, [
+			{
+				link: "Old",
+				original: first,
+				position: { start: { offset: 0 }, end: { offset: first.length } },
+			},
+			{
+				link: "Old",
+				original: second,
+				position: {
+					start: { offset: content.indexOf(second) },
+					end: { offset: content.length },
+				},
+			},
+		]);
+		const result = await renamePreCreationUnresolvedLinks(
+			app,
+			makeIndexingService(file),
+			makeIndexUpdateBatch(),
+			"Old",
+			"New",
+		);
+
+		expect(getContent()).toBe(content);
+		expect(result.failed).toEqual([
+			{
+				path: file.path,
+				reason: expect.stringContaining("Unsupported link format"),
+			},
+		]);
+	});
+
 	it("does not create or rename files", async () => {
 		const original = "[[Old]]";
 		const { app, file } = makeApp(original, [

@@ -475,6 +475,7 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 
 		// During editing: update linktext / expectedPath to synchronize button state
 		this.inlineTitleEl.addEventListener("input", () => {
+			if (this.isCreating || this.isRenaming) return;
 			const newName = this.inlineTitleEl?.textContent?.trim() ?? "";
 			this.updateLinktextFromTitle(newName);
 			if (this.createButtonEl) {
@@ -629,13 +630,15 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 
 		this.isRenaming = true;
 		if (this.createButtonEl) this.createButtonEl.disabled = true;
+		if (this.inlineTitleEl) this.inlineTitleEl.contentEditable = "false";
+		const newLinktext = this.linktext;
 		try {
 			const result = await renamePreCreationUnresolvedLinks(
 				this.app,
 				this.plugin.indexingService,
 				this.plugin.indexUpdateQueue,
 				oldLinktext,
-				this.linktext,
+				newLinktext,
 			);
 			if (result.failed.length > 0) {
 				console.warn(
@@ -652,13 +655,17 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 						)
 					: text.renameUnresolvedLinksSuccess(result.linksUpdated),
 			);
-			// The renamed dangling target is now canonical for this pre-creation
-			// view. A later explicit Create should create it directly, rather than
-			// recreating the old target and relying on a file rename side effect.
-			this.creationPath = this.expectedPath;
-			this.persistCurrentBootstrapState();
-			this.syncToEphemeralState();
-			this.originalLinktext = this.linktext;
+			if (result.failed.length > 0) {
+				// Keep the old target editable so the remaining failed sources can
+				// be retried. Sources already updated will not match on the next pass.
+				this.restoreTitleAfterFailedRename(oldLinktext);
+			} else {
+				// The renamed dangling target is now canonical for this view.
+				this.creationPath = this.expectedPath;
+				this.persistCurrentBootstrapState();
+				this.syncToEphemeralState();
+				this.originalLinktext = newLinktext;
+			}
 		} catch (error) {
 			console.error(
 				"[Cosense card links] Failed to rename unresolved links:",
@@ -668,27 +675,38 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 				getMainUiTranslations(this.plugin.settings.language)
 					.renameUnresolvedLinksFailure,
 			);
+			this.restoreTitleAfterFailedRename(oldLinktext);
 		} finally {
 			this.isRenaming = false;
 			if (this.leaf.view === this) this.render();
 		}
 	}
 
+	private restoreTitleAfterFailedRename(oldLinktext: string): void {
+		this.linktext = oldLinktext;
+		this.expectedPath = this.computeExpectedPath();
+		this.originalLinktext = oldLinktext;
+		this.persistCurrentBootstrapState();
+		this.syncToEphemeralState();
+		this.refreshLeafHeader();
+	}
+
 	private async handleCreateAndOpen(): Promise<void> {
-		if (!this.expectedPath || this.isCreating) {
+		if (!this.expectedPath || this.isCreating || this.isRenaming) {
 			return;
 		}
+		const finalPath = this.expectedPath;
+		const linktext = this.linktext;
 		const filenamePolicy = getPreCreationFilenamePolicy(Platform);
 		if (
-			filenamePolicy.hasInvalidCharacter(this.expectedPath) ||
-			filenamePolicy.hasInvalidCharacter(this.linktext)
+			filenamePolicy.hasInvalidCharacter(finalPath) ||
+			filenamePolicy.hasInvalidCharacter(linktext)
 		) {
 			this.showInvalidFilenameModal(filenamePolicy.forbiddenCharacters);
 			return;
 		}
-		if (this.isRenaming) return;
-
 		this.isCreating = true;
+		if (this.inlineTitleEl) this.inlineTitleEl.contentEditable = "false";
 		if (this.createButtonEl) {
 			this.createButtonEl.disabled = true;
 		}
@@ -699,18 +717,19 @@ export class PreCreationView extends AbstractSvelteListView<IndexedLink> {
 				this.creationPath &&
 				!filenamePolicy.hasInvalidCharacter(this.creationPath)
 					? this.creationPath
-					: this.expectedPath;
+					: finalPath;
 			await this.ensureParentFolder(creationPath);
-			if (creationPath !== this.expectedPath) {
-				await this.ensureParentFolder(this.expectedPath);
+			if (creationPath !== finalPath) {
+				await this.ensureParentFolder(finalPath);
 			}
 
 			const file = await materializePreCreationFile({
 				creationPath,
-				finalPath: this.expectedPath,
+				finalPath,
 				createFile: (path) => this.app.vault.create(path, ""),
 				renameFile: (createdFile, newPath) =>
 					this.app.fileManager.renameFile(createdFile, newPath),
+				deleteFile: (createdFile) => this.app.vault.delete(createdFile),
 				waitForIndexIdle: () => this.plugin.indexingService.awaitIdle(),
 			});
 			// Open the file in the current leaf

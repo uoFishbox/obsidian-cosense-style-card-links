@@ -139,6 +139,11 @@ async function rewriteBodyLinks(
 				ref.link,
 				toTarget,
 			);
+			if (replacement === null) {
+				throw new Error(
+					"Unsupported link format; no links in this file were changed",
+				);
+			}
 			out = out.slice(0, start) + replacement + out.slice(end);
 			lastStart = start;
 			count++;
@@ -298,14 +303,33 @@ function rewriteReferenceOriginal(
 	original: string,
 	link: string,
 	toTarget: string,
-): string {
+): string | null {
 	const parsed = parseWikilink(original);
 	if (parsed) return rewriteParsedWikilink(parsed, toTarget);
 
-	// Defensive fallback for unusual cache.original values.
+	// Markdown links and embeds are also present in metadataCache.links/embeds.
+	// Change only their destination, preserving label, title, and syntax.
+	const opening = original.lastIndexOf("](");
+	if (opening < 0) return null;
+	const linkStart = original.indexOf(link, opening + 2);
+	if (linkStart < 0) return null;
+	const linkEnd = linkStart + link.length;
+	const destinationPrefix = original.slice(opening + 2, linkStart);
+	const suffix = original.slice(linkEnd);
+	if (
+		!/^\s*<?$/u.test(destinationPrefix) ||
+		!/^>?\s*(?:(?:"[^"]*"|'[^']*')\s*)?\)$/u.test(suffix)
+	) {
+		return null;
+	}
+
 	const anchorIndex = link.indexOf("#");
 	const subpath = anchorIndex >= 0 ? link.slice(anchorIndex) : "";
-	return `[[${toTarget}${subpath}]]`;
+	const originalTarget = anchorIndex >= 0 ? link.slice(0, anchorIndex) : link;
+	const target = originalTarget.toLowerCase().endsWith(".md")
+		? normalizeLinkToMarkdownPath(toTarget)
+		: toTarget;
+	return `${original.slice(0, linkStart)}${target}${subpath}${suffix}`;
 }
 
 interface ParsedWikilink {

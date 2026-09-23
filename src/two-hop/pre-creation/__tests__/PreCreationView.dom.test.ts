@@ -135,13 +135,16 @@ function createViewForFileCreation(linktext: string, creationPath?: string) {
 	let ephemeralState: Record<string, unknown> = {};
 	const create = vi.fn(async (path: string) => ({ path }));
 	const createFolder = vi.fn(async () => {});
+	const deleteFile = vi.fn(async () => {});
 	const renameFile = vi.fn(async () => {});
+	const awaitIdle = vi.fn(async () => {});
 	const openFile = vi.fn(async () => {});
 	const leaf = {
 		app: {
 			vault: {
 				create,
 				createFolder,
+				delete: deleteFile,
 				getAbstractFileByPath: () => null,
 			},
 			fileManager: { renameFile },
@@ -158,7 +161,7 @@ function createViewForFileCreation(linktext: string, creationPath?: string) {
 		settings: { language: "en", displayMode: "editor-inline" },
 		indexingService: {
 			isReady: () => false,
-			awaitIdle: vi.fn(async () => {}),
+			awaitIdle,
 			onDataUpdate: () => () => {},
 		},
 		indexUpdateQueue: {},
@@ -173,7 +176,9 @@ function createViewForFileCreation(linktext: string, creationPath?: string) {
 		view,
 		create,
 		createFolder,
+		deleteFile,
 		renameFile,
+		awaitIdle,
 		openFile,
 		setState: () =>
 			view.setState(
@@ -189,6 +194,34 @@ function createViewForFileCreation(linktext: string, creationPath?: string) {
 }
 
 describe("PreCreationView file name validation", () => {
+	it("keeps the validated destination fixed and ignores title input during file creation", async () => {
+		const { setState, create, renameFile, awaitIdle, view } =
+			createViewForFileCreation("New", "Original.md");
+		let releaseIndex!: () => void;
+		awaitIdle.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					releaseIndex = resolve;
+				}),
+		);
+		await setState();
+		const title = document.querySelector<HTMLDivElement>(".inline-title")!;
+		document
+			.querySelector<HTMLButtonElement>(
+				".cosense-card-links-pre-create__actions button",
+			)
+			?.click();
+		await waitFor(() => expect(create).toHaveBeenCalledWith("Original.md", ""));
+		expect(title.contentEditable).toBe("false");
+		title.textContent = "Unvalidated?Name";
+		title.dispatchEvent(new Event("input"));
+		expect(view.getState().expectedPath).toBe("New.md");
+		releaseIndex();
+		await waitFor(() =>
+			expect(renameFile).toHaveBeenCalledWith({ path: "Original.md" }, "New.md"),
+		);
+	});
+
 	it.each(["*", '"', "\\", ":", "?", "<", ">", "#", "^", "[", "]", "|"])(
 		"shows a rename modal and does not create a file for %s",
 		async (character) => {
@@ -285,6 +318,36 @@ describe("PreCreationView file name validation", () => {
 });
 
 describe("PreCreationView title rename", () => {
+	it("restores the old title on partial failure so failed backlinks can be retried", async () => {
+		renameLinks.mockResolvedValueOnce({
+			filesUpdated: 1,
+			linksUpdated: 1,
+			failed: [{ path: "failed.md", reason: "write failed" }],
+		});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		const { view, setState } = createViewForFileCreation("Old", "Old.md");
+		await setState();
+		const firstTitle = document.querySelector<HTMLDivElement>(".inline-title")!;
+		firstTitle.focus();
+		firstTitle.textContent = "New";
+		firstTitle.dispatchEvent(new Event("input"));
+		firstTitle.blur();
+
+		await waitFor(() => expect(renameLinks).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(view.getState().linktext).toBe("Old"));
+		expect(view.getState().creationPath).toBe("Old.md");
+		expect(document.querySelector(".inline-title")?.textContent).toBe("Old");
+
+		const retryTitle = document.querySelector<HTMLDivElement>(".inline-title")!;
+		retryTitle.focus();
+		retryTitle.textContent = "New";
+		retryTitle.dispatchEvent(new Event("input"));
+		retryTitle.blur();
+		await waitFor(() => expect(renameLinks).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(view.getState().creationPath).toBe("New.md"));
+		expect(renameLinks.mock.calls[1]?.slice(-2)).toEqual(["Old", "New"]);
+	});
+
 	it("focuses and selects the entire current title with F2, then unregisters on close", async () => {
 		const { view, setState } = createViewForFileCreation("folder/Original");
 		await setState();
@@ -396,7 +459,7 @@ describe("PreCreationView title rename", () => {
 						: "Renamed 2 unresolved links.",
 				),
 			);
-			expect(view.getState().creationPath).toBe("NewName.md");
+			expect(view.getState().creationPath).toBe(failed ? "Old.md" : "NewName.md");
 		},
 	);
 });
