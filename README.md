@@ -3,7 +3,7 @@
 最大 2 ホップ先までの関連リンクを [Cosense](https://scrapbox.io) 風のカード形式で表示する Obsidian プラグインです。
 
 > [!NOTE]
-> 本プラグインは、株式会社HelpfeelおよびHelpfeel Cosenseとは関係のない非公式プロジェクトです。
+> 本プラグインは、株式会社HelpfeelおよびHelpfeel Cosenseとは無関係の非公式プロジェクトです。
 
 カード内には簡易的なプレビューを表示します。プレビューは以下に対応しています。
 
