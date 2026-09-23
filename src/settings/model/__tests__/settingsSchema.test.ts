@@ -62,12 +62,6 @@ describe("settings schema", () => {
 		},
 	);
 
-	it("defaults the image preview properties for existing versioned data", () => {
-		const settings = parsePluginSettings(persistedData());
-
-		expect(settings.priorityFrontmatterKeysForImagePreview).toBe("image");
-	});
-
 	it("loads and saves the preview scroll speed with a default for existing data", () => {
 		expect(parsePluginSettings(persistedData()).previewScrollCommitsPerSecond).toBe(
 			DEFAULT_SETTINGS.previewScrollCommitsPerSecond,
