@@ -24,6 +24,7 @@ type CurrentPersistedPluginData = Readonly<{
 
 export type PluginSettingsLoadResult =
 	| { status: "current"; settings: PluginSettings }
+	| { status: "cleaned"; settings: PluginSettings }
 	| {
 			status: "migrated";
 			settings: PluginSettings;
@@ -59,7 +60,13 @@ export function loadPluginSettings(raw: unknown): PluginSettingsLoadResult {
 		if (!isCurrentPersistedPluginData(raw)) {
 			return { status: "invalid", settings: { ...DEFAULT_SETTINGS } };
 		}
-		return { status: "current", settings: parseCurrentPluginSettings(raw) };
+		const settings = parseCurrentPluginSettings(raw);
+		const hasOldPreviewLimits = [
+			"previewMaxLines",
+			"previewMaxChars",
+			"previewVisualLineSafetyMargin",
+		].some((key) => key in raw.settings);
+		return { status: hasOldPreviewLimits ? "cleaned" : "current", settings };
 	}
 
 	const migrated = migrateLegacyPluginData(raw);
@@ -164,18 +171,6 @@ function parseCurrentPluginSettings(raw: CurrentPersistedPluginData): PluginSett
 			settings.quickSortField2,
 			QUICK_SORT_FIELDS,
 			DEFAULT_SETTINGS.quickSortField2,
-		),
-		previewMaxLines: nonNegativeIntegerSetting(
-			settings.previewMaxLines,
-			DEFAULT_SETTINGS.previewMaxLines,
-		),
-		previewMaxChars: nonNegativeIntegerSetting(
-			settings.previewMaxChars,
-			DEFAULT_SETTINGS.previewMaxChars,
-		),
-		previewVisualLineSafetyMargin: nonNegativeIntegerSetting(
-			settings.previewVisualLineSafetyMargin,
-			DEFAULT_SETTINGS.previewVisualLineSafetyMargin,
 		),
 		previewScrollCommitsPerSecond: boundedIntegerSetting(
 			settings.previewScrollCommitsPerSecond,

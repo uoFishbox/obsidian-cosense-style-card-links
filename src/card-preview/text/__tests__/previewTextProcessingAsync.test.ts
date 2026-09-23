@@ -6,6 +6,9 @@ import {
 } from "../previewTextProcessingAsync";
 import { PREVIEW_TEXT_WORKER_MIN_CONTENT_LENGTH } from "../previewTextWorkerTypes";
 import { DEFAULT_SETTINGS } from "settings/model";
+import { createPreviewRenderSettings } from "card-preview/pipeline/previewRenderSettings";
+
+const previewSettings = createPreviewRenderSettings(DEFAULT_SETTINGS);
 
 const state = vi.hoisted(() => ({
 	runPreviewTextWorker: vi.fn(),
@@ -32,7 +35,7 @@ describe("preview text processing async wrappers", () => {
 	test("prepares snippet before deciding whether to use worker", async () => {
 		const content = "x".repeat(PREVIEW_TEXT_WORKER_MIN_CONTENT_LENGTH + 1);
 
-		const result = await getContentSnippetAsync(content, DEFAULT_SETTINGS);
+		const result = await getContentSnippetAsync(content, previewSettings);
 
 		expect(result.length).toBeLessThan(PREVIEW_TEXT_WORKER_MIN_CONTENT_LENGTH);
 		expect(result.endsWith("...")).toBe(true);
@@ -43,7 +46,7 @@ describe("preview text processing async wrappers", () => {
 		state.runPreviewTextWorker.mockResolvedValue("worker-result");
 		const content = "x".repeat(200000);
 		const settings = {
-			...DEFAULT_SETTINGS,
+			...previewSettings,
 			previewMaxChars: 20000,
 			previewMaxLines: 0,
 		};
@@ -69,7 +72,7 @@ describe("preview text processing async wrappers", () => {
 		state.runPreviewTextWorker.mockReturnValue(undefined);
 		const content = "Hello [[World]]" + "x".repeat(200000);
 		const settings = {
-			...DEFAULT_SETTINGS,
+			...previewSettings,
 			previewMaxChars: 20000,
 			previewMaxLines: 0,
 		};
@@ -96,7 +99,7 @@ describe("preview text processing async wrappers", () => {
 		state.runPreviewTextWorker.mockResolvedValue("worker-result");
 		const content = "x".repeat(200000) + " target needle";
 		const settings = {
-			...DEFAULT_SETTINGS,
+			...previewSettings,
 			previewMaxChars: 20000,
 			previewMaxLines: 0,
 		};
@@ -139,7 +142,7 @@ describe("preview text processing async wrappers", () => {
 		state.runPreviewTextWorker.mockReturnValue(undefined);
 		const content = "a".repeat(60000) + "\n\n# target note\n[[World]]";
 		const settings = {
-			...DEFAULT_SETTINGS,
+			...previewSettings,
 			previewMaxChars: 20000,
 			previewMaxLines: 0,
 		};

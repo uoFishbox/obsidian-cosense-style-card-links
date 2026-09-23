@@ -5,7 +5,7 @@ import {
 	createPreviewRenderSettings,
 	type PreviewRenderSettings,
 } from "card-preview/pipeline/previewRenderSettings";
-import { DEFAULT_SETTINGS, type PluginSettings } from "settings/model";
+import { DEFAULT_SETTINGS } from "settings/model";
 import { createMockTFile } from "testing/__mocks__/testHelpers";
 
 const state = vi.hoisted(() => ({
@@ -45,12 +45,9 @@ vi.mock("card-preview/pipeline/previewContent", () => ({
 }));
 
 function createSettings(
-	overrides: Partial<PluginSettings> = {},
+	overrides: Partial<PreviewRenderSettings> = {},
 ): PreviewRenderSettings {
-	return createPreviewRenderSettings({
-		...DEFAULT_SETTINGS,
-		...overrides,
-	});
+	return { ...createPreviewRenderSettings(DEFAULT_SETTINGS), ...overrides };
 }
 
 function createDeferred<T>() {
@@ -77,7 +74,7 @@ describe("cardPreviewSharedCache search context", () => {
 		state.getContentSnippet.mockImplementation(
 			(
 				_rawContent: string,
-				_settings: PluginSettings,
+				_settings: PreviewRenderSettings,
 				query: string,
 				options: { firstMatchIndex: number },
 			) => `snippet:${query}:${options.firstMatchIndex}`,

@@ -1,10 +1,10 @@
 import { describe, test, expect } from "vitest";
 import { getContentSnippet } from "../snippetExtractor";
 import { highlightSearchMatchesInHtml } from "../searchHighlighter";
-import type { PluginSettings } from "settings/model";
 import { DEFAULT_SETTINGS } from "settings/model";
+import { createPreviewRenderSettings } from "card-preview/pipeline/previewRenderSettings";
 
-const defaultSettings: PluginSettings = DEFAULT_SETTINGS;
+const defaultSettings = createPreviewRenderSettings(DEFAULT_SETTINGS);
 
 const SEARCH_PREVIEW_SEEK_BUFFER_CHARS = 15;
 

@@ -34,7 +34,11 @@ export class SettingsManager {
 				showSettingsLoadWarning(result);
 				return;
 			}
-			if (result.status === "migrated" || result.status === "missing") {
+			if (
+				result.status === "migrated" ||
+				result.status === "missing" ||
+				result.status === "cleaned"
+			) {
 				await this.persistSettings();
 			}
 		} catch (error) {

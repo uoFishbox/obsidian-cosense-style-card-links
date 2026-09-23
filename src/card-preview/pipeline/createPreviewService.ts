@@ -156,7 +156,7 @@ export function createPreviewService(
 
 	function createInFlightRequest(
 		file: TFile,
-		settings: PluginSettings,
+		settings: PluginSettings & PreviewRenderSettings,
 		cacheKey: string,
 	): InFlightRequest {
 		const request: InFlightRequest = {
@@ -270,7 +270,7 @@ export function createPreviewService(
 
 	async function generatePreview(
 		file: TFile,
-		settings: PluginSettings,
+		settings: PluginSettings & PreviewRenderSettings,
 		signal: AbortSignal,
 		cacheKey: string,
 	): Promise<PreviewData> {
@@ -335,7 +335,7 @@ function buildRawContentCacheKey(file: TFile): string {
 function applyRequestedRenderSettings(
 	settings: PluginSettings,
 	renderSettings: PreviewRenderSettings,
-): PluginSettings {
+): PluginSettings & PreviewRenderSettings {
 	return {
 		...settings,
 		...renderSettings,

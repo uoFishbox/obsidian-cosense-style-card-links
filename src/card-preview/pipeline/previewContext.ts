@@ -1,6 +1,7 @@
 import type { App, TFile } from "obsidian";
 import type { IMetadataCache, IVault } from "obsidian-integration/hostContracts";
 import type { PluginSettings } from "settings/model";
+import type { PreviewRenderSettings } from "./previewRenderSettings";
 import type { ParsedEmbed } from "../text/mediaExtractor";
 import { defaultYieldToMainThread } from "indexing/timeSlicing";
 import { extractFirstEmbeddedMediaAsync } from "../text/previewTextProcessingAsync";
@@ -13,7 +14,7 @@ export interface PreviewContext {
 	readonly vault: IVault;
 	readonly metadataCache: IMetadataCache;
 	readonly app: App;
-	readonly settings: PluginSettings;
+	readonly settings: PluginSettings & PreviewRenderSettings;
 	readonly getContent: (signal?: AbortSignal) => Promise<string>;
 	readonly getFirstEmbeddedMedia: () => Promise<ParsedEmbed | undefined>;
 }
@@ -23,7 +24,7 @@ export function createPreviewContext(
 	vault: IVault,
 	metadataCache: IMetadataCache,
 	app: App,
-	settings: PluginSettings,
+	settings: PluginSettings & PreviewRenderSettings,
 	loadRawContent: RawContentLoader = (targetFile, contentSignal) =>
 		readRawContent(targetFile, vault, contentSignal),
 	signal?: AbortSignal,

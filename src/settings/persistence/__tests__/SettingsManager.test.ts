@@ -55,6 +55,28 @@ describe("SettingsManager", () => {
 		warning.mockRestore();
 	});
 
+	it("removes old preview limits from existing data on load", async () => {
+		const plugin = {
+			settings: { ...DEFAULT_SETTINGS },
+			loadData: vi.fn().mockResolvedValue({
+				schemaVersion: SETTINGS_SCHEMA_VERSION,
+				settings: { language: "ja", previewMaxChars: 1000 },
+				preferences: {},
+			}),
+			saveData: vi.fn(),
+		};
+		const manager = new SettingsManager(plugin);
+
+		await manager.load();
+
+		expect(plugin.settings.language).toBe("ja");
+		expect(plugin.settings).not.toHaveProperty("previewMaxChars");
+		expect(plugin.saveData).toHaveBeenCalledOnce();
+		expect(plugin.saveData.mock.calls[0]?.[0].settings).not.toHaveProperty(
+			"previewMaxChars",
+		);
+	});
+
 	it("drops obsolete internal tuning settings while loading", async () => {
 		const plugin = {
 			settings: { ...DEFAULT_SETTINGS },

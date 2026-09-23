@@ -95,7 +95,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"In edit mode, seamlessly move the caret and edit text between the title and body.",
 		experimentalShadowDomCss: "Experimental: Shadow DOM custom CSS",
 		experimentalShadowDomCssDesc:
-			"Append CSS to card-rendering Shadow DOM surfaces. Changes apply immediately. Invalid CSS may break card display.",
+			"Add custom CSS to the Shadow DOM used for card rendering.",
 		language: "Language",
 		languageDesc: "Select the display language for the UI.",
 		general: "General",
@@ -141,8 +141,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"The display order of headers within the '2-hop link' section.",
 		quickSortField1: "Pinned sort 1",
 		quickSortField2: "Pinned sort 2",
-		quickSortFieldDesc:
-			"Show this sort field beside the sort menu. Select None to leave the slot empty; duplicate fields are shown only once.",
+		quickSortFieldDesc: "Show this sort field beside the sort menu.",
 		none: "None",
 		sortRelevance: "Related",
 		sortTitle: "Title",
@@ -152,7 +151,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		sortFileSize: "File size",
 		hideDuplicateNotes: "Hide duplicate notes",
 		hideDuplicateNotesDesc:
-			"Hide notes that are already displayed in higher sections.",
+			"Hide notes that reappear in lower sections when they are already displayed in upper sections.",
 		enableTagFeatures: "Enable tag features",
 		enableTagFeaturesDesc:
 			"Enable tag pages, tag search interception, and tag index building.",
@@ -160,8 +159,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		showTagsSectionDesc:
 			"Display notes that have the same tags as the current note.",
 		hideAttachments: "Hide attachments",
-		hideAttachmentsDesc:
-			"Exclude attachment files from results such as Backlinks and related links.",
+		hideAttachmentsDesc: "Exclude attachment file links.",
 		highlightUnresolvedLinks: "Highlight unresolved links with single Backlink",
 		highlightUnresolvedLinksDesc:
 			"Change the appearance of unresolved links that have only one Backlink.",
@@ -194,10 +192,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"Pin bookmarked notes to the top of the All Notes view.",
 		frontmatterKeyCreationDate: "Property to use for creation date",
 		frontmatterKeyCreationDateDesc:
-			"If specified, use the value of this property instead of the file's creation date (e.g., created). If empty, use the file's creation date.",
+			"If specified, use the value of this property instead of the file's creation date. If empty, use the file's creation date.",
 		frontmatterKeyModificationDate: "Property to use for modification date",
 		frontmatterKeyModificationDateDesc:
-			"If specified, use the value of this property instead of the file's modification date (e.g., updated). If empty, use the file's modification date.",
+			"If specified, use the value of this property instead of the file's modification date. If empty, use the file's modification date.",
 		belowEditor: "Below editor",
 		sidebar: "Sidebar",
 		hybrid: "Hybrid",
@@ -209,9 +207,9 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		experimentalCosenseTitleEditing: "Experimental: Cosenseスタイルのタイトル編集",
 		experimentalCosenseTitleEditingDesc:
 			"編集モードで、タイトルと本文の間のキャレット移動・テキスト編集をシームレスにします。",
-		experimentalShadowDomCss: "Experimental: Shadow DOM カスタム CSS",
+		experimentalShadowDomCss: "Shadow DOM カスタム CSS",
 		experimentalShadowDomCssDesc:
-			"カード描画用 Shadow DOM に CSS を追加します。変更はすぐに反映されます。不正な CSS によりカード表示が崩れる場合があります。",
+			"カード描画用 Shadow DOM に カスタムCSS を追加します。",
 		language: "言語",
 		languageDesc: "UIの表示言語を選択します。",
 		general: "一般",
@@ -230,7 +228,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		defaultVisibleLinkCount: "デフォルトの表示リンク数",
 		defaultVisibleLinkCountDesc:
 			"各セクションにデフォルトで表示するリンク数を設定します。",
-		loadMoreLinkIncrement: "追加読み込み時の増分数",
+		loadMoreLinkIncrement: "追加で読み込むリンク数",
 		loadMoreLinkIncrementDesc:
 			"「もっと読み込む」をクリックした際に追加で読み込むリンク数を設定します。",
 		cardWidth: "カード幅（px）",
@@ -256,8 +254,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"「2ホップリンク」セクション内のヘッダーの表示順序を設定します。",
 		quickSortField1: "固定ソート 1",
 		quickSortField2: "固定ソート 2",
-		quickSortFieldDesc:
-			"ソートメニューの横に表示する項目を選びます。「なし」で空欄になり、同じ項目を2つ選んだ場合は1つだけ表示されます。",
+		quickSortFieldDesc: "ソートメニューの横に表示する項目を選びます。",
 		none: "なし",
 		sortRelevance: "関連度",
 		sortTitle: "タイトル",
@@ -267,15 +264,14 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 		sortFileSize: "ファイルサイズ",
 		hideDuplicateNotes: "重複ノートを非表示",
 		hideDuplicateNotesDesc:
-			"既に上位セクションに表示されているノートを非表示にします。",
+			"既に上段に表示されているノートが下段で再登場した場合に除外します。",
 		enableTagFeatures: "タグ機能を有効化",
 		enableTagFeaturesDesc:
 			"タグ専用ページ、タグ検索の専用表示、タグインデックス作成を有効にします。",
-		showTagsSection: "タグセクションを表示",
+		showTagsSection: "タグを表示",
 		showTagsSectionDesc: "現在のノートと同じタグを持つノートを表示します。",
 		hideAttachments: "添付ファイルを非表示",
-		hideAttachmentsDesc:
-			"バックリンクや関連リンクなどの結果から添付ファイルを除外します。",
+		hideAttachmentsDesc: "添付ファイルのリンクを除外します。",
 		highlightUnresolvedLinks: "バックリンクが1つのみの未解決リンクをハイライト",
 		highlightUnresolvedLinksDesc:
 			"バックリンクが1つのみの未解決リンクの外観を変更します。",
@@ -309,10 +305,10 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
 			"すべてのノートビューで、ブックマークしたノートをリストの先頭に固定します。",
 		frontmatterKeyCreationDate: "作成日に使用するプロパティ",
 		frontmatterKeyCreationDateDesc:
-			"指定した場合、ファイルの作成日の代わりにこのプロパティの値を使用します（例: created）。空の場合、ファイルの作成日を使用します。",
+			"指定した場合、ファイルの作成日の代わりにこのプロパティの値を使用します。空の場合、ファイルの作成日を使用します。",
 		frontmatterKeyModificationDate: "更新日に使用するプロパティ",
 		frontmatterKeyModificationDateDesc:
-			"指定した場合、ファイルの更新日の代わりにこのプロパティの値を使用します（例: updated）。空の場合、ファイルの更新日を使用します。",
+			"指定した場合、ファイルの更新日の代わりにこのプロパティの値を使用します。空の場合、ファイルの更新日を使用します。",
 		belowEditor: "エディタの下",
 		sidebar: "サイドバー",
 		hybrid: "ハイブリッド",

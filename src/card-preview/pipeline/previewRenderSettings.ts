@@ -23,6 +23,10 @@ interface DimensionedSettingsCacheEntry {
 	readonly settings: PreviewRenderSettings;
 }
 
+const PREVIEW_MAX_CHARS = 500;
+const PREVIEW_MAX_LINES = 15;
+const PREVIEW_VISUAL_LINE_SAFETY_MARGIN = 0;
+
 const settingsSnapshots = new WeakMap<PluginSettings, PreviewRenderSettings>();
 const dimensionedSettingsSnapshots = new WeakMap<
 	PreviewRenderSettings,
@@ -39,9 +43,9 @@ export function createPreviewRenderSettings(
 	const snapshot: PreviewRenderSettings = Object.freeze({
 		cardWidthPx: settings.cardWidthPx,
 		cardHeightRatio: settings.cardHeightRatio,
-		previewMaxChars: settings.previewMaxChars,
-		previewMaxLines: settings.previewMaxLines,
-		previewVisualLineSafetyMargin: settings.previewVisualLineSafetyMargin,
+		previewMaxChars: PREVIEW_MAX_CHARS,
+		previewMaxLines: PREVIEW_MAX_LINES,
+		previewVisualLineSafetyMargin: PREVIEW_VISUAL_LINE_SAFETY_MARGIN,
 		priorityFrontmatterKeysForImagePreview:
 			settings.priorityFrontmatterKeysForImagePreview,
 		priorityFrontmatterKeyForPreview: settings.priorityFrontmatterKeyForPreview,
@@ -95,9 +99,6 @@ function hasSamePreviewRenderSettings(
 	return (
 		previous.cardWidthPx === next.cardWidthPx &&
 		previous.cardHeightRatio === next.cardHeightRatio &&
-		previous.previewMaxChars === next.previewMaxChars &&
-		previous.previewMaxLines === next.previewMaxLines &&
-		previous.previewVisualLineSafetyMargin === next.previewVisualLineSafetyMargin &&
 		previous.priorityFrontmatterKeysForImagePreview ===
 			next.priorityFrontmatterKeysForImagePreview &&
 		previous.priorityFrontmatterKeyForPreview ===

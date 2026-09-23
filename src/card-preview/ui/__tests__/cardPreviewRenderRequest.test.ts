@@ -45,11 +45,27 @@ describe("compileCardPreviewRequest", () => {
 		const settings = createSettings();
 
 		const first = compile(file, settings, "first");
-		settings.previewMaxChars += 1;
+		settings.cardWidthPx += 1;
 		const second = compile(file, settings, "second");
 
 		expect(second?.settings).not.toBe(first?.settings);
-		expect(second?.settings.previewMaxChars).toBe(settings.previewMaxChars);
+		expect(second?.settings.cardWidthPx).toBe(settings.cardWidthPx);
+	});
+
+	it("uses fixed preview limits even when legacy fields are present", () => {
+		const file = createMockTFile("notes/legacy-preview-limits.md");
+		const settings = {
+			...DEFAULT_SETTINGS,
+			previewMaxLines: 30,
+			previewMaxChars: 1000,
+			previewVisualLineSafetyMargin: 2,
+		};
+
+		const request = compile(file, settings, "");
+
+		expect(request.settings.previewMaxLines).toBe(15);
+		expect(request.settings.previewMaxChars).toBe(500);
+		expect(request.settings.previewVisualLineSafetyMargin).toBe(0);
 	});
 
 	it("keeps the projection after an unrelated in-place setting update", () => {

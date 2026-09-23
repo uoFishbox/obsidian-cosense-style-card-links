@@ -54,9 +54,6 @@ export interface CardSettings {
 	cardGapPx: number;
 	cardMaxColumns: number;
 	sectionMarginBottomPx: number;
-	previewMaxLines: number;
-	previewMaxChars: number;
-	previewVisualLineSafetyMargin: number;
 	previewScrollCommitsPerSecond: number;
 	priorityFrontmatterKeysForImagePreview: string;
 	priorityFrontmatterKeyForPreview: string;

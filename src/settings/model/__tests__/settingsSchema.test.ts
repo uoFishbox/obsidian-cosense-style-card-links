@@ -147,7 +147,6 @@ describe("settings schema", () => {
 				cardGapPx: 0,
 				cardHeightRatio: 0,
 				cardMaxColumns: Number.POSITIVE_INFINITY,
-				previewMaxChars: "500" as never,
 			}),
 		);
 
@@ -155,7 +154,26 @@ describe("settings schema", () => {
 		expect(settings.cardGapPx).toBe(0);
 		expect(settings.cardHeightRatio).toBe(DEFAULT_SETTINGS.cardHeightRatio);
 		expect(settings.cardMaxColumns).toBe(DEFAULT_SETTINGS.cardMaxColumns);
-		expect(settings.previewMaxChars).toBe(DEFAULT_SETTINGS.previewMaxChars);
+	});
+
+	it("ignores old preview limits and omits them from saved data", () => {
+		const oldLimits = {
+			previewMaxLines: 30,
+			previewMaxChars: 1000,
+			previewVisualLineSafetyMargin: 2,
+		};
+		const result = loadPluginSettings(
+			persistedData({ ...oldLimits, language: "ja" }),
+		);
+		const settings = result.settings;
+		const serialized = serializePluginSettings(settings);
+
+		expect(result.status).toBe("cleaned");
+		expect(settings.language).toBe("ja");
+		for (const key of Object.keys(oldLimits)) {
+			expect(settings).not.toHaveProperty(key);
+			expect(serialized.settings).not.toHaveProperty(key);
+		}
 	});
 
 	it("strips unknown keys from current-version data", () => {

@@ -376,14 +376,14 @@ describe("PreviewService.getPreview", () => {
 	test("preview generation cache is separated by settings affecting generation", async () => {
 		const resolvePreview = vi.fn<PreviewResolver>(async (_file, context) => ({
 			type: "text" as const,
-			content: String(context.settings.previewMaxChars),
+			content: String(context.settings.cardWidthPx),
 		}));
 		const service = createService(resolvePreview);
 		const file = createMockTFileAsPlainObject("note.md");
 
-		settings = { ...DEFAULT_SETTINGS, previewMaxChars: 100 };
+		settings = { ...DEFAULT_SETTINGS, cardWidthPx: 100 };
 		const first = await service.getPreview(file);
-		settings = { ...DEFAULT_SETTINGS, previewMaxChars: 200 };
+		settings = { ...DEFAULT_SETTINGS, cardWidthPx: 200 };
 		const second = await service.getPreview(file);
 		const third = await service.getPreview(file);
 
