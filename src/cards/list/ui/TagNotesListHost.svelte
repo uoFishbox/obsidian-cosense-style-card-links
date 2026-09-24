@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import type { App } from "obsidian";
 	import SearchableItemList from "./SearchableItemList.svelte";
 	import type { ListConfig } from "./types";
@@ -33,7 +34,7 @@
 		uiState = undefined,
 	}: Props = $props();
 
-	let currentItems = $state.raw<CardItem[]>(items);
+	let currentItems = $state.raw<CardItem[]>(untrack(() => items));
 
 	function syncItemsFromProps(): void {
 		currentItems = items;

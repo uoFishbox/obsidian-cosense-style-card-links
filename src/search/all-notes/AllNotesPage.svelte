@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Notice, TFile, TFolder, type App } from "obsidian";
+	import { untrack } from "svelte";
 	import { getCardItemKey, type CardItem } from "cards/CardItem";
 	import { resolveExpectedPath } from "obsidian-integration/files/resolveExpectedPath";
 	import SearchableItemList from "cards/list/ui/SearchableItemList.svelte";
@@ -41,7 +42,7 @@
 	}: Props = $props();
 	const text = $derived(getMainUiTranslations(settings.language));
 
-	let catalogRevision = $state(allNotesCatalog.getRevision());
+	let catalogRevision = $state(untrack(() => allNotesCatalog.getRevision()));
 	let cardLayoutCssText = $derived(getCardLayoutCssText(settings));
 	let isCreatingSearchNote = $state(false);
 	let rootEl = $state<HTMLDivElement | null>(null);
@@ -95,33 +96,31 @@
 		}
 	}
 
-	let listConfig = $derived.by(
-		(): ListConfig<CardItem> => ({
-			title: text.allNotes,
-			paginationMode: "infinite-scroll",
-			preserveResultsHeightOnSearch: false,
-			searchEnabled: true,
-			allowContentSearch: true,
-			searchPlaceholder: text.searchNoteTitles,
-			contentSearchPlaceholder: text.searchNoteContents,
-			getSearchText: (item: CardItem, ctx) => {
-				if (item.type !== "file") return "";
-				return getFileCardTitleSearchText(
-					item.data,
-					ctx.sourceFile.path,
-					ctx.fileToLinktext,
-					ctx.getMetadata,
-					settings.priorityFrontmatterKeyForTitle,
-				);
-			},
-			getItemKey: getCardItemKey,
-			getSortedItems: (sortOption) => allNotesCatalog.getSortedItems(sortOption),
-			sectionId: "empty-view-all-notes",
-			pinBookmarkedToTop: settings.pinBookmarkedToTopInAllNotes,
-			emptyMessage: text.noNotesFound,
-			onSearchSubmit: createNoteFromSearchTitle,
-		}),
-	);
+	let listConfig = $derived.by((): ListConfig<CardItem> => ({
+		title: text.allNotes,
+		paginationMode: "infinite-scroll",
+		preserveResultsHeightOnSearch: false,
+		searchEnabled: true,
+		allowContentSearch: true,
+		searchPlaceholder: text.searchNoteTitles,
+		contentSearchPlaceholder: text.searchNoteContents,
+		getSearchText: (item: CardItem, ctx) => {
+			if (item.type !== "file") return "";
+			return getFileCardTitleSearchText(
+				item.data,
+				ctx.sourceFile.path,
+				ctx.fileToLinktext,
+				ctx.getMetadata,
+				settings.priorityFrontmatterKeyForTitle,
+			);
+		},
+		getItemKey: getCardItemKey,
+		getSortedItems: (sortOption) => allNotesCatalog.getSortedItems(sortOption),
+		sectionId: "empty-view-all-notes",
+		pinBookmarkedToTop: settings.pinBookmarkedToTopInAllNotes,
+		emptyMessage: text.noNotesFound,
+		onSearchSubmit: createNoteFromSearchTitle,
+	}));
 
 	$effect(() => {
 		return allNotesCatalog.subscribe((revision) => {

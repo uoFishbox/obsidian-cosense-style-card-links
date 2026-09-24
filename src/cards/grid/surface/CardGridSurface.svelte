@@ -98,11 +98,21 @@
 		getRowHeight: () => rowHeight,
 		getInteractionDescriptorResolverProvider: () =>
 			interactionDescriptorResolverProvider,
-		resolveNavigationTarget,
-		resolveSequentialNavigationTarget,
-		onMoveFocusAboveGrid,
-		shouldMoveFocusAboveGrid,
-		flushVirtualScrollMeasurement,
+		get resolveNavigationTarget() {
+			return resolveNavigationTarget;
+		},
+		get resolveSequentialNavigationTarget() {
+			return resolveSequentialNavigationTarget;
+		},
+		get onMoveFocusAboveGrid() {
+			return onMoveFocusAboveGrid;
+		},
+		get shouldMoveFocusAboveGrid() {
+			return shouldMoveFocusAboveGrid;
+		},
+		get flushVirtualScrollMeasurement() {
+			return flushVirtualScrollMeasurement;
+		},
 	});
 	const {
 		delegatedInteractions,

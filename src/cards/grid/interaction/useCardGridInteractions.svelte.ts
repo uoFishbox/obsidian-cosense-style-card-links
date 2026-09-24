@@ -30,8 +30,7 @@ export interface CardSurfaceInteractionParams {
 	getObserverRoot(): HTMLElement | null;
 	getRowHeight(): number;
 	getInteractionDescriptorResolverProvider():
-		| InteractionDescriptorResolverProvider
-		| undefined;
+		InteractionDescriptorResolverProvider | undefined;
 	resolveNavigationTarget?: (
 		currentKey: string,
 		direction: NavigationDirection,
@@ -56,20 +55,16 @@ export interface CardSurfaceInteractionParams {
 	flushVirtualScrollMeasurement?: (snapshot: ProgrammaticScrollSnapshot) => void;
 }
 
-export function createCardSurfaceInteractions({
-	getRootEl,
-	getContentEl,
-	getShadowRoot,
-	setShadowRoot,
-	getObserverRoot,
-	getRowHeight,
-	getInteractionDescriptorResolverProvider,
-	resolveNavigationTarget,
-	resolveSequentialNavigationTarget,
-	onMoveFocusAboveGrid,
-	shouldMoveFocusAboveGrid,
-	flushVirtualScrollMeasurement,
-}: CardSurfaceInteractionParams) {
+export function createCardSurfaceInteractions(options: CardSurfaceInteractionParams) {
+	const {
+		getRootEl,
+		getContentEl,
+		getShadowRoot,
+		setShadowRoot,
+		getObserverRoot,
+		getRowHeight,
+		getInteractionDescriptorResolverProvider,
+	} = options;
 	const interactionRegistry = createInteractionRegistry();
 	setInteractionRegistryContext(interactionRegistry);
 
@@ -123,11 +118,21 @@ export function createCardSurfaceInteractions({
 		getRowHeight,
 		delegatedInteractions,
 		cellBindingRegistry,
-		resolveNavigationTarget,
-		resolveSequentialNavigationTarget,
-		onMoveFocusAboveGrid,
-		shouldMoveFocusAboveGrid,
-		flushVirtualScrollMeasurement,
+		get resolveNavigationTarget() {
+			return options.resolveNavigationTarget;
+		},
+		get resolveSequentialNavigationTarget() {
+			return options.resolveSequentialNavigationTarget;
+		},
+		get onMoveFocusAboveGrid() {
+			return options.onMoveFocusAboveGrid;
+		},
+		get shouldMoveFocusAboveGrid() {
+			return options.shouldMoveFocusAboveGrid;
+		},
+		get flushVirtualScrollMeasurement() {
+			return options.flushVirtualScrollMeasurement;
+		},
 		flushMountedState,
 	});
 

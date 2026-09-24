@@ -134,7 +134,7 @@
 		uiState,
 		keyboardNavigationSurfaceRegistry,
 	}: Props = $props();
-	const applicationUiState = applicationStore.uiState;
+	const applicationUiState = untrack(() => applicationStore.uiState);
 
 	let loading = $derived(applicationStore.loading);
 	let loadingPhase = $derived(applicationStore.loadingPhase);
@@ -154,9 +154,8 @@
 	let currentSort = $derived(applicationUiState.sortOption);
 	let cardLayoutCssText = $derived(getCardLayoutCssText(currentSettings));
 	let contentSearchEnabled = $state(false);
-	let searchMatchScope = $derived.by(
-		(): SearchMatchScope =>
-			contentSearchEnabled ? "title-and-content" : "title-only",
+	let searchMatchScope = $derived.by((): SearchMatchScope =>
+		contentSearchEnabled ? "title-and-content" : "title-only",
 	);
 
 	$effect(() => {
@@ -164,14 +163,14 @@
 	});
 
 	const search = useSearchQuery({
-		initialValue: uiState?.searchInputValue,
+		initialValue: untrack(() => uiState?.searchInputValue),
 		onInputChange: (value) => {
 			if (uiState) {
 				uiState.searchInputValue = value;
 			}
 		},
 	});
-	const bookmarks = useBookmarks(app);
+	const bookmarks = untrack(() => useBookmarks(app));
 	let getSortedTwoHopItems = $derived.by(() => {
 		const store = applicationStore;
 		return (items: Parameters<TwoHopState["getSortedTwoHopItems"]>[0]) =>
@@ -201,7 +200,7 @@
 		buildTwoHopSearchSnapshot(getSearchAdapterOptions()),
 	);
 	const searchSession = useStreamingSearchSession({
-		app,
+		app: untrack(() => app),
 		query: () => search.normalized,
 		enabled: () => !!search.normalized,
 		matchScope: () => searchMatchScope,
@@ -289,9 +288,9 @@
 	);
 
 	let filteredDisplayData = $derived(searchPresentation.displayData);
-	const sourceFile = linkContext.sourceFile;
-	const fileToLinktext = linkContext.fileToLinktext;
-	const onTagClick = linkContext.onTagClick;
+	const sourceFile = $derived(linkContext.sourceFile);
+	const fileToLinktext = $derived(linkContext.fileToLinktext);
+	const onTagClick = $derived(linkContext.onTagClick);
 	const sectionPublicationMemo = createTwoHopSectionPublicationMemo();
 	let getSectionVisibleCount = $derived.by(() => {
 		const expandedLimits = applicationUiState.sectionExpandedLimits ?? {};
@@ -365,38 +364,37 @@
 		);
 	}
 
-	setAppContext({
-		linkContext,
-		applicationStore: applicationUiState,
-		app,
-		previewRuntime,
-		bookmarks,
-		resolveSearchMatchPosition: (query, targetFile) =>
-			searchSession.resolveFirstMatchPosition(query, targetFile),
-		resolveSearchMatchOffset: (query, targetFile) =>
-			searchSession.getFirstMatchOffset(query, targetFile),
-		updateSetting,
+	untrack(() => {
+		setAppContext({
+			linkContext,
+			applicationStore: applicationUiState,
+			app,
+			previewRuntime,
+			bookmarks,
+			resolveSearchMatchPosition: (query, targetFile) =>
+				searchSession.resolveFirstMatchPosition(query, targetFile),
+			resolveSearchMatchOffset: (query, targetFile) =>
+				searchSession.getFirstMatchOffset(query, targetFile),
+			updateSetting,
+		});
+		setLinkContext(linkContext);
+		setContext<CardCollectionState>("applicationStore", applicationUiState);
+		setLazyLoaderCache(lazyLoaderCache);
 	});
-
-	setLinkContext(linkContext);
-	setContext<CardCollectionState>("applicationStore", applicationUiState);
-	setLazyLoaderCache(lazyLoaderCache);
 
 	function getPreviewRenderVersion(path: string): string {
 		return applicationUiState.previewState.getRenderVersion(path);
 	}
 
-	const cardModelRevision = $derived.by(
-		(): TwoHopCardModelRevision => ({
-			settings: currentSettings,
-			searchQuery: appliedSearchQuery,
-			searchScope: appliedSearchScope,
-			matchesByKey: searchPresentation.result?.matchesByKey ?? null,
-			linkContext,
-			getPreviewRenderVersion,
-			applicationUpdateVersion: applicationUiState.updateVersion,
-		}),
-	);
+	const cardModelRevision = $derived.by((): TwoHopCardModelRevision => ({
+		settings: currentSettings,
+		searchQuery: appliedSearchQuery,
+		searchScope: appliedSearchScope,
+		matchesByKey: searchPresentation.result?.matchesByKey ?? null,
+		linkContext,
+		getPreviewRenderVersion,
+		applicationUpdateVersion: applicationUiState.updateVersion,
+	}));
 	const resolveItemCardModel = (
 		item: Parameters<typeof buildTwoHopCardModel>[0],
 		revision: unknown,

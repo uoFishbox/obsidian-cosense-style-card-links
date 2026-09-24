@@ -106,7 +106,7 @@
 	let allowContentSearch = $derived(config.allowContentSearch ?? true);
 
 	const search = useSearchQuery({
-		initialValue: uiState?.searchInputValue,
+		initialValue: untrack(() => uiState?.searchInputValue),
 		onInputChange: (value) => {
 			if (!uiState) return;
 			if (value !== uiState.searchInputValue) {
@@ -119,11 +119,8 @@
 	const contentSearchEnabledSetting = $derived(
 		applicationStore.settings?.enableContentSearch ?? false,
 	);
-	let searchMatchScope = $derived.by(
-		(): SearchMatchScope =>
-			allowContentSearch && contentSearchEnabled
-				? "title-and-content"
-				: "title-only",
+	let searchMatchScope = $derived.by((): SearchMatchScope =>
+		allowContentSearch && contentSearchEnabled ? "title-and-content" : "title-only",
 	);
 
 	function syncContentSearchToggleFromSettings(): void {
@@ -164,7 +161,7 @@
 			).toLowerCase(),
 		);
 	};
-	const bookmarks = useBookmarks(app);
+	const bookmarks = untrack(() => useBookmarks(app));
 	let sortedItems = $derived.by(() => {
 		void sortSettingsSignature;
 		const option = resolveStandardSortOption(sortOption);
@@ -204,27 +201,31 @@
 		};
 	};
 
-	setLinkContext(linkContext);
-	setContext<ListViewState>("applicationStore", applicationStore);
+	untrack(() => {
+		setLinkContext(linkContext);
+		setContext<ListViewState>("applicationStore", applicationStore);
+	});
 	const searchSession = useStreamingSearchSession({
-		app,
+		app: untrack(() => app),
 		query: () => search.normalized,
 		enabled: () => searchEnabled && !!search.normalized,
 		matchScope: () => searchMatchScope,
 		buildSnapshot: buildSearchSnapshot,
 	});
 
-	setAppContext({
-		linkContext,
-		applicationStore,
-		app,
-		bookmarks,
-		previewRuntime,
-		resolveSearchMatchPosition: (query, file) =>
-			searchSession.resolveFirstMatchPosition(query, file),
-		resolveSearchMatchOffset: (query, file) =>
-			searchSession.getFirstMatchOffset(query, file),
-	});
+	untrack(() =>
+		setAppContext({
+			linkContext,
+			applicationStore,
+			app,
+			bookmarks,
+			previewRuntime,
+			resolveSearchMatchPosition: (query, file) =>
+				searchSession.resolveFirstMatchPosition(query, file),
+			resolveSearchMatchOffset: (query, file) =>
+				searchSession.getFirstMatchOffset(query, file),
+		}),
+	);
 	const lazyLoaderCache = new Set<string>();
 	setLazyLoaderCache(lazyLoaderCache);
 	let isSearchLoading = $derived(searchSession.isPending);

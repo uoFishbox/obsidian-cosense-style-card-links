@@ -16,6 +16,7 @@
 	} from "cards/interactions/interactionTypes";
 	import type { Language } from "settings/model";
 	import { getMainUiTranslations } from "shared/i18n/mainUiTranslations";
+	import { untrack } from "svelte";
 
 	interface Props {
 		cell: TwoHopVirtualCell;
@@ -41,7 +42,7 @@
 	}: Props = $props();
 	const text = $derived(getMainUiTranslations(language));
 	let cardModel = $state.raw<CardRenderModel | undefined>(undefined);
-	let boundLogicalKey = cell.logicalKey;
+	let boundLogicalKey = untrack(() => cell.logicalKey);
 	const fallbackInteractionHandle = createInteractionHandle("c");
 	const resolvedInteractionHandle = $derived(
 		interactionHandle ?? fallbackInteractionHandle,
