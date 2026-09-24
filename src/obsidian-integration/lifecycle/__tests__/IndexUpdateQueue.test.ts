@@ -225,11 +225,11 @@ describe("IndexUpdateQueue", () => {
 		expect(harness.indexingService.rebuildIndexesTimeSliced).not.toHaveBeenCalled();
 		expect(becameIdle).toBe(false);
 
-		harness.emitMetadataEvent("resolved");
 		await vi.advanceTimersByTimeAsync(INITIAL_FULL_SCAN_DELAY_MS - 1);
 		expect(harness.indexingService.rebuildIndexesTimeSliced).not.toHaveBeenCalled();
 		expect(becameIdle).toBe(false);
 
+		harness.emitMetadataEvent("resolved");
 		await vi.advanceTimersByTimeAsync(1);
 		await flushAsyncTasks();
 		expect(harness.indexingService.rebuildIndexesTimeSliced).toHaveBeenCalledTimes(
@@ -238,22 +238,6 @@ describe("IndexUpdateQueue", () => {
 		await idlePromise;
 
 		expect(becameIdle).toBe(true);
-	});
-
-	test("metadata activity before the scheduled scan does not postpone it", async () => {
-		const harness = createHarness();
-
-		harness.queue.setupEventListeners();
-		harness.triggerLayoutReady();
-		await vi.advanceTimersByTimeAsync(INITIAL_FULL_SCAN_DELAY_MS - 1);
-
-		harness.emitMetadataEvent("resolved");
-		await vi.advanceTimersByTimeAsync(1);
-		await flushAsyncTasks();
-
-		expect(harness.indexingService.rebuildIndexesTimeSliced).toHaveBeenCalledTimes(
-			1,
-		);
 	});
 
 	test("initial scan keeps the 100 ms delay when layout is already ready", async () => {

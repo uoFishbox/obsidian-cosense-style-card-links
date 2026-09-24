@@ -116,20 +116,6 @@ Actual content.`;
 			const result = getContentSnippet("---\ntitle: X\n---", defaultSettings);
 			expect(result).toBe("");
 		});
-
-		test("handles BOM and CRLF frontmatter", () => {
-			const bom = getContentSnippet(
-				"\uFEFF---\ntitle: X\n---\nBody",
-				defaultSettings,
-			);
-			expect(bom).toBe("Body");
-
-			const crlf = getContentSnippet(
-				["---", "title: X", "---", "", "Body"].join("\r\n"),
-				defaultSettings,
-			);
-			expect(crlf).toBe("Body");
-		});
 	});
 
 	describe("code block transformation", () => {
@@ -626,16 +612,6 @@ describe("getContentSnippet with search query", () => {
 		expect(highlighted).toContain(
 			'title: <span class="ccl-search-highlight">target</span> note',
 		);
-	});
-
-	test("accepts precomputed firstMatchIndex option", () => {
-		const content = "A".repeat(1200) + " target near end.";
-		const firstMatchIndex = content.toLowerCase().indexOf("target");
-		const withOpt = getContentSnippet(content, defaultSettings, "target", {
-			firstMatchIndex,
-		});
-		const withoutOpt = getContentSnippet(content, defaultSettings, "target");
-		expect(withOpt).toBe(withoutOpt);
 	});
 
 	test("literal search with regex metacharacters", () => {

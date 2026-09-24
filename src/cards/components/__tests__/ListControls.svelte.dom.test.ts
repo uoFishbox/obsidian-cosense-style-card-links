@@ -382,31 +382,7 @@ describe("ListControls", () => {
 		expect(onSearchInput).toHaveBeenCalledWith("alpha");
 	});
 
-	it("requests result focus movement on ArrowDown only", async () => {
-		const onMoveFocusToResults = vi.fn();
-
-		render(ListControls, {
-			props: {
-				searchInputValue: "",
-				sortOption: "alphabetical",
-				onSortChange: vi.fn(),
-				onSearchInput: vi.fn(),
-				onMoveFocusToResults,
-			},
-		});
-
-		const input = screen.getByRole("searchbox");
-		await fireEvent.keyDown(input, { key: "ArrowUp" });
-
-		expect(onMoveFocusToResults).not.toHaveBeenCalled();
-
-		await fireEvent.keyDown(input, { key: "ArrowDown" });
-
-		expect(onMoveFocusToResults).toHaveBeenCalledTimes(1);
-		expect(onMoveFocusToResults).toHaveBeenNthCalledWith(1, "down");
-	});
-
-	it("leaves ArrowUp in the search input unconsumed and without side effects", async () => {
+	it("moves to results on ArrowDown and leaves ArrowUp unconsumed", async () => {
 		const onMoveFocusToResults = vi.fn();
 		const onMoveFocusToEditor = vi.fn(() => true);
 
@@ -429,6 +405,11 @@ describe("ListControls", () => {
 		expect(onMoveFocusToResults).not.toHaveBeenCalled();
 		expect(onMoveFocusToEditor).not.toHaveBeenCalled();
 		expect(document.activeElement).toBe(input);
+
+		await fireEvent.keyDown(input, { key: "ArrowDown" });
+
+		expect(onMoveFocusToResults).toHaveBeenCalledTimes(1);
+		expect(onMoveFocusToResults).toHaveBeenNthCalledWith(1, "down");
 	});
 
 	it("requests editor focus on Escape while the search input is empty", async () => {
@@ -574,30 +555,7 @@ describe("ListControls", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("uses the full-text placeholder while content search is enabled", async () => {
-		const view = render(ListControls, {
-			props: {
-				searchInputValue: "",
-				sortOption: "alphabetical",
-				onSortChange: vi.fn(),
-				searchPlaceholder: "Search note titles...",
-				contentSearchPlaceholder: "Search note contents...",
-				contentSearchEnabled: false,
-			},
-		});
-
-		expect(
-			screen.getByPlaceholderText("Search note titles..."),
-		).toBeInTheDocument();
-
-		await view.rerender({ contentSearchEnabled: true });
-
-		expect(
-			screen.getByPlaceholderText("Search note contents..."),
-		).toBeInTheDocument();
-	});
-
-	it("falls back to the full-text placeholder when no content placeholder is configured", async () => {
+	it("uses the default or configured full-text placeholder", async () => {
 		const view = render(ListControls, {
 			props: {
 				searchInputValue: "",
@@ -620,5 +578,14 @@ describe("ListControls", () => {
 		expect(
 			screen.queryByPlaceholderText("Search note titles..."),
 		).not.toBeInTheDocument();
+
+		await view.rerender({
+			contentSearchEnabled: true,
+			contentSearchPlaceholder: "Search custom contents...",
+		});
+
+		expect(
+			screen.getByPlaceholderText("Search custom contents..."),
+		).toBeInTheDocument();
 	});
 });

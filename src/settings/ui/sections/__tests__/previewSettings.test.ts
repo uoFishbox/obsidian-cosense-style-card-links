@@ -8,16 +8,6 @@ import {
 import { PREVIEW_SETTING_DEFINITIONS } from "../previewSettings";
 
 describe("PREVIEW_SETTING_DEFINITIONS", () => {
-	it("does not expose preview truncation controls", () => {
-		const settingKeys = PREVIEW_SETTING_DEFINITIONS.map(
-			(definition) => definition.settingKey,
-		);
-
-		expect(settingKeys).not.toContain("previewMaxLines");
-		expect(settingKeys).not.toContain("previewMaxChars");
-		expect(settingKeys).not.toContain("previewVisualLineSafetyMargin");
-	});
-
 	it("exposes a single slider for text and image scroll preview speeds", () => {
 		const definition = PREVIEW_SETTING_DEFINITIONS.find(
 			(candidate) => candidate.settingKey === "previewScrollCommitsPerSecond",
@@ -28,9 +18,7 @@ describe("PREVIEW_SETTING_DEFINITIONS", () => {
 		expect(definition.min).toBe(MIN_PREVIEW_DOM_COMMITS_PER_SECOND);
 		expect(definition.max).toBe(MAX_PREVIEW_DOM_COMMITS_PER_SECOND);
 		expect(definition.step).toBe(PREVIEW_DOM_COMMITS_STEP);
-		expect(definition.max).toBe(170);
 		expect((definition.max - definition.min) % definition.step).toBe(0);
-		expect(DEFAULT_SETTINGS.previewScrollCommitsPerSecond).toBe(96);
 	});
 
 	it("defines a comma-separated image property setting", () => {

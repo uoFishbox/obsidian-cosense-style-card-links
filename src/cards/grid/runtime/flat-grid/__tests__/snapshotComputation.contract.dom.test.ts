@@ -97,31 +97,6 @@ describe("VirtualListEngine contract", () => {
 		expect(shifted.mountedBuild).not.toBe(initial.mountedBuild);
 	});
 
-	it("reuses the mounted build when only previewVisible changes", () => {
-		const rowModel = createHarnessRowModel(30);
-		const initialResult = computeHarnessSnapshot({
-			rowModel,
-			ranges: {
-				mounted: { start: 0, end: 7 },
-				previewVisible: { start: 0, end: 1 },
-			},
-		});
-		const nextResult = computeHarnessSnapshot({
-			rowModel,
-			previous: initialResult.snapshot,
-			ranges: {
-				mounted: { start: 0, end: 7 },
-				previewVisible: { start: 1, end: 2 },
-			},
-		});
-
-		expect(nextResult.snapshot).not.toBe(initialResult.snapshot);
-		expect(nextResult.snapshot.ranges.previewVisible).toEqual({ start: 1, end: 2 });
-		expect(nextResult.snapshot.mountedBuild).toBe(
-			initialResult.snapshot.mountedBuild,
-		);
-	});
-
 	it("returns an empty snapshot when the row model has no rows", () => {
 		const result = computeHarnessSnapshot({ rowModel: createHarnessRowModel(0) });
 

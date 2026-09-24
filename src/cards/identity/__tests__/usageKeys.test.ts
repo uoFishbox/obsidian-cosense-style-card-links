@@ -60,7 +60,7 @@ describe("keyGenerator", () => {
 	});
 
 	describe("getLinkUsageKey", () => {
-		test("uses displayText when present", () => {
+		test("uses the source file path when available", () => {
 			const link: IndexedLink = {
 				rawText: "[[note]]",
 				path: "note.md",
@@ -72,25 +72,25 @@ describe("keyGenerator", () => {
 			expect(getLinkUsageKey(link)).toBe("f:folder/source.md");
 		});
 
-		test("uses rawText when displayText is absent", () => {
+		test("uses rawText when displayText and the source path are absent", () => {
 			const link: IndexedLink = {
 				rawText: "Raw Text",
-				path: "note.md",
+				path: undefined,
 				displayText: undefined,
-				isUnresolved: false,
-				sourceFile: { path: "Folder/Source.md" } as TFile,
+				isUnresolved: true,
+				sourceFile: { path: undefined } as unknown as TFile,
 			};
 
-			expect(getLinkUsageKey(link)).toBe("f:folder/source.md");
+			expect(getLinkUsageKey(link)).toBe("t:raw text");
 		});
 
-		test("uses text key when file key is absent", () => {
+		test("uses displayText when the source path is absent", () => {
 			const link: IndexedLink = {
 				rawText: "Raw Text",
 				path: undefined,
 				displayText: "Display Text",
 				isUnresolved: true,
-				sourceFile: { path: undefined } as any,
+				sourceFile: { path: undefined } as unknown as TFile,
 			};
 
 			expect(getLinkUsageKey(link)).toBe("t:display text");

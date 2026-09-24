@@ -52,16 +52,9 @@ describe("compileCardPreviewRequest", () => {
 		expect(second?.settings.cardWidthPx).toBe(settings.cardWidthPx);
 	});
 
-	it("uses fixed preview limits even when legacy fields are present", () => {
-		const file = createMockTFile("notes/legacy-preview-limits.md");
-		const settings = {
-			...DEFAULT_SETTINGS,
-			previewMaxLines: 30,
-			previewMaxChars: 1000,
-			previewVisualLineSafetyMargin: 2,
-		};
-
-		const request = compile(file, settings, "");
+	it("uses fixed preview limits for current settings", () => {
+		const file = createMockTFile("notes/fixed-preview-limits.md");
+		const request = compile(file, createSettings(), "");
 
 		expect(request.settings.previewMaxLines).toBe(15);
 		expect(request.settings.previewMaxChars).toBe(500);

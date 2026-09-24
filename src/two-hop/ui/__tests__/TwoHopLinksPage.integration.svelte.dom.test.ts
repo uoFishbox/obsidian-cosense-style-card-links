@@ -8,6 +8,12 @@ import type { TagGroup, TwoHopLinkBranch, TwoHopLinkResult } from "two-hop/model
 import type { TaggedNote, IndexedLink } from "indexing/model";
 import type { DisplayData } from "two-hop/display/displayDataBuilder";
 import TwoHopLinksPage from "../TwoHopLinksPage.svelte";
+import {
+	collectDisplayFiles,
+	createBacklink,
+	createDisplayData,
+	createTaggedNote,
+} from "./twoHopDisplayFixtures";
 import { createKeyboardNavigationSurfaceRegistry } from "obsidian-integration/navigation/keyboardNavigationSurface";
 import {
 	installAnimationFrameMock,
@@ -100,19 +106,6 @@ vi.mock("cards/context/linkContext", async () => {
 	};
 });
 
-function createBacklink(
-	sourceFile: TFile,
-	rawText: string = sourceFile.basename,
-): IndexedLink {
-	return {
-		sourceFile,
-		rawText,
-		path: sourceFile.path,
-		isUnresolved: false,
-		backlinkCount: 0,
-	} as IndexedLink;
-}
-
 function createBranch(
 	originFile: TFile,
 	targetFile: TFile,
@@ -127,25 +120,6 @@ function createBranch(
 			isUnresolved: false,
 		},
 		hop2: childFiles.map((childFile) => createBacklink(childFile)),
-	};
-}
-
-function createTaggedNote(file: TFile, tag: string): TaggedNote {
-	return {
-		file,
-		commonTags: [tag],
-		path: file.path,
-	};
-}
-
-function createDisplayData(): DisplayData {
-	return {
-		outgoing: [],
-		backlinks: [],
-		mergedItems: [],
-		twoHopBranches: [],
-		tagGroups: [],
-		newLinks: [],
 	};
 }
 
@@ -176,47 +150,6 @@ function createTwoHopState(
 	};
 }
 
-function collectFiles(originFile: TFile, displayData: DisplayData): Map<string, TFile> {
-	const files = new Map<string, TFile>([[originFile.path, originFile]]);
-	const addFile = (file: TFile | null | undefined) => {
-		if (file) {
-			files.set(file.path, file);
-		}
-	};
-
-	for (const branch of displayData.outgoing) {
-		if (branch.hop1.path) {
-			addFile(createMockTFile(branch.hop1.path));
-		}
-	}
-	for (const link of displayData.backlinks) {
-		addFile(link.sourceFile);
-	}
-	for (const item of displayData.mergedItems) {
-		if ("hop1" in item && item.hop1.path) {
-			addFile(createMockTFile(item.hop1.path));
-		}
-		if ("sourceFile" in item) {
-			addFile(item.sourceFile);
-		}
-	}
-	for (const branch of displayData.twoHopBranches) {
-		if (branch.hop1.path) {
-			addFile(createMockTFile(branch.hop1.path));
-		}
-		for (const link of branch.hop2) {
-			addFile(link.sourceFile);
-		}
-	}
-	for (const section of displayData.tagGroups) {
-		for (const note of section.notes) {
-			addFile(note.file);
-		}
-	}
-
-	return files;
-}
-
 interface RootPropsOverrides {
 	app?: App;
 	isSidebar?: boolean;
@@ -229,7 +162,7 @@ function createRootProps(
 	overrides: RootPropsOverrides = {},
 ): ComponentProps<typeof TwoHopLinksPage> {
 	const app = overrides.app ?? ({} as App);
-	const filesByPath = collectFiles(originFile, displayData);
+	const filesByPath = collectDisplayFiles(displayData, [originFile]);
 	const applicationStore = createTwoHopState(displayData, settings, originFile);
 	const linkContext = {
 		resolveFile: vi.fn((path: string) => filesByPath.get(path) ?? null),

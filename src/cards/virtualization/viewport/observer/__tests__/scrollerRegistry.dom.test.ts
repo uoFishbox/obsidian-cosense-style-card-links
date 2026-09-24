@@ -38,6 +38,17 @@ const scheduleScrollMeasurement = (task?: () => void): void => {
 	window.requestAnimationFrame(task);
 };
 
+function setScrollMetricGetter(
+	scroller: HTMLElement,
+	metric: "scrollTop" | "clientHeight",
+	getValue: () => number,
+): void {
+	Object.defineProperty(scroller, metric, {
+		get: getValue,
+		configurable: true,
+	});
+}
+
 describe("observeVirtualListViewport", () => {
 	it("defers inline position notifications until idle and removes the listener on cleanup", async () => {
 		vi.useFakeTimers();
@@ -132,18 +143,9 @@ describe("observeVirtualListViewport", () => {
 
 		const scrollContainer = document.createElement("div");
 		scrollContainer.style.overflow = "auto";
-		Object.defineProperty(scrollContainer, "scrollHeight", {
-			configurable: true,
-			value: 1000,
-		});
-		Object.defineProperty(scrollContainer, "clientHeight", {
-			configurable: true,
-			value: 240,
-		});
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			configurable: true,
-			value: 320,
-		});
+		setNumericProperty(scrollContainer, "scrollHeight", 1000);
+		setNumericProperty(scrollContainer, "clientHeight", 240);
+		setNumericProperty(scrollContainer, "scrollTop", 320);
 		document.body.append(scrollContainer);
 		scrollContainer.append(wrapper);
 
@@ -472,18 +474,9 @@ describe("observeVirtualListViewport", () => {
 		const clientHeightGetter = vi.fn(() => clientHeight);
 		const rootRectGetter = vi.spyOn(rootEl, "getBoundingClientRect");
 		const scrollerRectGetter = vi.spyOn(scrollContainer, "getBoundingClientRect");
-		Object.defineProperty(scrollContainer, "scrollHeight", {
-			value: 1000,
-			configurable: true,
-		});
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: scrollTopGetter,
-			configurable: true,
-		});
-		Object.defineProperty(scrollContainer, "clientHeight", {
-			get: clientHeightGetter,
-			configurable: true,
-		});
+		setNumericProperty(scrollContainer, "scrollHeight", 1000);
+		setScrollMetricGetter(scrollContainer, "scrollTop", scrollTopGetter);
+		setScrollMetricGetter(scrollContainer, "clientHeight", clientHeightGetter);
 
 		const runScrollMeasurement = vi.fn();
 		const onScrollContainerChange = vi.fn();
@@ -555,10 +548,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 120;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -620,10 +610,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 300;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const stopObserving = observeVirtualListViewport({
@@ -910,10 +897,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 100;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -977,10 +961,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 120;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const scheduleScrollMeasurementSpy = vi.fn();
 		const onScrollStateChange = vi.fn();
@@ -1032,10 +1013,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 120;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -1091,10 +1069,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 110;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 		// Simulate a scrollend-capable environment: per-frame programmatic
 		// scrolls fire scrollend after every scrollTop mutation.
 		Object.defineProperty(scrollContainer, "onscrollend", {
@@ -1158,10 +1133,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 120;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -1222,10 +1194,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 300;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -1281,10 +1250,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 150;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		let rangeMin = 100;
@@ -1343,10 +1309,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 300;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -1405,10 +1368,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 150;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => ({
@@ -1461,10 +1421,7 @@ describe("observeVirtualListViewport", () => {
 		scrollContainer.append(rootEl);
 
 		let scrollTop = 150;
-		Object.defineProperty(scrollContainer, "scrollTop", {
-			get: () => scrollTop,
-			configurable: true,
-		});
+		setScrollMetricGetter(scrollContainer, "scrollTop", () => scrollTop);
 
 		const runScrollMeasurement = vi.fn();
 		const getScrollMeasurementRange = vi.fn(() => null);

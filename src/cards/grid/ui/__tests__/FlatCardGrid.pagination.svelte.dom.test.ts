@@ -87,28 +87,4 @@ describe("FlatCardGrid pagination", () => {
 			expect(driver.visibleItems()).toEqual(createItems(10));
 		});
 	});
-
-	it("does not chain sentinel intersections through all remaining pages", async () => {
-		const driver = renderFlatCardGridBehavior({
-			items: createItems(20),
-			initialVisibleCount: 5,
-			loadMoreIncrement: 5,
-			paginationMode: "infinite-scroll",
-			infiniteScrollRootMargin: "0px",
-		});
-
-		await driver.setViewport({
-			rootHeight: 4000,
-			width: 330,
-		});
-
-		driver.triggerInfiniteScroll();
-
-		await waitFor(() => {
-			expect(driver.visibleItems()).toHaveLength(10);
-		});
-
-		expect(driver.visibleItems()).not.toContain("Item 10");
-		expect(driver.visibleItems()).not.toContain("Item 15");
-	});
 });

@@ -190,9 +190,8 @@ describe("VirtualListEngine performance contracts", () => {
 
 // The remaining contracts cover the engine's reuse fast paths. They assert
 // object identity and builder call counts on purpose: PERFORMANCE.md lists
-// snapshot/build reuse, physical slot stability, and the canonical mounted
-// build shape as Required Invariants, so a failure here means the performance
-// implementation changed rather than that user-visible behaviour broke.
+// snapshot/build reuse and physical slot stability as Required Invariants,
+// so a failure here means the performance implementation changed.
 describe("VirtualListEngine reuse contracts", () => {
 	it("keeps render slots unique and reuses physical slots while scrolling", () => {
 		const rowModel = createHarnessRowModel(12);
@@ -213,22 +212,6 @@ describe("VirtualListEngine reuse contracts", () => {
 		expect(new Set(shiftedCells.map((cell) => cell.physicalCellSlot)).size).toBe(
 			shiftedCells.length,
 		);
-	});
-
-	it("publishes no visibility metadata or mounted-cell key index", () => {
-		const snapshot = computeHarnessSnapshot({
-			rowModel: createHarnessRowModel(12),
-			mountedOverscanPx: 220,
-		}).snapshot;
-
-		// The mounted build is the canonical representation; adding a flat key
-		// index or per-cell visibility flag would duplicate it.
-		expect("mountedCellsByKey" in snapshot).toBe(false);
-		expect(
-			getHarnessMountedCells(snapshot.mountedBuild!).every(
-				(cell) => !Object.prototype.hasOwnProperty.call(cell, "visibility"),
-			),
-		).toBe(true);
 	});
 
 	it("reuses the mounted build when only previewVisible changes", () => {
@@ -253,6 +236,8 @@ describe("VirtualListEngine reuse contracts", () => {
 		});
 
 		expect(buildMountedRows).toHaveBeenCalledTimes(1);
+		expect(nextResult.snapshot).not.toBe(initialResult.snapshot);
+		expect(nextResult.snapshot.ranges.previewVisible).toEqual({ start: 1, end: 2 });
 		expect(nextResult.snapshot.mountedBuild).toBe(
 			initialResult.snapshot.mountedBuild,
 		);

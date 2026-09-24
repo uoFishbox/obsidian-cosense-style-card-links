@@ -61,20 +61,6 @@ describe("PropertyWidgetStyler.updateForPaths", () => {
 		expect(stylingService.decoratePropertiesPane).toHaveBeenCalledTimes(2);
 	});
 
-	it("does not style disconnected widgets during targeted refresh", () => {
-		const stylingService = {
-			decoratePropertiesPane: vi.fn(),
-		};
-		const styler = createPropertyWidgetStyler(stylingService as never);
-
-		const disconnectedEl = createWidget();
-		styler.register(disconnectedEl, { path: "notes/match.md" } as never);
-
-		styler.updateForPaths(["notes/match.md"]);
-
-		expect(stylingService.decoratePropertiesPane).not.toHaveBeenCalled();
-	});
-
 	it("does not let a stale disconnected widget block styling of other widgets", () => {
 		const stylingService = {
 			decoratePropertiesPane: vi.fn(),

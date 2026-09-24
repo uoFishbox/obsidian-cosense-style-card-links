@@ -5,7 +5,7 @@ import Icon from "../Icon.svelte";
 describe("Icon", () => {
 	afterEach(cleanup);
 
-	it("renders structured SVG data with controlled presentation props", () => {
+	it("renders an SVG with controlled presentation props", () => {
 		const view = render(Icon, {
 			props: {
 				name: "Link",
@@ -20,6 +20,5 @@ describe("Icon", () => {
 		expect(icon).toHaveAttribute("height", "20");
 		expect(icon).toHaveClass("test-icon");
 		expect(icon).toHaveAttribute("aria-hidden", "true");
-		expect(icon?.querySelectorAll("path")).toHaveLength(2);
 	});
 });

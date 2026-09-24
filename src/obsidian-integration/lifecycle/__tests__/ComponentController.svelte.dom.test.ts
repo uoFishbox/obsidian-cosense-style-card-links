@@ -427,6 +427,7 @@ describe("ComponentController mountComponentsForView", () => {
 
 		controller.mountComponentsForView(view, beta);
 		await flushMicrotasks();
+		expect(alphaDestroySpy).toHaveBeenCalledTimes(1);
 		controller.mountComponentsForView(view, alpha);
 		await flushMicrotasks();
 
@@ -438,23 +439,5 @@ describe("ComponentController mountComponentsForView", () => {
 			destroy: () => void;
 		};
 		expect(finalAlphaStore).not.toBe(alphaStore);
-		expect(alphaDestroySpy).toHaveBeenCalledTimes(1);
-	});
-
-	it("destroys the previous store when navigating to another file", async () => {
-		const { controller, view } = createController();
-		const firstFile = createMockTFile("notes/first.md");
-		const secondFile = createMockTFile("notes/second.md");
-
-		controller.mountComponentsForView(view, firstFile);
-		await flushMicrotasks();
-		const firstMountStores = getStoresFromMountCalls();
-		const firstStore = firstMountStores[0] as { destroy: () => void };
-		const firstDestroySpy = vi.spyOn(firstStore, "destroy");
-
-		controller.mountComponentsForView(view, secondFile);
-		await flushMicrotasks();
-
-		expect(firstDestroySpy).toHaveBeenCalledTimes(1);
 	});
 });

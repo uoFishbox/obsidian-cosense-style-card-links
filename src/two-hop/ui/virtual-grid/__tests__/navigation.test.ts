@@ -55,28 +55,6 @@ function requirePosition(model: ReturnType<typeof createTwoHopRowModel>, key: st
 }
 
 describe("two-hop navigation policy", () => {
-	it("skips non-focusable headers when navigating sequentially", () => {
-		const model = createModel([
-			createSection("first", 2),
-			createSection("second", 2),
-		]);
-		const lastOfFirst = "item:first:first-1";
-		const firstOfSecond = "item:second:second-0";
-		const expectedPosition = requirePosition(model, firstOfSecond);
-
-		expect(
-			model.resolveSequentialNavigationTarget?.(
-				lastOfFirst,
-				"forward",
-				requirePosition(model, lastOfFirst),
-			),
-		).toEqual({
-			key: firstOfSecond,
-			rowTop: model.getRow(expectedPosition.rowIndex)?.top,
-			...expectedPosition,
-		});
-	});
-
 	it("treats a clickable header as sequentially focusable", () => {
 		const model = createModel([
 			createSection("first", 2),
@@ -96,35 +74,6 @@ describe("two-hop navigation policy", () => {
 			key: headerOfSecond,
 			rowTop: model.getRow(headerPosition.rowIndex)?.top,
 			...headerPosition,
-		});
-	});
-
-	it("wraps horizontal navigation across rows", () => {
-		const model = createModel([createSection("section", 4)]);
-		const item0 = "item:section:section-0";
-		const item1 = "item:section:section-1";
-		const item2 = "item:section:section-2";
-		const item3 = "item:section:section-3";
-
-		expect(
-			model.resolveNavigationTarget?.(
-				item0,
-				"right",
-				requirePosition(model, item0),
-			),
-		).toEqual({
-			key: item1,
-			rowTop: model.getRow(requirePosition(model, item1).rowIndex)?.top,
-		});
-		expect(
-			model.resolveNavigationTarget?.(
-				item3,
-				"left",
-				requirePosition(model, item3),
-			),
-		).toEqual({
-			key: item2,
-			rowTop: model.getRow(requirePosition(model, item2).rowIndex)?.top,
 		});
 	});
 

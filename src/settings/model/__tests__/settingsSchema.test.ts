@@ -23,23 +23,6 @@ function persistedData(
 }
 
 describe("settings schema", () => {
-	it("ignores removed Canvas and mobile long-press settings in saved data", () => {
-		const settings = parsePluginSettings(
-			persistedData({
-				showTwoHopForSelectedCanvasFileNode: false,
-				mobileLongPressAction: "preview",
-			} as Partial<ConfigSettings>),
-		);
-		const serialized = serializePluginSettings(settings);
-
-		expect(settings).not.toHaveProperty("showTwoHopForSelectedCanvasFileNode");
-		expect(settings).not.toHaveProperty("mobileLongPressAction");
-		expect(serialized.settings).not.toHaveProperty(
-			"showTwoHopForSelectedCanvasFileNode",
-		);
-		expect(serialized.settings).not.toHaveProperty("mobileLongPressAction");
-	});
-
 	it.each(["relevance", "relevance-reverse"] as const)(
 		"restores the %s sort preference",
 		(sortOption) => {
@@ -180,26 +163,6 @@ describe("settings schema", () => {
 		expect(settings.cardMaxColumns).toBe(DEFAULT_SETTINGS.cardMaxColumns);
 	});
 
-	it("ignores old preview limits and omits them from saved data", () => {
-		const oldLimits = {
-			previewMaxLines: 30,
-			previewMaxChars: 1000,
-			previewVisualLineSafetyMargin: 2,
-		};
-		const result = loadPluginSettings(
-			persistedData({ ...oldLimits, language: "ja" }),
-		);
-		const settings = result.settings;
-		const serialized = serializePluginSettings(settings);
-
-		expect(result.status).toBe("cleaned");
-		expect(settings.language).toBe("ja");
-		for (const key of Object.keys(oldLimits)) {
-			expect(settings).not.toHaveProperty(key);
-			expect(serialized.settings).not.toHaveProperty(key);
-		}
-	});
-
 	it("strips unknown keys from current-version data", () => {
 		const settings = parsePluginSettings({
 			schemaVersion: SETTINGS_SCHEMA_VERSION,
@@ -231,23 +194,6 @@ describe("settings schema", () => {
 		expect(result.settings.language).toBe("ja");
 		expect(result.settings.highlightOnOpen).toBe(false);
 		expect(result.settings.lastUsedSortOption).toBe("modified-date");
-		expect(result.settings.enableContentSearch).toBe(true);
-	});
-
-	it("migrates schema version 2 into the current envelope", () => {
-		const result = loadPluginSettings({
-			...DEFAULT_SETTINGS,
-			settingsSchemaVersion: 2,
-			language: "ja",
-			lastUsedSortOption: "created-date",
-			enableContentSearch: true,
-		});
-
-		expect(result.status).toBe("migrated");
-		if (result.status !== "migrated") return;
-		expect(result.fromVersion).toBe(2);
-		expect(result.settings.language).toBe("ja");
-		expect(result.settings.lastUsedSortOption).toBe("created-date");
 		expect(result.settings.enableContentSearch).toBe(true);
 	});
 

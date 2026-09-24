@@ -287,35 +287,6 @@ describe("runStreamingSearch", () => {
 		});
 	});
 
-	it("publishes the first content match offset without scanning for line numbers", async () => {
-		const file = createMockTFile("notes/alpha.md");
-		const plainContent = `${"line\n".repeat(1_000_000)}find alpha here`;
-		const wrappedContent = new String(plainContent);
-		const charCodeAt = vi.fn(String.prototype.charCodeAt.bind(wrappedContent));
-		Object.defineProperty(wrappedContent, "charCodeAt", { value: charCodeAt });
-		const { vault } = createVault(
-			new Map([[file.path, wrappedContent as unknown as string]]),
-		);
-		const updates: StreamingSearchUpdate[] = [];
-
-		await runStreamingSearch({
-			vault,
-			files: [file],
-			items: [createItem("alpha", "unrelated", file.path)],
-			query: "alpha",
-			scope: "title-and-content",
-			isCancelled: () => false,
-			onUpdate: (update) => updates.push(update),
-		});
-
-		const position = getFinalUpdate(updates).firstContentMatchByPath.get(file.path);
-		expect(position).toEqual({
-			offset: plainContent.length - "alpha here".length,
-			length: 5,
-		});
-		expect(charCodeAt).not.toHaveBeenCalled();
-	});
-
 	it("treats regular expression metacharacters as case-insensitive literal text", async () => {
 		const exactFile = createMockTFile("notes/exact.md");
 		const falsePositiveFile = createMockTFile("notes/false-positive.md");

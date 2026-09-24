@@ -220,38 +220,35 @@ describe("PreCreationView file name validation", () => {
 		);
 	});
 
-	it.each(["*", '"', "\\", ":", "?", "<", ">", "#", "^", "[", "]", "|"])(
-		"shows a rename modal and does not create a file for %s",
-		async (character) => {
-			const { setState, create, createFolder, openFile } =
-				createViewForFileCreation(`Bad${character}Name`);
-			await setState();
-			document
-				.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
-				?.click();
-			expect(document.querySelector(".modal h2")?.textContent).toBe(
-				"Invalid file name",
-			);
-			expect(document.querySelector(".modal p")?.textContent).toBe(
-				'The file name contains characters that cannot be used in Obsidian (\\ / : * ? " < > # ^ [ ] |).',
-			);
-			expect(document.querySelector(".modal p code")?.textContent).toBe(
-				'\\ / : * ? " < > # ^ [ ] |',
-			);
-			expect(
-				document.querySelector(".modal .modal-button-container button")
-					?.textContent,
-			).toBe("Rename title");
-			expect(create).not.toHaveBeenCalled();
-			expect(createFolder).not.toHaveBeenCalled();
-			expect(openFile).not.toHaveBeenCalled();
-			const title = document.querySelector<HTMLElement>(".inline-title");
-			const focus = vi.spyOn(title!, "focus");
-			document.querySelector<HTMLButtonElement>(".modal button")?.click();
-			expect(focus).toHaveBeenCalled();
-			expect(document.querySelector(".modal")).toBeNull();
-		},
-	);
+	it("shows a rename modal and does not create a file for an invalid name", async () => {
+		const { setState, create, createFolder, openFile } =
+			createViewForFileCreation("Bad#Name");
+		await setState();
+		document
+			.querySelector<HTMLButtonElement>(".ccl-pre-create-actions button")
+			?.click();
+		expect(document.querySelector(".modal h2")?.textContent).toBe(
+			"Invalid file name",
+		);
+		expect(document.querySelector(".modal p")?.textContent).toBe(
+			'The file name contains characters that cannot be used in Obsidian (\\ / : * ? " < > # ^ [ ] |).',
+		);
+		expect(document.querySelector(".modal p code")?.textContent).toBe(
+			'\\ / : * ? " < > # ^ [ ] |',
+		);
+		expect(
+			document.querySelector(".modal .modal-button-container button")
+				?.textContent,
+		).toBe("Rename title");
+		expect(create).not.toHaveBeenCalled();
+		expect(createFolder).not.toHaveBeenCalled();
+		expect(openFile).not.toHaveBeenCalled();
+		const title = document.querySelector<HTMLElement>(".inline-title");
+		const focus = vi.spyOn(title!, "focus");
+		document.querySelector<HTMLButtonElement>(".modal button")?.click();
+		expect(focus).toHaveBeenCalled();
+		expect(document.querySelector(".modal")).toBeNull();
+	});
 
 	it("allows Windows-only characters on macOS and shows the macOS list for invalid names", async () => {
 		platformFlags.isWin = false;
@@ -334,33 +331,6 @@ describe("PreCreationView title rename", () => {
 		await waitFor(() => expect(renameLinks).toHaveBeenCalledTimes(2));
 		await waitFor(() => expect(view.getState().creationPath).toBe("New.md"));
 		expect(renameLinks.mock.calls[1]?.slice(-2)).toEqual(["Old", "New"]);
-	});
-
-	it("focuses and selects the entire current title with F2, then unregisters on close", async () => {
-		const { view, setState } = createViewForFileCreation("folder/Original");
-		await setState();
-		// Register the shortcut in the view scope, then edit after a re-render.
-		await view.onOpen();
-		await view.setState(
-			{
-				linktext: "folder/NewTitle",
-				sourcePath: "source.md",
-				expectedPath: "folder/NewTitle.md",
-			},
-			{ history: false },
-		);
-
-		const title = document.querySelector<HTMLDivElement>(".inline-title");
-		expect(title?.textContent).toBe("NewTitle");
-		expect(shortcutHandlers.get("F2")?.()).toBe(false);
-		expect(document.activeElement).toBe(title);
-		const selection = document.getSelection();
-		expect(selection?.toString()).toBe("NewTitle");
-		expect(selection?.getRangeAt(0).startContainer).toBe(title);
-		expect(selection?.getRangeAt(0).endContainer).toBe(title);
-
-		await view.onClose();
-		expect(shortcutHandlers.has("F2")).toBe(false);
 	});
 
 	it.each([

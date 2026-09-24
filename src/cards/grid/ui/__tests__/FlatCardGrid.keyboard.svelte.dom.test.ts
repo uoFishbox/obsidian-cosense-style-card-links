@@ -61,25 +61,7 @@ describe("FlatCardGrid keyboard navigation", () => {
 		geometryRead.mockRestore();
 	});
 
-	it("moves focus to the start of the next row when pressing ArrowRight at the end of a row", async () => {
-		const driver = renderFlatCardGridBehavior({
-			items: createItems(6),
-			initialVisibleCount: 6,
-		});
-
-		await driver.setViewport({
-			rootHeight: 4000,
-			width: 330,
-		});
-
-		const firstRowEnd = driver.getItem("Item 2");
-		firstRowEnd.focus();
-
-		await fireEvent.keyDown(firstRowEnd, { key: "ArrowRight" });
-		driver.expectFocusedItem("Item 3");
-	});
-
-	it("moves focus to the same target using ArrowRight as Tab at row ends", async () => {
+	it("moves focus to the next row using ArrowRight or Tab at row ends", async () => {
 		const driver = renderFlatCardGridBehavior({
 			items: createItems(6),
 			initialVisibleCount: 6,
@@ -100,25 +82,7 @@ describe("FlatCardGrid keyboard navigation", () => {
 		driver.expectFocusedItem("Item 3");
 	});
 
-	it("moves focus to the end of the previous row when pressing ArrowLeft at the start of a row", async () => {
-		const driver = renderFlatCardGridBehavior({
-			items: createItems(6),
-			initialVisibleCount: 6,
-		});
-
-		await driver.setViewport({
-			rootHeight: 4000,
-			width: 330,
-		});
-
-		const secondRowStart = driver.getItem("Item 3");
-		secondRowStart.focus();
-
-		await fireEvent.keyDown(secondRowStart, { key: "ArrowLeft" });
-		driver.expectFocusedItem("Item 2");
-	});
-
-	it("moves focus to the same target using ArrowLeft as Shift+Tab at row starts", async () => {
+	it("moves focus to the previous row using ArrowLeft or Shift+Tab at row starts", async () => {
 		const driver = renderFlatCardGridBehavior({
 			items: createItems(6),
 			initialVisibleCount: 6,

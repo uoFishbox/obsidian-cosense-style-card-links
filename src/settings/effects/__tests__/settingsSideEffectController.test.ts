@@ -68,23 +68,17 @@ describe("SettingsSideEffectController", () => {
 		expect(mocks.invalidateSortCache).toHaveBeenCalledOnce();
 	});
 
-	it("refreshes layout-affected views", () => {
-		const { apply, mocks } = createHarness();
+	it.each(["cardWidthPx", "experimentalShadowDomCss"] as const)(
+		"refreshes card views when %s changes",
+		(settingKey) => {
+			const { apply, mocks } = createHarness();
 
-		apply("cardWidthPx");
+			apply(settingKey);
 
-		expect(mocks.getLeavesOfType).toHaveBeenCalledTimes(4);
-		expect(mocks.refreshEmptyView).toHaveBeenCalledOnce();
-	});
-
-	it("refreshes every card view when custom Shadow DOM CSS changes", () => {
-		const { apply, mocks } = createHarness();
-
-		apply("experimentalShadowDomCss");
-
-		expect(mocks.getLeavesOfType).toHaveBeenCalledTimes(4);
-		expect(mocks.refreshEmptyView).toHaveBeenCalledOnce();
-	});
+			expect(mocks.getLeavesOfType).toHaveBeenCalledTimes(4);
+			expect(mocks.refreshEmptyView).toHaveBeenCalledOnce();
+		},
+	);
 
 	it("refreshes inline and dedicated views when language changes", () => {
 		const { apply, mocks } = createHarness();

@@ -6,6 +6,12 @@ import type { TaggedNote, IndexedLink } from "indexing/model";
 import type { SearchMatchedItem } from "search/searchTypes";
 import type { DisplayData } from "two-hop/display/displayDataBuilder";
 import {
+	collectDisplayFiles,
+	createBacklink,
+	createDisplayData,
+	createTaggedNote,
+} from "./twoHopDisplayFixtures";
+import {
 	buildTwoHopSearchSnapshot,
 	type TwohopSearchAdapterOptions,
 	type TwohopSearchRenderMode,
@@ -35,16 +41,6 @@ function createSearchAdapterHarness() {
 	};
 }
 
-function createBacklink(sourceFile: TFile, rawText: string): IndexedLink {
-	return {
-		sourceFile,
-		rawText,
-		path: sourceFile.path,
-		isUnresolved: false,
-		backlinkCount: 0,
-	};
-}
-
 function createBranch(
 	sourceFile: TFile,
 	targetPath: string | undefined,
@@ -59,26 +55,6 @@ function createBranch(
 			isUnresolved: targetPath === undefined,
 		},
 		hop2,
-	};
-}
-
-function createTaggedNote(file: TFile, tag: string = "alpha"): TaggedNote {
-	return {
-		file,
-		commonTags: [tag],
-		path: file.path,
-	};
-}
-
-function createDisplayData(partial: Partial<DisplayData> = {}): DisplayData {
-	return {
-		outgoing: [],
-		backlinks: [],
-		mergedItems: [],
-		twoHopBranches: [],
-		tagGroups: [],
-		newLinks: [],
-		...partial,
 	};
 }
 
@@ -108,44 +84,8 @@ function createAdapterOptions(
 	sourceFile: TFile,
 	renderMode: TwohopSearchRenderMode = DEFAULT_RENDER_MODE,
 ) {
-	const filesByPath = new Map<string, TFile>();
+	const filesByPath = collectDisplayFiles(displayData);
 	const metadataByPath = new Map<string, unknown>();
-
-	const addFile = (file: TFile | null | undefined) => {
-		if (file) {
-			filesByPath.set(file.path, file);
-		}
-	};
-
-	for (const branch of displayData.outgoing) {
-		if (branch.hop1.path) {
-			addFile(createMockTFile(branch.hop1.path));
-		}
-	}
-	for (const link of displayData.backlinks) {
-		addFile(link.sourceFile);
-	}
-	for (const item of displayData.mergedItems) {
-		if ("hop1" in item && item.hop1.path) {
-			addFile(createMockTFile(item.hop1.path));
-		}
-		if ("sourceFile" in item) {
-			addFile(item.sourceFile);
-		}
-	}
-	for (const branch of displayData.twoHopBranches) {
-		if (branch.hop1.path) {
-			addFile(createMockTFile(branch.hop1.path));
-		}
-		for (const link of branch.hop2) {
-			addFile(link.sourceFile);
-		}
-	}
-	for (const section of displayData.tagGroups) {
-		for (const note of section.notes) {
-			addFile(note.file);
-		}
-	}
 
 	return {
 		displayData,

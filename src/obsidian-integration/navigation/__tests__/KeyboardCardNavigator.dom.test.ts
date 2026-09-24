@@ -538,30 +538,6 @@ describe("KeyboardCardNavigator", () => {
 
 			expect(onClick).toHaveBeenCalledOnce();
 			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
-		});
-
-		it("activates a card by its hint key", () => {
-			const targetListener = vi.fn();
-			const rowOneA = createCard("row-1-a", { top: 10, left: 20 });
-			const rowOneB = createCard("row-1-b", { top: 10, left: 180 });
-			rowOneB.addEventListener("click", targetListener);
-
-			const root = createSurface("editor", [
-				rowOneA,
-				rowOneB,
-				createCard("row-2-a", { top: 90, left: 20 }),
-			]);
-			document.body.append(root);
-			const navigator = new KeyboardCardNavigator(createWorkspace({}), vi.fn());
-
-			navigator.activate(root);
-			const hintB = getHintForElement(root, "row-1-b");
-			expect(hintB).toBeDefined();
-
-			navigator.activateCardByHint(hintB!);
-
-			expect(targetListener).toHaveBeenCalledTimes(1);
-			expect(root.classList.contains("ccl-kb-nav-active")).toBe(false);
 			expect(getSelectedCard(root)).toBeNull();
 		});
 

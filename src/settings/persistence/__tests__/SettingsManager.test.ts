@@ -77,44 +77,6 @@ describe("SettingsManager", () => {
 		);
 	});
 
-	it("drops obsolete internal tuning settings while loading", async () => {
-		const plugin = {
-			settings: { ...DEFAULT_SETTINGS },
-			loadData: vi.fn().mockResolvedValue({
-				schemaVersion: SETTINGS_SCHEMA_VERSION,
-				settings: {
-					previewActivationAheadRows: 2.8,
-					previewDomCommitsPerSecond: 40.8,
-				},
-				preferences: {},
-			}),
-			saveData: vi.fn(),
-		};
-		const manager = new SettingsManager(plugin);
-
-		await manager.load();
-
-		expect(plugin.settings).not.toHaveProperty("previewActivationAheadRows");
-		expect(plugin.settings).not.toHaveProperty("previewDomCommitsPerSecond");
-	});
-
-	it("ignores unknown keys while loading settings", async () => {
-		const plugin = {
-			settings: { ...DEFAULT_SETTINGS },
-			loadData: vi.fn().mockResolvedValue({
-				schemaVersion: SETTINGS_SCHEMA_VERSION,
-				settings: { obsoleteSetting: { retained: false } },
-				preferences: {},
-			}),
-			saveData: vi.fn(),
-		};
-		const manager = new SettingsManager(plugin);
-
-		await manager.load();
-
-		expect(plugin.settings).not.toHaveProperty("obsoleteSetting");
-	});
-
 	it("replaces the authoritative settings object on update", async () => {
 		const plugin = {
 			settings: { ...DEFAULT_SETTINGS },

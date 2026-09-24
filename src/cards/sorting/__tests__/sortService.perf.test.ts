@@ -117,19 +117,6 @@ describe("SortService Performance", () => {
 		});
 	});
 
-	describe("result allocation", () => {
-		test("sort does not create a SortResult through sortWithResult", () => {
-			const sortWithResultSpy = vi.spyOn(sortService, "sortWithResult");
-
-			sortService.sort(
-				[createBranch("Beta"), createBranch("Alpha")],
-				"alphabetical",
-			);
-
-			expect(sortWithResultSpy).not.toHaveBeenCalled();
-		});
-	});
-
 	describe("lazy tie-breaker evaluation", () => {
 		test("does not compute displayName when numeric primary keys are unique", () => {
 			const items = [

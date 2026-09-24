@@ -2,38 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { createResidentRowSlotAllocator } from "cards/virtualization/public";
 import { buildMountedTwoHopRows } from "../mountedRows";
 import { createTwoHopRowModel } from "../rowModel";
+import { createMountedRowsModel } from "./mountedRowsModelFixture";
 import {
 	createTwoHopSectionModel,
 	type TwoHopItemModel,
 	type TwoHopSectionModel,
 } from "two-hop/ui/twoHopSectionModel";
-
-function createModel(itemCount: number) {
-	const items = Array.from({ length: itemCount }, (_, index) => ({
-		item: { type: "newLink" },
-		searchKey: `item:${index}`,
-		key: `item:${index}`,
-	})) as TwoHopItemModel[];
-	return createTwoHopRowModel({
-		sections: [
-			createTwoHopSectionModel({
-				id: "section",
-				kind: "new-links-section",
-				title: "Section",
-				items,
-				totalCount: itemCount,
-			}),
-		],
-		layout: {
-			containerWidth: 320,
-			columns: 3,
-			cellWidth: 100,
-			rowHeight: 100,
-			gap: 10,
-			sectionMarginBottom: 10,
-		},
-	});
-}
 
 describe("buildMountedTwoHopRows performance contracts", () => {
 	it("reads one section per entering row with 1,000 sections", () => {
@@ -85,7 +59,7 @@ describe("buildMountedTwoHopRows performance contracts", () => {
 	});
 
 	it("resolves only the entering row during sustained scrolling", () => {
-		const model = createModel(10_000);
+		const model = createMountedRowsModel(10_000);
 		const allocator = createResidentRowSlotAllocator();
 		let build = buildMountedTwoHopRows({
 			rowModel: model,

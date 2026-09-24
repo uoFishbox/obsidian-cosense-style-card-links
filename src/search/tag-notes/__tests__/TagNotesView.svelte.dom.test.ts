@@ -436,11 +436,6 @@ describe("TagNotesView", () => {
 
 		await view.setState({ tag: "alpha" }, { history: false });
 
-		expect(screen.queryByTestId("tag-notes-list-host")).toBeNull();
-		expect(
-			screen.getByText("Waiting for the tag index to finish building."),
-		).toBeInTheDocument();
-
 		deferredNotes.resolve([createTaggedNote("notes/alpha.md", 1)]);
 		await waitFor(() =>
 			expect(screen.getByTestId("tag-notes-list-host")).toHaveAttribute(

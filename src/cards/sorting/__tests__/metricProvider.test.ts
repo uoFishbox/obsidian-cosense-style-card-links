@@ -1,6 +1,6 @@
 import { describe, expect, beforeEach, vi, type MockedObject } from "vitest";
 import { MetricProvider, isBranch, isBacklink, isTaggedNote } from "../MetricProvider";
-import { TFile } from "obsidian";
+import { TFile, type TAbstractFile } from "obsidian";
 import type { CardLinkBranch } from "cards/model";
 import type {
 	IndexedLink,
@@ -270,6 +270,12 @@ describe("ObsidianMetricProvider", () => {
 			}
 
 			expect(provider.getOutgoingLinkCount(item)).toBe(expected);
+			if (targetPath) {
+				expect(mockVault.getAbstractFileByPath).toHaveBeenCalledTimes(1);
+				expect(mockVault.getAbstractFileByPath).toHaveBeenCalledWith(targetPath);
+			} else {
+				expect(mockVault.getAbstractFileByPath).not.toHaveBeenCalled();
+			}
 		});
 
 		it.each([
@@ -288,6 +294,7 @@ describe("ObsidianMetricProvider", () => {
 				{} as CachedMetadataWithLinkReferences,
 			);
 			expect(provider.getOutgoingLinkCount(item)).toBe(0);
+			expect(mockVault.getAbstractFileByPath).not.toHaveBeenCalled();
 		});
 	});
 
@@ -409,6 +416,14 @@ describe("ObsidianMetricProvider", () => {
 			const provider = createProvider();
 			mockVault.getAbstractFileByPath.mockReturnValue(null);
 			expect(provider[method](item)).toBe(0);
+		});
+
+		it("returns zero when a branch path resolves to a folder", () => {
+			const provider = createProvider();
+			const folder = { path: "folder" } as unknown as TAbstractFile;
+			mockVault.getAbstractFileByPath.mockReturnValue(folder);
+
+			expect(provider.getCreatedTime(makeBranch("folder"))).toBe(0);
 		});
 	});
 

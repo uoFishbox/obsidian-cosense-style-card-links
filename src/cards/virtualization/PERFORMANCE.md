@@ -25,7 +25,6 @@ Vault全体のベンチマークは、インデックス作成レイヤーやE2E
 - `physicalCellSlot` は、単一のマウント済みスナップショット内で一意であること。
 - 保持された論理セルは、レイアウトとphysical slot poolのepochが再利用可能な場合、そのレンダースロットを維持すること。
 - physical row/cell slot は `physicalRowSlot` / `physicalCellSlot` の数値だけを所有し、logical key と分離する。row が別の physical slot に移動した場合だけ physical binding を更新する。
-- mounted build の正規表現は `rowsInMountedRange` とし、同じbindingを平坦化した配列は保持しない。平坦な走査が必要なconsumerはrowの `bindings` をその場で走査する。
 - `previewVisible` は、 `mounted` の範囲を超えて拡張されないこと。
 - スクロールの測定値は、スクロールのフラッシュごとに1回だけ読み取られ、activeなsubscriberに渡されること。
 - 構造のミューテーションは、同じスクロールコンテナのactive subscriberだけを更新し、他のスクロールコンテナのsubscriberを測定しないこと。

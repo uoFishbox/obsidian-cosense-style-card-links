@@ -1,27 +1,21 @@
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "settings/model";
-import type { CardCollectionState } from "cards/CardCollectionState.svelte";
-import type { CardRenderModel } from "cards/rendering/cardRenderModel";
-import type { LinkContext } from "cards/context/linkContext";
-import type {
-	TwoHopItemModel,
-	TwoHopSectionModel,
-} from "two-hop/ui/twoHopSectionModel";
 import { createTwoHopSectionModel } from "two-hop/ui/twoHopSectionModel";
 import {
 	flushFrames,
 	installAnimationFrameMock,
 	installResizeObserverMock,
 	resetRecords,
-	setElementRect,
 	setNumericProperty,
 	teardownAnimationFrameMock,
 	teardownResizeObserverMock,
-	triggerResize,
 } from "testing/helpers/DOMObserverMock";
 import type { VirtualFrameLane } from "shared/ui/scheduling/frameCoordinator";
-import TwoHopVirtualGridHarness from "./TwoHopVirtualGridHarness.svelte";
+import {
+	createCardModelResolver,
+	createSection,
+	renderSurface,
+} from "./twoHopVirtualGridFixture";
 
 const cardDemandProbe = vi.hoisted(() => ({
 	getPreviewVisibleRangeCalls: 0,
@@ -65,125 +59,6 @@ vi.mock("two-hop/ui/virtual-grid/twoHopCardRuntime", async (importOriginal) => {
 		},
 	};
 });
-
-function createSection(count: number, totalCount = count): TwoHopSectionModel {
-	const items = Array.from({ length: count }, (_, index) => ({
-		item: { type: "newLink" },
-		searchKey: `item:${index}`,
-		key: `item:${index}`,
-	})) as TwoHopItemModel[];
-	return createTwoHopSectionModel({
-		id: "section",
-		kind: "new-links-section",
-		title: "Section",
-		items,
-		totalCount,
-	});
-}
-
-function createCardModelResolver() {
-	return vi.fn(
-		(item: TwoHopItemModel, _revision: unknown): CardRenderModel => ({
-			item: item.item,
-			targetFile: null,
-			title: item.key,
-			ariaLabel: item.key,
-			className: null,
-			extension: null,
-			interactionDescriptor: null,
-			searchQuery: "",
-			previewRequest: null,
-		}),
-	);
-}
-
-interface SurfaceFixture {
-	readonly root: HTMLElement;
-	readonly scroller: HTMLElement;
-	readonly rerender: ReturnType<typeof render>["rerender"];
-	readonly publishSection: (
-		section: TwoHopSectionModel,
-		cardModelRevision?: unknown,
-	) => Promise<void>;
-}
-
-async function renderSurface(params: {
-	section: TwoHopSectionModel;
-	resolveItemCardModel: ReturnType<typeof createCardModelResolver>;
-	loadMoreSection?: (sectionId: string) => void;
-	rootTop?: number;
-	cardModelRevision?: unknown;
-}): Promise<SurfaceFixture> {
-	const applicationStore = {
-		settings: {
-			...DEFAULT_SETTINGS,
-			cardWidthPx: 100,
-			cardHeightRatio: 1,
-			cardMaxColumns: 3,
-		},
-	} as unknown as CardCollectionState;
-	const scroller = document.createElement("div");
-	scroller.style.overflow = "auto";
-	setNumericProperty(scroller, "clientWidth", 320);
-	setNumericProperty(scroller, "clientHeight", 300);
-	setNumericProperty(scroller, "scrollHeight", 40_000);
-	setNumericProperty(scroller, "scrollTop", 0);
-	setElementRect(scroller, { top: 0, width: 320, height: 300 });
-	document.body.append(scroller);
-
-	const baseProps = {
-		sections: [params.section],
-		applicationStore,
-		linkContext: { getPreview: vi.fn() } as unknown as LinkContext,
-		loadMoreSection: params.loadMoreSection,
-		resolveItemCardModel: params.resolveItemCardModel,
-		cardModelRevision: params.cardModelRevision ?? 0,
-	};
-	const rendered = render(TwoHopVirtualGridHarness, {
-		target: scroller,
-		props: baseProps,
-	});
-	const root = rendered.container.querySelector<HTMLElement>(
-		".twohop-virtual-surface",
-	);
-	if (!root) throw new Error("Two-hop virtual surface was not rendered");
-	setElementRect(root, {
-		top: params.rootTop ?? 0,
-		width: 320,
-		height: 40_000,
-	});
-	triggerResize(root, 320, 40_000);
-	for (let index = 0; index < 4; index += 1) await flushFrames();
-
-	return {
-		root,
-		scroller,
-		rerender: rendered.rerender,
-		publishSection: (section, cardModelRevision = baseProps.cardModelRevision) =>
-			rendered.rerender({
-				...baseProps,
-				sections: [section],
-				cardModelRevision,
-			}),
-	};
-}
-
-function getRows(root: HTMLElement): HTMLElement[] {
-	return Array.from(
-		root.shadowRoot?.querySelectorAll<HTMLElement>(".twohop-virtual-row") ?? [],
-	);
-}
-
-async function waitForStableRowCount(root: HTMLElement): Promise<number> {
-	let previousRowCount = -1;
-	for (let attempt = 0; attempt < 20; attempt += 1) {
-		const rowCount = getRows(root).length;
-		if (rowCount === previousRowCount) return rowCount;
-		previousRowCount = rowCount;
-		await flushFrames();
-	}
-	return previousRowCount;
-}
 
 beforeEach(() => {
 	resetRecords();
