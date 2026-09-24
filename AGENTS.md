@@ -37,7 +37,7 @@ Compact guide for agents working in this repo.
 - `obsidian`, `electron`, all `@codemirror/*`, `@lezer/*`, and Node builtins are **external** — never bundle them.
 - Dev mode emits inline sourcemaps; production does not.
 - `process.env.NODE_ENV` is injected as `"development"` or `"production"`.
-- `vitest.config.js` is a compiled duplicate of `vitest.config.ts` — edit only the `.ts` file.
+- Vitest configuration lives in `vitest.config.mts` so it can be loaded as ESM.
 
 ## TypeScript & Svelte quirks
 

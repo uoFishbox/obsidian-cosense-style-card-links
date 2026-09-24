@@ -1,10 +1,9 @@
 import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import tsconfigPaths from "vite-tsconfig-paths";
-import * as path from "path";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
-	plugins: [svelte(), tsconfigPaths()],
+	plugins: [svelte()],
 	define: {
 		"process.env.NODE_ENV": JSON.stringify("test"),
 	},
@@ -94,18 +93,18 @@ export default defineConfig({
 		],
 	},
 	resolve: {
+		tsconfigPaths: true,
 		conditions: ["browser"],
 		alias: [
 			{
 				find: /^obsidian$/,
-				replacement: path.resolve(
-					__dirname,
-					"src/testing/__mocks__/obsidianMocks.ts",
+			replacement: fileURLToPath(
+					new URL("./src/testing/__mocks__/obsidianMocks.ts", import.meta.url),
 				),
 			},
 			{
 				find: "@/",
-				replacement: new URL("./src/", import.meta.url).pathname,
+			replacement: fileURLToPath(new URL("./src/", import.meta.url)),
 			},
 		],
 	},
