@@ -151,7 +151,7 @@ describe("createVirtualFrameCoordinator", () => {
 		const scrollSource = {};
 		const coordinator = createVirtualFrameCoordinator();
 		const task = vi.fn();
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, window);
 		coordinator.schedule("idle", "preview", task);
 
 		await vi.runOnlyPendingTimersAsync();

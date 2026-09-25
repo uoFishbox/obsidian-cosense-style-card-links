@@ -10,10 +10,7 @@ import {
 } from "../measurement";
 
 export type VirtualScrollMeasurementReason =
-	| "scroll-coverage-miss"
-	| "scroll-idle"
-	| "data-change"
-	| "post-layout";
+	"scroll-coverage-miss" | "scroll-idle" | "data-change" | "post-layout";
 
 /** Open scrollTop interval in which another scroll measurement is unnecessary. */
 export interface ScrollMeasurementRange {
@@ -295,7 +292,7 @@ const startScrollSession = (
 	state.isScrolling = true;
 	state.refreshDependenciesAfterScroll = false;
 	state.measureLayoutAfterScroll = false;
-	markScrollActivityActive(state.scrollActivitySource);
+	markScrollActivityActive(state.scrollActivitySource, state.scrollTarget);
 	actions.cancelInitialStabilizationMeasurement();
 	actions.onScrollStart();
 	actions.notifyScrollStateChange();

@@ -12,7 +12,7 @@ import {
 import type { VirtualFrameCoordinator } from "shared/ui/scheduling/frameCoordinator";
 import { createTestVirtualFrameCoordinator } from "testing/testVirtualFrameCoordinator";
 
-const scrollSource = {};
+const scrollSource = {} as Window;
 const DEFAULT_FRAME_INTERVAL_MS = 1000 / 60;
 let frameIntervalMs = DEFAULT_FRAME_INTERVAL_MS;
 let frameTimestamp = 0;
@@ -95,7 +95,7 @@ async function countCommits(params: {
 	let committed = 0;
 
 	if (params.scrolling) {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 	}
 	for (let index = 0; index < 500; index += 1) {
 		void enqueuePreviewDomCommit({
@@ -245,7 +245,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("commits previews sparsely while scrolling", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const committed: string[] = [];
 
 		const commits = Array.from({ length: 200 }, (_, index) =>
@@ -325,7 +325,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("delegates scrolling DOM commits to the post-paint lane", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const scheduledTask: { current: (() => void) | undefined } = {
 			current: undefined,
 		};
@@ -348,7 +348,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("does not immediately reschedule a scrolling scope only because its queue remains", () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const scheduledTask: { current: (() => void) | undefined } = {
 			current: undefined,
 		};
@@ -374,7 +374,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("waits until a low-rate scrolling token can be available", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const scheduledTask: { current: (() => void) | undefined } = {
 			current: undefined,
 		};
@@ -406,7 +406,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("commits during scrolling even when browser input is pending", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const isInputPending = vi.fn(() => true);
 		vi.stubGlobal("navigator", {
 			scheduling: { isInputPending },
@@ -478,7 +478,7 @@ describe("preview DOM commit scheduler", () => {
 		await flushAnimationFrame();
 		expect(committed).toEqual(["idle"]);
 
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		await flushAnimationFrame();
 		expect(committed).toEqual(["idle", "a"]);
 	});
@@ -566,7 +566,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("does not burst after a long scrolling frame gap", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const committed: string[] = [];
 
 		for (const key of ["a", "b", "c", "d"]) {
@@ -635,7 +635,7 @@ describe("preview DOM commit scheduler", () => {
 	});
 
 	it("uses the current scroll state when a frame drains", async () => {
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, scrollSource);
 		const committed: string[] = [];
 		const commits: Promise<boolean>[] = [];
 

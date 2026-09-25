@@ -403,7 +403,7 @@ describe("shadowHoverPopoverBridge", () => {
 		interaction.dispatchEvent(
 			new MouseEvent("mouseover", { bubbles: true, composed: true }),
 		);
-		markScrollActivityActive(scrollSource);
+		markScrollActivityActive(scrollSource, window);
 
 		expect(interaction.dataset.cclHovered).toBeUndefined();
 		expect(handleDelegatedLeaveMock).toHaveBeenCalledWith(interaction);
@@ -428,6 +428,40 @@ describe("shadowHoverPopoverBridge", () => {
 		);
 		expect(handleDelegatedEnterMock).toHaveBeenCalledTimes(2);
 
+		dispose();
+	});
+
+	it("keeps an anchor active when another scroller moves, then releases it for its own scroller", () => {
+		const { shadowRoot, dispose } = installBridge();
+		const cardScroller = document.createElement("div");
+		cardScroller.style.overflowY = "auto";
+		cardScroller.append(shadowRoot.host);
+		document.body.append(cardScroller);
+		const popoverScroller = document.createElement("div");
+		document.body.append(popoverScroller);
+		const interaction = createInteractionElement("item:first");
+		shadowRoot.append(interaction);
+		const popoverScrollSource = {};
+		const cardScrollSource = {};
+
+		interaction.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, composed: true }),
+		);
+		markScrollActivityActive(popoverScrollSource, popoverScroller);
+		expect(handleDelegatedLeaveMock).not.toHaveBeenCalled();
+		expect(interaction.dataset.cclHovered).toBe("true");
+
+		markScrollActivityActive(cardScrollSource, cardScroller);
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledOnce();
+		expect(handleDelegatedLeaveMock).toHaveBeenCalledWith(interaction);
+		expect(interaction.dataset.cclHovered).toBeUndefined();
+
+		markScrollActivityIdle(cardScrollSource);
+		interaction.dispatchEvent(
+			new MouseEvent("mouseover", { bubbles: true, composed: true }),
+		);
+		expect(handleDelegatedEnterMock).toHaveBeenCalledTimes(2);
+		markScrollActivityIdle(popoverScrollSource);
 		dispose();
 	});
 

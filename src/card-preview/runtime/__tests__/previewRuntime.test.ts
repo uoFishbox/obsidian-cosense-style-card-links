@@ -178,7 +178,7 @@ describe("PreviewRuntime", () => {
 			isScheduled: vi.fn(() => false),
 			dispose: vi.fn(),
 		};
-		markScrollActivityActive({});
+		markScrollActivityActive({}, {} as Window);
 		const runtime = createPreviewRuntime({
 			app: {} as App,
 			getPreview: vi.fn() as unknown as CardPreviewLoader,

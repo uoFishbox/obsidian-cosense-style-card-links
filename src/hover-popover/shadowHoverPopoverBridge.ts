@@ -21,9 +21,10 @@ import { COSENSE_CARD_LINKS_HOVER_SOURCE_ID } from "hover-popover/hoverPopoverLi
 import { isHTMLElementLike, isNodeLike } from "shared/ui/dom/realmSafeDom";
 import { VIRTUAL_CELL_WILL_REBIND_EVENT } from "cards/interactions/virtualCellRebind";
 import {
-	isScrollActivityActive,
-	subscribeScrollActivity,
+	isScrollerScrollActivityActive,
+	subscribeScrollerScrollActivity,
 } from "shared/ui/scroll/scrollActivity";
+import { findNearestScrollContainer } from "shared/ui/scroll/scrollContainer";
 
 interface ShadowHoverPopoverBridgeOptions {
 	shadowRoot: ShadowRoot;
@@ -97,6 +98,10 @@ function isRelatedTargetWithinAnchor(
 		isNodeLike(relatedTarget) &&
 		(relatedTarget === anchorEl || anchorEl.contains(relatedTarget))
 	);
+}
+
+function getAnchorScrollTarget(anchorEl: HTMLElement): Window | HTMLElement | null {
+	return findNearestScrollContainer(anchorEl) ?? anchorEl.ownerDocument.defaultView;
 }
 
 function leaveActiveAnchor(handle: SharedShadowHoverBridgeHandle): void {
@@ -181,14 +186,12 @@ function handleMouseOver(
 	handle: SharedShadowHoverBridgeHandle,
 	event: MouseEvent,
 ): void {
-	if (isScrollActivityActive()) {
-		return;
-	}
-
 	const nextAnchorEl = resolveInteractionElementFromEvent(handle.shadowRoot, event);
 	if (!nextAnchorEl) {
 		return;
 	}
+	const scrollTarget = getAnchorScrollTarget(nextAnchorEl);
+	if (scrollTarget && isScrollerScrollActivityActive(scrollTarget)) return;
 
 	const nextInteractionHandle = getInteractionHandleFromElement(nextAnchorEl);
 	if (!nextInteractionHandle) {
@@ -296,10 +299,6 @@ function handlePointerMove(
 	handle: SharedShadowHoverBridgeHandle,
 	event: PointerEvent,
 ): void {
-	if (isScrollActivityActive()) {
-		return;
-	}
-
 	const activeAnchorEl = handle.activeAnchorEl;
 	const interactionHandle = handle.activeInteractionHandle;
 	if (!activeAnchorEl || !interactionHandle) {
@@ -337,10 +336,13 @@ function handlePointerMove(
 
 	const modState = getModifierState(event);
 	const shouldRetrigger = modState && !handle.lastPointerModState;
-	handle.lastPointerModState = modState;
 	if (!shouldRetrigger) {
+		handle.lastPointerModState = modState;
 		return;
 	}
+	const scrollTarget = getAnchorScrollTarget(activeAnchorEl);
+	if (scrollTarget && isScrollerScrollActivityActive(scrollTarget)) return;
+	handle.lastPointerModState = modState;
 
 	handle.controller.handleDelegatedPointerMove(
 		activeAnchorEl,
@@ -436,16 +438,20 @@ function createHandle({
 	const onWindowBlur = () => {
 		handle.lastPointerModState = null;
 	};
-	const unsubscribeScrollActivity = subscribeScrollActivity((isActive) => {
-		if (!isActive || handle.disposed) return;
+	const unsubscribeScrollActivity = subscribeScrollerScrollActivity(
+		(target, isActive) => {
+			if (!isActive || handle.disposed) return;
+			const anchorEl = handle.activeAnchorEl ?? handle.hoveredAnchorEl;
+			if (!anchorEl || getAnchorScrollTarget(anchorEl) !== target) return;
 
-		if (handle.hoveredAnchorEl) {
-			delete handle.hoveredAnchorEl.dataset.cclHovered;
-			handle.hoveredAnchorEl = null;
-		}
+			if (handle.hoveredAnchorEl) {
+				delete handle.hoveredAnchorEl.dataset.cclHovered;
+				handle.hoveredAnchorEl = null;
+			}
 
-		leaveActiveAnchor(handle);
-	});
+			leaveActiveAnchor(handle);
+		},
+	);
 	const onVirtualCellWillRebind: EventListener = (event) => {
 		const target = event.target;
 		if (!isHTMLElementLike(target)) return;
